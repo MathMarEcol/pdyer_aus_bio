@@ -9,10 +9,11 @@ whatis("For more detail, run ")
 whatis(" ")
 load("singularity/3.5.0")
 -- Run Rscript on stdin
-set_alias("Rscript","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/r_aus_bio.sif Rscript")
-set_alias("R","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/r_aus_bio.sif R --vanilla" )
-set_alias("drake_build","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/r_aus_bio.sif Rscript --vanilla" )
-set_alias("shell","/sw/Containers/singularity/bin/run_singularity shell /30days/uqpdyer/aus_bio/r_aus_bio.sif " )
+set_alias("Rscript","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript")
+set_alias("R","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif R --vanilla" )
+set_alias("drake_build","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/aus_bio/8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript --vanilla" )
+set_alias("shell","/sw/Containers/singularity/bin/run_singularity shell /30days/uqpdyer/aus_bio/8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif " )
+set_alias("whereis", "ls ../")
 help([[
   Modulefile to provide a bespoke R package set and system library.
   The application runs within a NixOS based container.
