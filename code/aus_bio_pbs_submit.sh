@@ -23,10 +23,12 @@ rsync -irc ./drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 #Then run from the local disk
 cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
+#Bash builtin that allows module aliases to work in non-interactive jobs (shopt: SHell OPTions)
+#-s means set, expand_aliases is only default for interactive shells, not non-interactive
+shopt -s expand_aliases
+
 module load use.own
 module load aus_bio_module
-module list
-which Rscript
 Rscript drake_plan.R
 
 
