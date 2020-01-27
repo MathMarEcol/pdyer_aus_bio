@@ -1,9 +1,18 @@
 #+TITLE: Project for finding a Bioregionalisation around Australia
+* Build project
+:PROPERTIES:
+:ID:       org:a5ee9fee-f00d-435e-b85e-85bb6e0428b8
+:END:
+#+begin_src sh
+  module load use.own
+  module load aus_bio_module.lua #assumes you have copied this to ~/privatemodules/
+  cd code/
+  Rscript drake_plan.R #Rscript is an alias to call the singularity container and run Rscript from there.
+#+end_src
 * The singularity .sif files are large, and are not in the repo
 :PROPERTIES:
 :ID:       org:76b953b3-3016-497e-bb02-f354644e7903
 :END:
-
 The *.sif files, which contain R and all relevant packages and system software, are synced via ~scp~ or ~rsync~.
 * Components
 :PROPERTIES:
@@ -51,3 +60,27 @@ Using the package manager Nix, you can rebuild the .sif file with the following 
 The end result is guarenteed to be the exact image I generated with the same commands.
 
 The one thing that must be taken care of is that the git revision in r_shell.nix and singularity_image.nix are supposed to be the same, but I don't know how to do that automatically yet.
+** drake_plan.R
+:PROPERTIES:
+:ID:       org:f3d9a7ad-3801-42fb-b165-3c812b2778bc
+:END:
+The master R script that builds the project.
+
+Run with:
+#+begin_src sh
+Rscript drake_plan.R
+#+end_src
+* Directory structure 
+:PROPERTIES:
+:ID:       org:09e255e4-a92d-439c-b959-6b998e00880f
+:END:
+
+The whole project is assumed to be inside the MathMarEcol QRIScloud collection ~Q1216/pdyer~.
+The
+
+The ~code/~ folder contains the drake_plan.R and other scripts and code for the project.
+
+The data are all stored in a different QRIScloud collection, ~Q1215~.
+Different HPC systems have a different folder for the QRIScloud data, but Q1215 and Q1216 are always sibling folders, so relative paths will work, and will be more reliable than hard paths.
+
+Given that HPC code should not be run over the network, I copy the relevant parts of ~Q1215~ and ~Q1216~ into ~30days~ or something similar on Awoonga, before running ~Rscript drake_plan.R~
