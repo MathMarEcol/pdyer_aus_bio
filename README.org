@@ -1,0 +1,7 @@
+#+TITLE: Project for finding a Bioregionalisation around Australia
+* The singularity .sif files are large, and are not in the repo
+:PROPERTIES:
+:ID:       org:76b953b3-3016-497e-bb02-f354644e7903
+:END:
+
+The *.sif files, which contain R and all relevant packages and system software, are synced via ~scp~ or ~rsync~.
