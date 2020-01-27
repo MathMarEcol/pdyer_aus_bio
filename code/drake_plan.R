@@ -44,7 +44,6 @@ gf_trees <- 500
 gf_bins <- 201
 gf_corr_thres <- 0.5
 
-copepod_csv <- "../../../../data/AusCPR/combined_copeped_jul19.csv"
 
 proj_id <- list(nrs = "NRS",
                 cpr = "CPR",
@@ -68,7 +67,7 @@ pl <- drake::drake_plan(
          ##first, I wrap the string inside file_in, so that drake knows it is a filename,
          ##that I read from the file, and that the file should be tracked.
          ##files cannot be stored in variables, must be a string.
-         combined_copepod = readr::read_csv(file_in("../../../../data/AusCPR/combined_copeped_jul19.csv"),
+               combined_copepod = readr::read_csv(file_in("../../../../Q1215/AusCPR/combined_copeped_jul19.csv"),
                                              na = c("(null)", "."),
                                              col_types = readr::cols(PROJECT_ID = col_character(),
                                                                      SAMPLE_DEPTH = col_number()),
