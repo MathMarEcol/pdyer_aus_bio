@@ -25,6 +25,7 @@ cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 module load use.own
 module load aus_bio_module
+module list
 which Rscript
 Rscript drake_plan.R
 
