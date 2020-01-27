@@ -24,8 +24,8 @@ rsync -irc ./drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 module load use.own
-module load aus_bio_module.lua
-
+module load aus_bio_module
+which Rscript
 Rscript drake_plan.R
 
 
