@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -A UQ-SCI-SMP
-#PBS -l select=1:ncpus=2:mem=4GB
-#PBS -l walltime=00:10:00
+#PBS -l select=1:ncpus=1:mem=4GB
+#PBS -l walltime=00:01:00
 
 
 #by default, PBS begins in the home dir, but the env var $PBS_O_WORKDIR contains the path to this script.
@@ -29,6 +29,7 @@ shopt -s expand_aliases
 
 module load use.own
 module load aus_bio_module
+#Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
 Rscript drake_plan.R
 
 
