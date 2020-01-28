@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -A UQ-SCI-SMP
 #PBS -l select=1:ncpus=1:mem=4GB
-#PBS -l walltime=00:01:00
+#PBS -l walltime=00:10:00
 
 
 #by default, PBS begins in the home dir, but the env var $PBS_O_WORKDIR contains the path to this script.
