@@ -88,6 +88,9 @@ pl <- drake::drake_plan(
          )
 
 #' Make
-drake::make(pl)
+drake_result <- drake::make(pl)
 
+drake::vis_drake_graph(drake_result, file = "../outputs/drake_graph", selfcontained = TRUE, hover = TRUE,)
+drake::sankey_drake_graph(drake_result, file = "../outputs/drake_graph_sankey", selfcontained = TRUE)
+ggsave(filename = "../outputs/drake_ggplot.png", drake::drake_ggraph(drake_result))
 
