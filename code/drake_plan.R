@@ -88,6 +88,6 @@ pl <- drake::drake_plan(
          )
 
 #' Make
-drake::r_make(pl)
+drake::make(pl)
 
 
