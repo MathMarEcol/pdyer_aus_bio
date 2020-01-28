@@ -12,12 +12,12 @@ library(readr)
 library(tidyverse)
 
 #' Custom Functions
-split_surv <- function(id){
+split_surv <- function(combined_copepod, id){
   return(dplyr::filter(combined_copepod, PROJECT_ID %in% id))
 }
 
-remove_meso <- function(surv){
-  filter(surv, SAMPLE_DEPTH < 200 | is.na(SAMPLE_DEPTH))
+remove_meso <- function(surv, depth){
+  dplyr::filter(surv, SAMPLE_DEPTH < 200 | is.na(SAMPLE_DEPTH))
 }
 
 ## state<-rutilities::track_all_states()
@@ -77,7 +77,7 @@ pl <- drake::drake_plan(
 
          ##drake_plan() forces you to put commas everywhere, this is not an R block.
 
-         surv = target( split_surv(proj),         ##supplying the initial splitting of the data here
+         surv = target( split_surv(combined_copepod, proj),         ##supplying the initial splitting of the data here
             transform = map(proj = proj_id, .id = names(proj_id))
          ),
 
@@ -88,6 +88,6 @@ pl <- drake::drake_plan(
          )
 
 #' Make
-drake::make(pl)
+drake::r_make(pl)
 
 
