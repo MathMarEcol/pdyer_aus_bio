@@ -8,7 +8,7 @@ whatis("20200122 ")
 whatis("For more detail, run ")
 whatis(" ")
 
-setenv("SINGULARITY_BIND", "$TMPDIR")
+setenv("SINGULARITY_BIND", os.getenv("TMPDIR")) 
 
 load("singularity/3.5.0")
 -- Run Rscript on stdin
