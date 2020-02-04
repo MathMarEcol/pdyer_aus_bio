@@ -18,6 +18,8 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         provViz
         provParseR
         drake
+        visNetwork
+        networkD3
 
         #Maths and statistics
         emmix 
@@ -50,6 +52,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
 
         #Plotting
         ggthemes
+        ggraph
         maptools
         ggplot2
         ellipse
