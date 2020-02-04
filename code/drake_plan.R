@@ -59,12 +59,42 @@ pl <- drake::drake_plan(
 
          ##drake_plan() forces you to put commas everywhere, this is not an R block.
 
-         surv = target( split_surv(combined_copepod, proj),         ##supplying the initial splitting of the data here
-            transform = map(proj = proj_grid$matching, .id = proj_grid$names)
-         ),
+         surv = target( split_surv(combined_copepod, matching),         ##supplying the initial splitting of the data here
+                       ## How to use transform parameters
+                       ## the map() function steps through "rows of a grid"
+                       ## the nth target uses the nth entry of each object in map()
+                       ## so the second target below uses names = "cpr" and matching = "CPR"
+                       ## If you want all combinations, see cross().
+                       ##
+                       ## Notice that variables passed to split_surv() can come from all
+                       ## different places in drake_plan().
+                       ## combined_copepod is another target
+                       ## matching is provided by the tranform = map(...) just below.
+                       ## within map(), .id is provided by another parameter from map()
+                       ## In the surv_epi target map(), .id is using the names object from
+                       ## the surv target map().
+                       ## So most map() params can be hard coded or targets, but .id must be
+                       ##assigned another map() param
+                       transform = map(
+                         names = c("nrs", "cpr", "mkinnon", "goc", "nyan", "anita"),
+                         .id = names,
+                         matching = list(nrs = "NRS",
+                                         cpr = "CPR",
+                                         mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
+                                         goc = "1", #Gulf of Capentaria
+                                         nyan = "21", #SE Tasmania
+                                         anita = "18") #Tasmania data
+                         )
+                       ),
 
          #From now on, every call to surv should give me one survey at a time.
-         surv_epi = remove_meso(surv)
+         surv_epi = target(
+           remove_meso(surv, depth = epi_depth),
+           transform = map(
+             surv,
+             .id = names
+           )
+         )
 
          #Keep going, but get some outputs eventually
          )
