@@ -12,8 +12,8 @@ library(readr)
 library(tidyverse)
 
 #' Custom Functions
-split_surv <- function(combined_copepod, id){
-  return(dplyr::filter(combined_copepod, PROJECT_ID %in% id))
+split_surv <- function(combined_copepod, matching){
+  return(dplyr::filter(combined_copepod, PROJECT_ID %in% matching))
 }
 
 remove_meso <- function(surv, depth){
@@ -44,7 +44,16 @@ gf_trees <- 500
 gf_bins <- 201
 gf_corr_thres <- 0.5
 
-
+proj_grid <- tibble(
+  names= c("nrs", "cpr", "mkinnon", "goc", "nyan", "anita"),
+  matching = list(nrs = "NRS",
+                  cpr = "CPR",
+                  mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
+                  goc = "1", #Gulf of Capentaria
+                  nyan = "21", #SE Tasmania
+                  anita = "18") #Tasmania data
+)
+proj_names <- data.frame(
 proj_id <- list(nrs = "NRS",
                 cpr = "CPR",
                 mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
@@ -78,19 +87,19 @@ pl <- drake::drake_plan(
          ##drake_plan() forces you to put commas everywhere, this is not an R block.
 
          surv = target( split_surv(combined_copepod, proj),         ##supplying the initial splitting of the data here
-            transform = map(proj = proj_id, .id = names(proj_id))
+            transform = map(proj = proj_grid$matching, .id = proj_grid$names)
          ),
 
          #From now on, every call to surv should give me one survey at a time.
          surv_epi = remove_meso(surv)
 
-         #
+         #Keep going, but get some outputs eventually
          )
 
 #' Make
-drake_result <- drake::make(pl)
+drake::make(pl)
 
-drake::vis_drake_graph(drake_result, file = "../outputs/drake_graph", selfcontained = TRUE, hover = TRUE,)
-drake::sankey_drake_graph(drake_result, file = "../outputs/drake_graph_sankey", selfcontained = TRUE)
+drake::vis_drake_graph(drake_config(pl), file = "../outputs/drake_graph.html", selfcontained = TRUE, hover = TRUE,)
+drake::sankey_drake_graph(drake_config(pl), file = "../outputs/drake_graph_sankey.html", selfcontained = TRUE)
 ggsave(filename = "../outputs/drake_ggplot.png", drake::drake_ggraph(drake_result))
 
