@@ -29,47 +29,21 @@ remove_meso <- function(surv, depth){
 #' Plan
 
 ## Set up variables
-freq_range <- c(0.05, 1)
-min_occurrence <- 6
 
-cov_min <- 1.0
-
-spatial_vars <-  c("lat", "lon")
-env_id_col <- "env_id"
-
-env_res <- 1/12
-env_offset <- 0
-
-gf_trees <- 500
-gf_bins <- 201
-gf_corr_thres <- 0.5
-
-proj_grid <- tibble(
-  names= c("nrs", "cpr", "mkinnon", "goc", "nyan", "anita"),
-  matching = list(nrs = "NRS",
-                  cpr = "CPR",
-                  mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
-                  goc = "1", #Gulf of Capentaria
-                  nyan = "21", #SE Tasmania
-                  anita = "18") #Tasmania data
-)
-proj_id <- list(nrs = "NRS",
-                cpr = "CPR",
-                mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
-                goc = "1", #Gulf of Capentaria
-                nyan = "21", #SE Tasmania
-                anita = "18") #Tasmania data
-## proj_id <- list(nrs = "NRS",
-##                 cpr = "CPR",
-##                 mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
-##                 goc = "1", #Gulf of Capentaria
-##                 nyan = "21", #SE Tasmania
-##                 anita = "18") #Tasmania data
 
 #This should really be a drake plan too!
 ## env_data <- archivist::areadLocal("eca58d95fc8d82de9750864ad2c82adf", "../2019-09-05-0908_clip_env/archivist")
 
 pl <- drake::drake_plan(
+               ##parameters
+               epi_depth = 200,
+               freq_range = c(0.05, 1),
+               min_occurrence = 6,
+
+               cov_min = 1.0,
+               gf_trees = 500,
+               gf_bins = 201,
+               gf_corr_thres = 0.5,
          ##here I have referred to a variable defined above, copepod_csv
          ##copepod_csv is just a string, which will be passed to read_csv.
          ##first, I wrap the string inside file_in, so that drake knows it is a filename,
