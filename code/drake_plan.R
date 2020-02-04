@@ -53,7 +53,6 @@ proj_grid <- tibble(
                   nyan = "21", #SE Tasmania
                   anita = "18") #Tasmania data
 )
-proj_names <- data.frame(
 proj_id <- list(nrs = "NRS",
                 cpr = "CPR",
                 mckinnon = as.character(c(4, 5, 7, 9, 12, 15, 16, 24)), #McKinnon surveys
