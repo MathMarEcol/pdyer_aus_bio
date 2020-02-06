@@ -126,7 +126,7 @@ pl <- drake::drake_plan(
                freq_range = c(0.05, 1),
                min_occurrence = 6,
                cov_min = 1.0,
-               mapfile =  file_in(here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8"),
+               mapfile =  file_in(here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8")),
                mapLayer =  "World_EEZ_v8_2014_HR",
                biooracle_folder = here::here("..", "..", "..", "Q1215", "bioORACLE"),
                pred = list(),
