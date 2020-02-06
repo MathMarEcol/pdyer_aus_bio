@@ -268,7 +268,7 @@ pl <- drake::drake_plan(
 #
          #plotting a bit
          ext_pl = plot_extents(marine_map, env_extent),
-         saved_ext_pl = ggsave(file_out(here::here("outputs" "extents.png")),
+         saved_ext_pl = ggsave(file_out(here::here("outputs", "extents.png")),
                                plot = ext_pl,
                                units = "cm",
                                width = 8,
@@ -277,7 +277,7 @@ pl <- drake::drake_plan(
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final, spatial_vars, marine_map, env_extent),
-         saved_ext_pl_biooracle = ggsave(file_out(here::here("outputs" "temps.png")),
+         saved_ext_pl_biooracle = ggsave(file_out(here::here("outputs", "temps.png")),
                                plot = ext_pl_biooracle,
                                units = "cm",
                                width = 8,
