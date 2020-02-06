@@ -63,7 +63,7 @@ env_aus_eez <- function(bio_oracle_cache,
 
 env_log_transform <- function(env_data, env_log){
   ## Transformations by log10
-  cv_min <- min(env_complete$BO2_curvelrange_ss)
+  cv_min <- min(env_data$BO2_curvelrange_ss)
   cv_min_offset <- cv_min + cv_min/10
 
   env_data$BO2_curvelrange_ss <- env_data$BO2_curvelrange_ss - cv_min_offset
