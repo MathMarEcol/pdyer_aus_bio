@@ -17,6 +17,8 @@ library(sdmpredictors)
 ##Plots
 library(ggplot2)
 library(ggthemes)
+##Support
+library(here)
 
 #' Custom Functions
 split_surv <- function(combined_copepod,
@@ -124,9 +126,9 @@ pl <- drake::drake_plan(
                freq_range = c(0.05, 1),
                min_occurrence = 6,
                cov_min = 1.0,
-               mapfile =  "/vmshare/phd/data/World_EEZ_v8_20140228",
+               mapfile =  file_in(here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8"),
                mapLayer =  "World_EEZ_v8_2014_HR",
-               biooracle_folder = "../../../../Q1215/bioORACLE",
+               biooracle_folder = here::here("..", "..", "..", "Q1215", "bioORACLE"),
                pred = list(),
                env_vars = c("depth", "temp", "nitrate", "silicate", "chlo", "iron",  "salinity", "curvel"),
                env_modes = c("min", "max", "mean", "range"),
@@ -214,7 +216,7 @@ pl <- drake::drake_plan(
          ##first, I wrap the string inside file_in, so that drake knows it is a filename,
          ##that I read from the file, and that the file should be tracked.
          ##files cannot be stored in variables, must be a string.
-               combined_copepod = readr::read_csv(file_in("../../../../Q1215/AusCPR/combined_copeped_jul19.csv"),
+               combined_copepod = readr::read_csv(file_in(here::here("..", "..", "..", "Q1215", "AusCPR", "combined_copeped_jul19.csv")),
                                              na = c("(null)", "."),
                                              col_types = readr::cols(PROJECT_ID = col_character(),
                                                                      SAMPLE_DEPTH = col_number()),
@@ -266,7 +268,7 @@ pl <- drake::drake_plan(
 #
          #plotting a bit
          ext_pl = plot_extents(marine_map, env_extent),
-         saved_ext_pl = ggsave(file_out("../outputs/extents.png"),
+         saved_ext_pl = ggsave(file_out(here::here("outputs" "extents.png")),
                                plot = ext_pl,
                                units = "cm",
                                width = 8,
@@ -275,7 +277,7 @@ pl <- drake::drake_plan(
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final, spatial_vars, marine_map, env_extent),
-         saved_ext_pl_biooracle = ggsave(file_out("../outputs/temps.png"),
+         saved_ext_pl_biooracle = ggsave(file_out(here::here("outputs" "temps.png")),
                                plot = ext_pl_biooracle,
                                units = "cm",
                                width = 8,

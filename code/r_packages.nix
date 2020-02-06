@@ -101,6 +101,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         R_cache #reduce re-evaluation of function calls
         archivist #store results, could be important for tracking outputs in JSON
         packrat
+        renv
 
         fst
         feather
@@ -124,7 +125,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         skimr
         janitor
         stringr
-        
+        here
 
         #vim support
         nvimcom
