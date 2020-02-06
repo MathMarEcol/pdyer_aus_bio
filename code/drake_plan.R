@@ -123,7 +123,8 @@ plot_temp <- function(env_data, spatial_vars, marine_map, env_extent){
 
 mapfile_location <- here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8")
 copepod_data <- here::here("..", "..", "..", "Q1215", "AusCPR", "combined_copeped_jul19.csv")
-
+ext_pl_temp_file <- here::here("outputs", "temps.png") 
+ext_pl_map_file <- here::here("outputs", "extents.png")
 
 pl <- drake::drake_plan(
                ##parameters
@@ -273,7 +274,7 @@ pl <- drake::drake_plan(
 #
          #plotting a bit
          ext_pl = plot_extents(marine_map, env_extent),
-         saved_ext_pl = ggsave(file_out(here::here("outputs", "extents.png")),
+         saved_ext_pl = ggsave(file_out(!!exp_pl_map_file),
                                plot = ext_pl,
                                units = "cm",
                                width = 8,
@@ -282,7 +283,7 @@ pl <- drake::drake_plan(
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final, spatial_vars, marine_map, env_extent),
-         saved_ext_pl_biooracle = ggsave(file_out(here::here("outputs", "temps.png")),
+         saved_ext_pl_biooracle = ggsave(file_out(!!ext_pl_temp_file),
                                plot = ext_pl_biooracle,
                                units = "cm",
                                width = 8,
