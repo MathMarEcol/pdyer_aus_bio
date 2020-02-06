@@ -120,13 +120,18 @@ plot_temp <- function(env_data, spatial_vars, marine_map, env_extent){
 #This should really be a drake plan too!
 ## env_data <- archivist::areadLocal("eca58d95fc8d82de9750864ad2c82adf", "../2019-09-05-0908_clip_env/archivist")
 
+
+mapfile_location <- here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8")
+copepod_data <- here::here("..", "..", "..", "Q1215", "AusCPR", "combined_copeped_jul19.csv")
+
+
 pl <- drake::drake_plan(
                ##parameters
                epi_depth = 200,
                freq_range = c(0.05, 1),
                min_occurrence = 6,
                cov_min = 1.0,
-               mapfile =  file_in(here::here("..", "..", "..", "Q1215", "ShapeFiles", "World_EEZ_v8")),
+               mapfile =  file_in(!!mapfile_location),
                mapLayer =  "World_EEZ_v8_2014_HR",
                biooracle_folder = here::here("..", "..", "..", "Q1215", "bioORACLE"),
                pred = list(),
@@ -216,7 +221,7 @@ pl <- drake::drake_plan(
          ##first, I wrap the string inside file_in, so that drake knows it is a filename,
          ##that I read from the file, and that the file should be tracked.
          ##files cannot be stored in variables, must be a string.
-               combined_copepod = readr::read_csv(file_in(here::here("..", "..", "..", "Q1215", "AusCPR", "combined_copeped_jul19.csv")),
+               combined_copepod = readr::read_csv(file_in(!!copepod_data),
                                              na = c("(null)", "."),
                                              col_types = readr::cols(PROJECT_ID = col_character(),
                                                                      SAMPLE_DEPTH = col_number()),
