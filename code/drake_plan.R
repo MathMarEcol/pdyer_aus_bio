@@ -40,7 +40,7 @@ env_aus_eez <- function(bio_oracle_cache,
                         ){
 
 
-  env_pairs <- data.table::as.data.table(merge.data.frame(env_vars, env_modes, all=TRUE)))
+  env_pairs <- data.table::as.data.table(merge.data.frame(env_vars, env_modes, all=TRUE))
 
   env_bio_oracle_names <- apply(env_pairs[x != "depth"], 1,  function(x){sprintf(bio_oracle_str_template, x[1], x[2])})
   ## Add bathymetry separately
