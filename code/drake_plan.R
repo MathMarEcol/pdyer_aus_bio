@@ -280,7 +280,7 @@ pl <- drake::drake_plan(
                                width = 16, #widescreen
                                height = 9,
                                dpi = "screen",
-                               scale = 10
+                               scale = 3
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final, spatial_vars, marine_map, env_extent),
@@ -290,7 +290,7 @@ pl <- drake::drake_plan(
                                width = 16, #widescreen
                                height = 9,
                                dpi = "screen",
-                               scale = 10
+                               scale = 3
                                )
 #
          )
