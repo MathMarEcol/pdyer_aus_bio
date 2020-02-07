@@ -279,7 +279,7 @@ pl <- drake::drake_plan(
                                units = "cm",
                                width = 16, #widescreen
                                height = 9,
-                               dpi = "print",
+                               dpi = 300,
                                scale = 1
                                ),
 #
@@ -289,7 +289,7 @@ pl <- drake::drake_plan(
                                units = "cm",
                                width = 16, #widescreen
                                height = 9,
-                               dpi = "print",
+                               dpi = 300,
                                scale = 1
                                )
 #
