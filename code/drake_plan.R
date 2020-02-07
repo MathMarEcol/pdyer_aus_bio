@@ -277,18 +277,20 @@ pl <- drake::drake_plan(
          saved_ext_pl = ggsave(file_out(!!ext_pl_map_file),
                                plot = ext_pl,
                                units = "cm",
-                               width = 8,
-                               height = 6,
-                               dpi = "screen"
+                               width = 16, #widescreen
+                               height = 9,
+                               dpi = "screen",
+                               scale = 10
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final, spatial_vars, marine_map, env_extent),
          saved_ext_pl_biooracle = ggsave(file_out(!!ext_pl_temp_file),
                                plot = ext_pl_biooracle,
                                units = "cm",
-                               width = 8,
-                               height = 6,
-                               dpi = "screen"
+                               width = 16, #widescreen
+                               height = 9,
+                               dpi = "screen",
+                               scale = 10
                                )
 #
          )
