@@ -274,7 +274,7 @@ pl <- drake::drake_plan(
 #
          #plotting a bit
          ext_pl = plot_extents(marine_map, env_extent),
-         saved_ext_pl = ggsave(file_out(!!exp_pl_map_file),
+         saved_ext_pl = ggsave(file_out(!!ext_pl_map_file),
                                plot = ext_pl,
                                units = "cm",
                                width = 8,
