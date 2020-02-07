@@ -138,7 +138,7 @@ pl <- drake::drake_plan(
                pred = list(),
                env_vars = c("depth", "temp", "nitrate", "silicate", "chlo", "iron",  "salinity", "curvel"),
                env_modes = c("min", "max", "mean", "range"),
-               spatial_vars =  c("lat", "lon"),
+               spatial_vars =  c("lon", "lat"),
                env_id_col = "env_id",
                bio_oracle_str_template = "BO2_%s%s_ss",
                env_res = 1/12,
