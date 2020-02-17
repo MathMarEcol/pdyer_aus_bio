@@ -179,7 +179,7 @@ ext_pl_map_file <- here::here("outputs", "extents.png")
 
 pl <- drake::drake_plan(
                ##parameters
-               epi_depth = 200,
+               epi_depth = 400,
                freq_range = c(0.05, 1),
                min_occurrence = 6,
                cov_min = 1.0,
