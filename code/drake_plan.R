@@ -86,7 +86,7 @@ foc_cov_filter <- function(surv_env,
                            sp_names,
                            freq_range,
                            cov_min,
-                           min_occurrence,
+                           min_occurrence
                            ){
 
 surv_sp_freq <- surv_env %>% dplyr::select(sp_names) %>%
