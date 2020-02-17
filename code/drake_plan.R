@@ -82,6 +82,40 @@ align_env_samp <- function(surv,
   return(surv_env)
 }
 
+foc_cov_filter <- function(surv_env,
+                           sp_names
+                           ){
+
+surv_sp_freq <- surv_env %>% dplyr::select(sp_names) %>%
+      dplyr::summarise_all(
+               function(x){
+                 sum(x != 0)/length(x)
+               }
+             ) %>%
+        tidyr::gather( key = "species", value = "freq")
+
+surv_sp_occ <- surv_env %>% dplyr::select(sp_names) %>%
+    dplyr::summarise_all(
+             function(x){
+               sum(x != 0)
+             }
+           ) %>%
+    tidyr::gather( key = "species", value = "occ")
+
+surv_sp_cov <- surv_env %>% dplyr::select(sp_names) %>%
+    dplyr::summarise_all(
+             function(x){
+               sd(x)/mean(x)
+             }
+           ) %>%
+    tidyr::gather( key = "species", value = "cov")
+
+
+surv_sp_f_cov <- inner_join(surv_sp_freq, surv_sp_cov, by = "species")
+surv_sp_f_cov_occ <- inner_join(surv_sp_f_cov, surv_sp_occ, by = "species")
+
+}
+
 env_aus_eez <- function(bio_oracle_cache,
                         env_vars,
                         env_modes,
@@ -355,9 +389,10 @@ pl <- drake::drake_plan(
          ),
          ##Frequency of occurrence and coefficient of variance 
          surv_sp_keep = target(
-           foc_cov_filter(),
+           foc_cov_filter(surv_env, sp_names),
            transform = map(
              surv_env,
+             sp_names,
              .id = names
            )
          ),
