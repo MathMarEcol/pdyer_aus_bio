@@ -31,6 +31,57 @@ remove_meso <- function(surv,
   dplyr::filter(surv, SAMPLE_DEPTH < depth | is.na(SAMPLE_DEPTH))
 }
 
+clean_sp_names <- function(surv) {
+  surv %>%
+    dplyr::filter(Z_TYPE != "No taxa") %>%
+    dplyr::mutate(SPECIES = stringr::str_replace(SPECIES, " ", "_")) %>%
+    dplyr::select(SPECIES) %>%
+    dplyr::distinct(SPECIES) %>%
+    dplyr::pull(SPECIES)
+}
+
+surv_to_wide <- function(surv){
+  surv %>%
+    dplyr::group_by_at(1:7) %>%
+    dplyr::summarise(ABUNDANCE_M3 = sum(ABUNDANCE_M3)) %>%
+    dplyr::ungroup() %>%
+    ##First, replace spaces in species names with underscore
+    dplyr::mutate(SPECIES = stringr::str_replace(SPECIES, " ", "_")) %>%
+    tidyr::spread(key = SPECIES, value = ABUNDANCE_M3, fill = 0) %>%
+    ##May need a column rename here
+    dplyr::mutate(No_taxa = NULL, 
+                  SAMPLE_DEPTH = NULL, 
+                  Z_TYPE = NULL, 
+                  PROJECT_ID = NULL,
+                  SAMPLE_DATE = NULL)
+}
+
+env_round_label <- function(env_data,
+                            spatial_vars,
+                            env_res,
+                            env_offset,
+                            env_id_col){
+  env_round <- rphildyerphd::align_sp(env_data, spatial_cols = spatial_vars,
+                                    res = env_res, offset = env_offset,
+                                    fun = mean)
+  env_round[[env_id_col]] <- 1:nrow(env_round)
+  return(env_round)
+}
+
+align_env_samp <- function(surv,
+                           spatial_vars,
+                           env_res,
+                           env_offset,
+                           env_round){
+                                        #only keep sites in both env_round and surv_round
+  surv %>% dplyr::rename(lat = LATITUDE, lon = LONGITUDE) %>%
+    rphildyerphd::align_sp(spatial_cols = spatial_vars, 
+                           res = env_res, offset = env_offset,
+                           fun = mean) %>%
+    merge(env_round, by = spatial_vars) -> surv_env
+  return(surv_env)
+}
+
 env_aus_eez <- function(bio_oracle_cache,
                         env_vars,
                         env_modes,
@@ -141,7 +192,6 @@ pl <- drake::drake_plan(
                spatial_vars =  c("lon", "lat"),
                env_id_col = "env_id",
                bio_oracle_str_template = "BO2_%s%s_ss",
-               env_res = 1/12,
                env_offset = 0,
                max_depth = 1500,
                regrid_resolution = 1/12, #in lat lon degrees, use 1/integer fraction for proper rastering later,
@@ -217,6 +267,11 @@ pl <- drake::drake_plan(
                env_logged = env_log_transform(env_data = env_complete, env_log = env_log),
                env_clipped = env_clip_extremes(env_data = env_logged, env_limits = env_limits),
                env_final = env_name_spatial(env_data = env_clipped, spatial_vars = spatial_vars),
+               env_round = env_round_label(env_data = env_final,
+                                           spatial_vars = spatial_vars,
+                                           env_res = regrid_resolution,
+                                           env_offset = env_offset,
+                                           env_id_col = env_id_col),
          ##here I have referred to a variable defined above, copepod_csv
          ##copepod_csv is just a string, which will be passed to read_csv.
          ##first, I wrap the string inside file_in, so that drake knows it is a filename,
@@ -269,6 +324,43 @@ pl <- drake::drake_plan(
            )
          ),
 #
+         ##Extract species names
+         sp_names = target(
+           clean_sp_names(surv_epi),
+           transform = map(
+             surv_epi,
+             .id = names
+           )
+         ),
+         ##Convert to wide format
+         surv_wide = target(
+           surv_to_wide(surv_epi),
+           transform = map(
+             surv_epi,
+             .id = names
+           )
+         ),
+#
+         ##Align env and samples
+         surv_env = target(
+           align_env_samp(surv_wide,
+                          spatial_vars = spatial_vars,
+                          env_res = regrid_resolution,
+                          env_offset = env_offset,
+                          env_round = env_round),
+           transform = map(
+             surv_wide,
+             .id = names
+           )
+         ),
+         ##Frequency of occurrence and coefficient of variance 
+         surv_sp_keep = target(
+           foc_cov_filter(),
+           transform = map(
+             surv_env,
+             .id = names
+           )
+         ),
          #Keep going, but get some outputs eventually
 #
 #
