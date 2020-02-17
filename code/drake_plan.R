@@ -127,7 +127,8 @@ surv_sp_f_cov_occ <- inner_join(surv_sp_f_cov, surv_sp_occ, by = "species")
 
 }
 
-filter_surv_env <- function(surv_sp_names,
+filter_surv_env <- function(surv_env,
+                            surv_sp_names,
                             env_id_col,
                             spatial_vars,
                             env_vars){
@@ -420,7 +421,8 @@ pl <- drake::drake_plan(
            )
          ),
          surv_env_filter = target(
-           filter_surv_env(surv_sp_keep,
+           filter_surv_env(surv_env,
+                           surv_sp_keep,
                            env_id_col = env_id_col,
                            spatial_vars = spatial_vars, 
                            env_vars = env_vars
