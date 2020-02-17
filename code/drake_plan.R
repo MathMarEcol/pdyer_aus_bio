@@ -452,9 +452,9 @@ pl <- drake::drake_plan(
          ),
          ##combined GF for copepods
          copepod_combined_gf = target(
-           gradientForest::combinedGradientForest(),
+           gradientForest::combinedGradientForest(surv_gf),
            transform = combine(surv_gf)
-         )
+         ),
          #Keep going, but get some outputs eventually
 #
 #
