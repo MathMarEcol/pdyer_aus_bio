@@ -83,7 +83,10 @@ align_env_samp <- function(surv,
 }
 
 foc_cov_filter <- function(surv_env,
-                           sp_names
+                           sp_names,
+                           freq_range,
+                           cov_min,
+                           min_occurrence,
                            ){
 
 surv_sp_freq <- surv_env %>% dplyr::select(sp_names) %>%
@@ -114,8 +117,23 @@ surv_sp_cov <- surv_env %>% dplyr::select(sp_names) %>%
 surv_sp_f_cov <- inner_join(surv_sp_freq, surv_sp_cov, by = "species")
 surv_sp_f_cov_occ <- inner_join(surv_sp_f_cov, surv_sp_occ, by = "species")
 
+  surv_sp_names  <- surv_sp_f_cov_occ %>% dplyr::filter(freq >= freq_range[1] &
+                         freq <= freq_range[2] &
+                         cov >= cov_min &
+                         occ > min_occurrence) %>%
+      dplyr::pull(species)
+
+  return(surv_sp_names)
+
 }
 
+filter_surv_env <- function(surv_sp_names,
+                            env_id_col,
+                            spatial_vars,
+                            env_vars){
+  surv_env_filter <- surv_env %>%
+    dplyr::select(!!env_id_col, !!spatial_vars, !!env_vars, !!surv_sp_names,)
+}
 env_aus_eez <- function(bio_oracle_cache,
                         env_vars,
                         env_modes,
@@ -387,12 +405,48 @@ pl <- drake::drake_plan(
              .id = names
            )
          ),
-         ##Frequency of occurrence and coefficient of variance 
+         ##Filter by Frequency of occurrence and coefficient of variance 
          surv_sp_keep = target(
-           foc_cov_filter(surv_env, sp_names),
+           foc_cov_filter(surv_env = surv_env,
+                          sp_names = sp_names,
+                          freq_range = freq_range,
+                          cov_min = cov_min,
+                          min_occurrence = min_occurrence
+           ),
            transform = map(
              surv_env,
              sp_names,
+             .id = names
+           )
+         ),
+         surv_env_filter = target(
+           filter_surv_env(surv_sp_keep,
+                           env_id_col = env_id_col,
+                           spatial_vars = spatial_vars, 
+                           env_vars = env_vars
+           ),
+           transform = map(
+             surv_sp_keep,
+             .id = names
+           )
+         ),
+         ##Fit GF models
+         surv_gf = target(
+           gradientForest::gradientForest(
+                             as.data.frame(surv_env_filter),
+                             predictor.vars = env_vars,
+                             response.vars = surv_sp_keep,
+                             ntree = gf_trees,
+                             compact = T,
+                             nbin = gf_bins,
+                             transform = NULL,
+                             corr.threshold = gf_corr_thres,
+                             maxLevel = floor(log2(length(.y)*0.368/2)),
+                             trace = TRUE
+                           ),
+           transform = map(
+             surv_env_filter,
+             surv_sp_keep,
              .id = names
            )
          ),
