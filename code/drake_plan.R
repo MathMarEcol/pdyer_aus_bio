@@ -12,6 +12,7 @@ library(readr)
 library(tidyverse)
 library(sf)
 library(raster)
+library(gradientForest)
 ##Data
 library(sdmpredictors)
 ##Plots
