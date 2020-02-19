@@ -532,11 +532,11 @@ pl <- drake::drake_plan(
            )
          ),
          surv_env_filter = target(
-           filter_surv_env(surv_env,
-                           surv_sp_keep,
+           filter_surv_env(surv_env = surv_env,
+                           surv_sp_names = surv_sp_keep,
                            env_id_col = env_id_col,
                            spatial_vars = spatial_vars,
-                           env_vars = names(env_round)
+                           env_vars = base::names(env_round)
            ),
            transform = map(
              surv_env,
