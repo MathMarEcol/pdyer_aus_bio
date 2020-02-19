@@ -556,7 +556,7 @@ pl <- drake::drake_plan(
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
-                             maxLevel = floor(log2(length(.y) * 0.368 / 2)),
+                             maxLevel = floor(log2(length(surv_sp_keep) * 0.368 / 2)),
                              trace = TRUE
                            ),
            transform = map(
