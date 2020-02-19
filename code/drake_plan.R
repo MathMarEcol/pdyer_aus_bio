@@ -548,7 +548,7 @@ pl <- drake::drake_plan(
          surv_gf = target(
            gradientForest::gradientForest(
                              as.data.frame(surv_env_filter),
-                             predictor.vars = names(env_round),
+                             predictor.vars = base::names(env_round),
                              response.vars = surv_sp_keep,
                              ntree = gf_trees,
                              compact = T,
