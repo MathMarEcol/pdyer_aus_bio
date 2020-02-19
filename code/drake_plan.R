@@ -211,8 +211,15 @@ env_name_spatial <- function(env_data, spatial_vars) {
   return(env_data)
 }
 
-plot_extents <- function(marine_map, env_extent) {
-  ggplot(marine_map, aes(x = x, y = y)) +
+plot_extents <- function(marine_map,
+                         env_extent,
+                         out_file,
+                         units = "cm",
+                         width = 16,
+                         height = 9,
+                         dpi = 300
+                         ) {
+  ext_pl <- ggplot(marine_map, aes(x = x, y = y)) +
     geom_sf(data = marine_map,
             inherit.aes = FALSE,
             color = "black",
@@ -220,10 +227,27 @@ plot_extents <- function(marine_map, env_extent) {
     coord_sf(xlim = env_extent$x, ylim = env_extent$y) +
     theme_tufte()
 
+  ggsave(out_file,
+         plot = ext_pl,
+         units = units,
+         width = width, #widescreen
+         height = height,
+         dpi = dpi
+         )
 }
 
-plot_temp <- function(env_data, spatial_vars, marine_map, env_extent) {
-  ggplot(env_data[, c(spatial_vars, "BO2_tempmean_ss")],
+plot_temp <- function(env_data,
+                      spatial_vars,
+                      marine_map,
+                      env_extent,
+                      out_file,
+                      units = "cm",
+                      width = 16,
+                      height = 9,
+                      dpi = 300
+                      ) {
+
+  ext_pl_biooracle <- ggplot(env_data[, c(spatial_vars, "BO2_tempmean_ss")],
          aes(x = lon, y = lat, fill = BO2_tempmean_ss)) +
     geom_raster() +
     geom_sf(data = marine_map, inherit.aes = FALSE,
@@ -231,6 +255,15 @@ plot_temp <- function(env_data, spatial_vars, marine_map, env_extent) {
     labs(fill = "Mean ss Temp") +
     coord_sf(xlim = env_extent$x, ylim = env_extent$y) +
     theme_tufte()
+
+  ggsave(out_file,
+    plot = ext_pl_biooracle,
+    units = units,
+    width = width, #widescreen
+    height = height,
+    dpi = dpi
+  )
+
 }
 
 ## state<-rutilities::track_all_states()
@@ -574,30 +607,19 @@ pl <- drake::drake_plan(
 #
 #
          #plotting a bit
-         ext_pl = plot_extents(marine_map, env_extent),
-         saved_ext_pl = ggsave(file_out(!!ext_pl_map_file),
-                               plot = ext_pl,
-                               units = "cm",
-                               width = 16, #widescreen
-                               height = 9,
-                               dpi = 300,
-                               scale = 1
+         ext_pl = plot_extents(marine_map,
+                               env_extent,
+                               file_out(!!ext_pl_map_file)
                                ),
 #
          ext_pl_biooracle = plot_temp(env_final,
                                       spatial_vars,
                                       marine_map,
-                                      env_extent),
-         saved_ext_pl_biooracle = ggsave(file_out(!!ext_pl_temp_file),
-                               plot = ext_pl_biooracle,
-                               units = "cm",
-                               width = 16, #widescreen
-                               height = 9,
-                               dpi = 300,
-                               scale = 1
-                               )
-                                        #
+                                      env_extent,
+                                      file_out(!!ext_pl_temp_file)
+                                      ),
          )
+
 
 r_seed <- 20200219
 #' Make
