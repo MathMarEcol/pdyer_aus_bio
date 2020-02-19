@@ -137,7 +137,7 @@ filter_surv_env <- function(surv_env,
                             spatial_vars,
                             env_vars) {
   surv_env_filter <- surv_env %>%
-    dplyr::select(!!env_id_col, !!spatial_vars, !!env_vars, !!surv_sp_names,)
+    dplyr::select(!!env_id_col, !!spatial_vars, !!env_vars, !!surv_sp_names)
 }
 env_aus_eez <- function(bio_oracle_cache,
                         env_vars,
@@ -535,8 +535,8 @@ pl <- drake::drake_plan(
            filter_surv_env(surv_env,
                            surv_sp_keep,
                            env_id_col = env_id_col,
-                           spatial_vars = spatial_vars, 
-                           env_vars = env_vars
+                           spatial_vars = spatial_vars,
+                           env_vars = names(env_round)
            ),
            transform = map(
              surv_sp_keep,
@@ -547,7 +547,7 @@ pl <- drake::drake_plan(
          surv_gf = target(
            gradientForest::gradientForest(
                              as.data.frame(surv_env_filter),
-                             predictor.vars = env_vars,
+                             predictor.vars = names(env_round),
                              response.vars = surv_sp_keep,
                              ntree = gf_trees,
                              compact = T,
