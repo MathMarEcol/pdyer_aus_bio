@@ -599,17 +599,18 @@ pl <- drake::drake_plan(
                                         #
          )
 
+r_seed <- 20200219
 #' Make
 if (!interactive()) {
-   drake::make(pl)
+   drake::make(pl, seed = r_seed)
 }
 
-drake::vis_drake_graph(drake_config(pl),
+drake::vis_drake_graph(drake_config(pl, seed = r_seed),
                        file = "../outputs/drake_graph.html",
                        selfcontained = TRUE,
                        hover = TRUE)
-drake::sankey_drake_graph(drake_config(pl),
+drake::sankey_drake_graph(drake_config(pl, seed = r_seed),
                           file = "../outputs/drake_graph_sankey.html",
                           selfcontained = TRUE)
 ggsave(filename = "../outputs/drake_ggplot.png",
-       drake::drake_ggraph(drake_config(pl)))
+       drake::drake_ggraph(drake_config(pl, seed = r_seed)))
