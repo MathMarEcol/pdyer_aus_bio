@@ -460,13 +460,13 @@ pl <- drake::drake_plan(
                              ##can be hard coded or targets, but .id must
                              ##be assigned another map() param
                        transform = map(
-                         names = c("nrs",
+                         surv_names = c("nrs",
                                    "cpr",
                                    "mkinnon",
                                    "goc",
                                    "nyan",
                                    "anita"),
-                         .id = names,
+                         .id = surv_names,
                          matching = list(nrs = "NRS",
                                          cpr = "CPR",
                                          mckinnon =
@@ -484,7 +484,7 @@ pl <- drake::drake_plan(
            remove_meso(surv, depth = epi_depth),
            transform = map(
              surv,
-             .id = names
+             .id = surv_names
            )
          ),
 #
@@ -493,7 +493,7 @@ pl <- drake::drake_plan(
            clean_sp_names(surv_epi),
            transform = map(
              surv_epi,
-             .id = names
+             .id = surv_names
            )
          ),
          ##Convert to wide format
@@ -501,7 +501,7 @@ pl <- drake::drake_plan(
            surv_to_wide(surv_epi),
            transform = map(
              surv_epi,
-             .id = names
+             .id = surv_names
            )
          ),
 #
@@ -514,7 +514,7 @@ pl <- drake::drake_plan(
                           env_round = env_round),
            transform = map(
              surv_wide,
-             .id = names
+             .id = surv_names
            )
          ),
          ##Filter by Frequency of occurrence and coefficient of variance
@@ -528,7 +528,7 @@ pl <- drake::drake_plan(
            transform = map(
              surv_env,
              sp_names,
-             .id = names
+             .id = surv_names
            )
          ),
          surv_env_filter = target(
@@ -541,7 +541,7 @@ pl <- drake::drake_plan(
            transform = map(
              surv_env,
              surv_sp_keep,
-             .id = names
+             .id = surv_names
            )
          ),
          ##Fit GF models
@@ -561,7 +561,7 @@ pl <- drake::drake_plan(
            transform = map(
              surv_env_filter,
              surv_sp_keep,
-             .id = names
+             .id = surv_names
            )
          ),
          ##combined GF for copepods
