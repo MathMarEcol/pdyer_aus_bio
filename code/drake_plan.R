@@ -539,6 +539,7 @@ pl <- drake::drake_plan(
                            env_vars = names(env_round)
            ),
            transform = map(
+             surv_env,
              surv_sp_keep,
              .id = names
            )
