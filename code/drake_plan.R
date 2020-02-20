@@ -287,7 +287,7 @@ gf_plot_wrapper <- function(gf_model,
 state_rds <- function(rds_path, yaml_path) {
   total_state <- rutilities::track_all_states()
   saveRDS(file = rds_path, object = total_state)
-  cat(yaml::as.yaml(state, line.sep = "\n", column.major = FALSE), file = yaml_path)
+  cat(yaml::as.yaml(total_state, line.sep = "\n", column.major = FALSE), file = yaml_path)
 }
 
 ## I am taking my code from here:
