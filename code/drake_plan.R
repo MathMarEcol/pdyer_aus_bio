@@ -266,9 +266,11 @@ plot_temp <- function(env_data,
 
 }
 
-## state<-rutilities::track_all_states()
-## seed <- 20190703
-## set.seed(seed)
+state_rds <- function(rds_path, yaml_path) {
+  total_state <- rutilities::track_all_states()
+  saveRDS(file = path, object = total_state)
+  cat(yaml::as.yaml(state, line.sep = "\n", column.major = FALSE), file = yaml_path)
+}
 
 ## I am taking my code from here:
 ## [[file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd][file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd]]
@@ -286,6 +288,8 @@ copepod_data <- here::here(
                       )
 ext_pl_temp_file <- here::here("outputs", "temps.png")
 ext_pl_map_file <- here::here("outputs", "extents.png")
+state_rds_file <- here::here("outputs", "state.rds")
+state_yaml_file <- here::here("outputs", "state.yaml")
 
 pl <- drake::drake_plan(
                ##parameters
@@ -618,6 +622,8 @@ pl <- drake::drake_plan(
                                       env_extent,
                                       file_out(!!ext_pl_temp_file)
                                       ),
+         track_state = state_rds(file_out(!!state_rds_file),
+                                 file_out(!!state_yaml_file))
          )
 
 
