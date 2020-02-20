@@ -280,7 +280,7 @@ gf_plot_wrapper <- function(gf_model,
       width = width,
       height = height,
       res = dpi)
-  plot(gf_model, plot.type = plot_type, imp.vars = names(importance(gf_fit))[vars])
+  plot(gf_model, plot.type = plot_type, imp.vars = names(importance(gf_model))[vars])
   dev.off()
 }
 
