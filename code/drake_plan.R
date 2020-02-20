@@ -266,6 +266,24 @@ plot_temp <- function(env_data,
 
 }
 
+gf_plot_wrapper <- function(gf_model,
+                            plot_type,
+                            vars,
+                            out_file,
+                            units = "cm",
+                            width = 16,
+                            height = 9,
+                            dpi = 300
+) {
+  png(filename = out_file,
+      units = units,
+      width = width,
+      height = height,
+      res = dpi)
+  plot(gf_model, plot.type = plot_type, imp.vars = names(importance(gf_fit))[vars])
+  dev.off()
+}
+
 state_rds <- function(rds_path, yaml_path) {
   total_state <- rutilities::track_all_states()
   saveRDS(file = path, object = total_state)
@@ -290,6 +308,11 @@ ext_pl_temp_file <- here::here("outputs", "temps.png")
 ext_pl_map_file <- here::here("outputs", "extents.png")
 state_rds_file <- here::here("outputs", "state.rds")
 state_yaml_file <- here::here("outputs", "state.yaml")
+
+pl_gf_range_file <- here::here("outputs", "gf_range.png")
+pl_gf_density_file <- here::here("outputs", "gf_density.png")
+pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
+pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
 
 pl <- drake::drake_plan(
                ##parameters
@@ -623,7 +646,23 @@ pl <- drake::drake_plan(
                                       file_out(!!ext_pl_temp_file)
                                       ),
          track_state = state_rds(file_out(!!state_rds_file),
-                                 file_out(!!state_yaml_file))
+                                 file_out(!!state_yaml_file)),
+         plot_range = gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_range_file)),
+         plot_density = gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Predictor.Density",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_density_file)),
+         plot_cumimp = gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_cumimp_file)),
+         plot_perf = gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_perf_file))
          )
 
 
