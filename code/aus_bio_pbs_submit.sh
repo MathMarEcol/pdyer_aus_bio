@@ -13,12 +13,17 @@ mkdir -p $TMPDIR/Q1215
 mkdir -p $TMPDIR/Q1216
 
 #Have to carefully make sure all files make it over
+mkdir -p $TMPDIR/Q1215/BioORACLE
+rsync -irc ../../../../Q1215/BioORACLE $TMPDIR/Q1215/BioORACLE
 mkdir -p $TMPDIR/Q1215/AusCPR
 rsync -irc ../../../../Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
+mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
+rsync -irc ../../../../Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 rsync -irc ./drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
-
+#Set up the output directory
+mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Then run from the local disk
 cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
@@ -35,4 +40,4 @@ Rscript drake_plan.R
 
 #Recover the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $PBS_O_WORKDIR
-rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR../outputs/
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR/../outputs/
