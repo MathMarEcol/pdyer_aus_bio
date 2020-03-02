@@ -673,11 +673,11 @@ if (!interactive()) {
 }
 
 drake::vis_drake_graph(drake_config(pl, seed = r_seed),
-                       file = "../outputs/drake_graph.html",
+                       file = here::here("outputs", "drake_graph.html"),
                        selfcontained = TRUE,
                        hover = TRUE)
 drake::sankey_drake_graph(drake_config(pl, seed = r_seed),
-                          file = "../outputs/drake_graph_sankey.html",
+                          file = here::here("outputs", "drake_graph_sankey.html"),
                           selfcontained = TRUE)
-ggsave(filename = "../outputs/drake_ggplot.png",
+ggsave(filename = here::here("outputs", "drake_ggplot.png"),
        drake::drake_ggraph(drake_config(pl, seed = r_seed)))

@@ -8,6 +8,9 @@
 #by default, PBS begins in the home dir, but the env var $PBS_O_WORKDIR contains the path to this script.
 #Assuming that this job was called from /???30days???/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code
 cd $PBS_O_WORKDIR
+#capture current git hash for use later
+git_hash=$(git rev-parse --short HEAD)
+date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
 #For best performance, copy all needed files to the node local disk. This may break when drake submits jobs for me.
 mkdir -p $TMPDIR/Q1215
@@ -48,9 +51,15 @@ module load aus_bio_module
 Rscript $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 
 
-#Recover the outputs
+#Store the drake cache
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $PBS_O_WORKDIR
+#Store the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR/../outputs/
+#copy outputs to an archive
+mkdir -p ${PBS_O_WORKDIR}/../outputs_history
+for file in $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
+    cp "$file" "${PBS_O_WORKDIR}/../outputs_history/${date_run}_${git_hash}_${file##*/}"
+done
 
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMPDIR/Q1215/BioORACLE $PBS_O_WORKDIR/../../../../Q1215/BioORACLE
