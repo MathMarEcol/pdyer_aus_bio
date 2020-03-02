@@ -45,3 +45,6 @@ Rscript $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 #Recover the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $PBS_O_WORKDIR
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR/../outputs/
+
+#The downloaded variables from bioORACLE are also worth saving
+rsync -irc $TMPDIR/Q1215/BioORACLE $PBS_O_WORKDIR/../../../../Q1215/BioORACLE
