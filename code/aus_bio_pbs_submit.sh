@@ -35,3 +35,4 @@ Rscript drake_plan.R
 
 #Recover the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $PBS_O_WORKDIR
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR../outputs/
