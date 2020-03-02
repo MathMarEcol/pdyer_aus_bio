@@ -12,10 +12,10 @@ setenv("SINGULARITY_BIND", os.getenv("TMPDIR"))
 
 load("singularity/3.5.0")
 -- Run Rscript on stdin
-set_alias("Rscript","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/b97n2ipzfsafzjcykcdnm6jqmfn5dfgi-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript")
-set_alias("R","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/b97n2ipzfsafzjcykcdnm6jqmfn5dfgi-docker-image-r-singularity-aus_bio_singularity_conversion.sif R --vanilla" )
-set_alias("drake_build","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/b97n2ipzfsafzjcykcdnm6jqmfn5dfgi-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript --vanilla" )
-set_alias("shell","/sw/Containers/singularity/bin/run_singularity shell /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/b97n2ipzfsafzjcykcdnm6jqmfn5dfgi-docker-image-r-singularity-aus_bio_singularity_conversion.sif " )
+set_alias("Rscript","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript")
+set_alias("R","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif R --vanilla" )
+set_alias("drake_build","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript --vanilla" )
+set_alias("shell","/sw/Containers/singularity/bin/run_singularity shell /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif " )
 help([[
   Modulefile to provide a bespoke R package set and system library.
   The application runs within a NixOS based container.
