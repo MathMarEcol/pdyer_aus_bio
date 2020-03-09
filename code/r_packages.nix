@@ -85,8 +85,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         SOAR
         bigmemory
         ff
-        # clustermq #currently breaking
-        # rzmq
+        clustermq 
         (Rmpi.overrideDerivation(attrs:{
           configureFlags  = ["--with-Rmpi-include=${pkgs.openmpi}/include"
               "--with-Rmpi-libpath=${pkgs.openmpi}/lib"
