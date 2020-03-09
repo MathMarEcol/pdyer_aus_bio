@@ -12,7 +12,7 @@
   # Commit hash for nixos-unstable as of 2020-01-20
   # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
   ref = "refs/heads/nixos-unstable"; #using bleeding edge packages
-  rev = "90441b4b47fc7280de6a5bd1a228017caaa0f97f";#fixed revision, latest release as of 2020-01-20
+  rev = (import ./nixpkgs_rev.nix);
 	}) { #the attributes to import
 	overlays = [ 
 		(import /vmshare/cust-nix/Rshell/packages/rpackages_overlay.nix)
