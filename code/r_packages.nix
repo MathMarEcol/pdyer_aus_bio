@@ -8,6 +8,8 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         phil_rutilities
         phil_rmethods
         rphildyerphd
+        gfbootstrap
+        castcluster
 
         #Image processing
         EBImage
@@ -38,6 +40,10 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         interp
         akima
         mvpart
+        clusterCrit
+        Hotelling
+        ICSNP
+        rrcov
  
 
         #data sources
@@ -62,6 +68,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         plotly
         RColorBrewer
         R_devices
+        quantreg
 
         #Data manipulation
         tidyverse
@@ -101,6 +108,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         archivist #store results, could be important for tracking outputs in JSON
         packrat
         renv
+        callr
 
         fst
         feather
@@ -115,10 +123,10 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         knitr
         microbenchmark
         assertthat
-        testthat
-        RUnit
         pryr
         profvis
+        proftools
+        profr
         caTools
         qwraps2
         skimr

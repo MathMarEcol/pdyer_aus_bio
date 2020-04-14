@@ -13,6 +13,8 @@ library(tidyverse)
 library(sf)
 library(raster)
 library(gradientForest)
+library(gfbootstrap)
+library(castcluster)
 ##Data
 library(sdmpredictors)
 ##Plots
