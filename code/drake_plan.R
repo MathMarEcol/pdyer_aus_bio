@@ -779,13 +779,12 @@ if (!interactive()) {
   options(
     clustermq.scheduler = "PBS",
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-    clustermq.template = "pbs_clustermq.tmpl"
+    clustermq.template = here::here("code", "pbs_clustermq.tmpl")
 )
    drake::make(pl, seed = r_seed,
                parallelism = "clustermq",
                jobs = 6, ## 6 jobs, for 6 surveys
-               console_log_file = here::here("outputs", "drake_log.log"),
-               template = list()
+               console_log_file = here::here("outputs", "drake_log.log")
                )
 }
 
