@@ -213,6 +213,42 @@ env_name_spatial <- function(env_data, spatial_vars) {
   return(env_data)
 }
 
+env_add_x_row <- function(env_data) {
+  cbind(x_row = seq.int(1, nrow(env_data)), env_data)
+}
+
+env_merge_spatial <- function(env_predicted, env_spatial, spatial_vars) {
+  assertthat::assert_that(assertthat::has_name(env_predicted, "x_row"))
+  assertthat::assert_that(assertthat::has_name(env_spatial, spatial_vars))
+
+  env_spatial_x_row <- cbind(x_row = seq.int(1, nrow(env_data)), env_spatial)
+  return(merge(env_predicted, env_spatial_x_row[, c("x_row", spatial_vars)]))
+}
+
+env_wide_list <- function(env_data){
+  assertthat::assert_that("predict.combinedBootstrapGF" %in% class(env_data))
+  type_names <- unique(env_data$type)
+  env_wide <- lapply(type_names, function(ty, env_data) {
+    tmp <- tidyr::pivot_wider(env_data[env_data$type == ty, c("var", "x_row", "y") ], names_from = "var", values_from = "y")
+    tmp <- tmp[order(tmp$x_row), ]
+    return(tmp)
+  }, env_data = env_data)
+  names(env_wide) <- type_names
+}
+
+cast_compact_stats <- function(aff_thres, sim_mat) {
+  cast_combi <- castcluster::cast_alg(sim_mat = sim_mat, aff_thres = aff_thres)
+  cast_combi_sta <- castcluster::cast_stabilize(cast_obj = cast_combi, sim_mat = sim_mat, aff_thres = aff_thres)
+  cast_combi_com <- castcluster::cast_compact(cast_ob = cast_combi_sta, sim_mat = sim_mat, aff_thres = aff_thres)
+
+  mem_mat <- castcluster::membership_mat(cast_combi_com)
+  h_com <- gfbootstrap::hubert_gamma(sim_mat, mem_mat, norm_z = TRUE)
+  k_com <- length(cast_combi_com)
+
+  stats <- data.frame(aff = aff_thres, type = "compact", norm_z = TRUE, h = h_com, k = k_com)
+  return(list(stats = stats, aff_thres = aff_thres, cast_compact = cast_combi_com))
+}
+
 plot_extents <- function(marine_map,
                          env_extent,
                          out_file,
@@ -268,6 +304,23 @@ plot_temp <- function(env_data,
 
 }
 
+ggsave_wrapper <- function(filename, plot
+                           units = "cm",
+                           width = 16,
+                           height = 9,
+                           dpi = 300,
+                           scale = 2
+                           ){
+  ggsave(filename =  filename,
+         plot = plot,
+         units = units,
+         width = width,
+         height = height,
+         dpi = dpi,
+         scale = scale
+         )
+}
+
 gf_plot_wrapper <- function(gf_model,
                             plot_type,
                             vars,
@@ -316,6 +369,9 @@ pl_gf_density_file <- here::here("outputs", "gf_density.png")
 pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
 pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
 
+pl_gfboot_cumimp_file <- here::here("outputs", "gfboot_cumimp.png")
+
+
 pl <- drake::drake_plan(
                ##parameters
                epi_depth = 200,
@@ -356,6 +412,8 @@ pl <- drake::drake_plan(
                gf_trees = 500,
                gf_bins = 201,
                gf_corr_thres = 0.5,
+               extrap = TRUE,
+               extrap_pow = 1/4,
                ##The following variables work better in log scale.
                ##If a variable is log transformed,
                ##clipping will take place on the log scale
@@ -514,10 +572,12 @@ pl <- drake::drake_plan(
                              ## Notice that variables passed to split_surv()
                              ##can come from all different places in
                              ##drake_plan().
-                             ##combined_copepod is another target matching
-                             ##is provided by the tranform = map(...) just
-                             ##below. within map(), .id is provided by another
-                             ##parameter from map() In the surv_epi target
+                             ##eg. combined_copepod is another target.
+                             ##
+                             ##matching is provided by the tranform = map(...)
+                             ##just below.
+                             ##within map(), .id is provided by another
+                             ##parameter from map(). In the surv_epi target
                              ##map(), .id is using the names object from
                              ##the surv target map(). So most map() params
                              ##can be hard coded or targets, but .id must
@@ -609,11 +669,11 @@ pl <- drake::drake_plan(
          ),
          ##Fit GF models
          surv_gf = target(
-           gradientForest::gradientForest(
+           gfbootstrap::bootstrapGradientForest(
                              as.data.frame(surv_env_filter),
                              predictor.vars = base::names(env_round),
                              response.vars = surv_sp_keep,
-                             ntree = gf_trees,
+                             nbootstrap = gf_trees,
                              compact = T,
                              nbin = gf_bins,
                              transform = NULL,
@@ -629,9 +689,48 @@ pl <- drake::drake_plan(
          ),
          ##combined GF for copepods
          copepod_combined_gf = target(
-           gradientForest::combinedGradientForest(surv_gf),
+           gfbootstrap::combinedBootstrapGF(surv_gf,
+                                            nbin = gf_bins,
+                                            n_samp = gf_trees),
            transform = combine(surv_gf)
          ),
+
+
+         ##Transform the environment. No need for target(), I am not mapping or combining
+         env_trans = predict.combinedGradientForest(object = copepod_combined_gf,
+                                          newdata = env_round,
+                                          type = c("mean", "variance", "points"),
+                                          extrap = extrap,
+                                          extrap_pow = extrap_pow),
+
+
+         ##Hotellings p-value similiarity matrix, using diagonal covariance
+         env_trans_wide = env_wide_list(env_trans),
+
+         p_mat_diag_cov = rmethods:::hotellings_bulk(
+                              means = env_trans_wide$mean[, env_vars],
+                              res_sq = env_trans_wide$variance[, env_vars]
+                            ),
+
+         ##cluster, using CAST
+         aff_sweep = seq(0.05, 0.95, 0.05),
+         cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
+                                                sim_mat = p_mat_diag_cov),
+           transform = map(.id = aff_sweep,
+                           aff_sweep)
+         ),
+
+         ##add lat and lon to env_trans_wide
+         ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
+
+
+         ##TODO hotellings with point clouds
+
+
+         ##Cluster the combined copepods
+         
+         
+
          #Keep going, but get some outputs eventually
 #
 #
@@ -649,19 +748,24 @@ pl <- drake::drake_plan(
                                       ),
          track_state = state_rds(file_out(!!state_rds_file),
                                  file_out(!!state_yaml_file)),
-         plot_range = gf_plot_wrapper(gf_model = copepod_combined_gf,
+         save_copepod_gfboot_cumimp = ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
+                                           plot = gg_combined_bootstrapGF(copepod_combined_gf,
+                                                                          n_curves = 30,
+                                                                          debug = FALSE)
+                                       )
+         plot_range = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_range_file)),
-         plot_density = gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_density = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Density",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_density_file)),
-         plot_cumimp = gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_cumimp = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Cumulative.Importance",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_cumimp_file)),
-         plot_perf = gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_perf = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Performance",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_perf_file))
