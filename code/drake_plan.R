@@ -713,11 +713,10 @@ pl <- drake::drake_plan(
                             ),
 
          ##cluster, using CAST
-         aff_sweep = seq(0.05, 0.95, 0.25),
          cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
                                                 sim_mat = p_mat_diag_cov),
            transform = map(.id = aff_sweep,
-                           aff_sweep)
+                           aff_sweep = seq(0.05, 0.95, 0.25))
          ),
 
          ##add lat and lon to env_trans_wide
