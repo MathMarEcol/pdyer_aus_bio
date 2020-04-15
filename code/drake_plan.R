@@ -776,15 +776,15 @@ r_seed <- 20200219
 if (!interactive()) {
   
   options(
-    clustermq.scheduler = "PBS",
+    clustermq.scheduler = "pbs",
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
     clustermq.template = here::here("code", "pbs_clustermq.tmpl")
-)
-   drake::make(pl, seed = r_seed,
-               parallelism = "clustermq",
-               jobs = 6, ## 6 jobs, for 6 surveys
-               console_log_file = here::here("outputs", "drake_log.log")
-               )
+  )
+  drake::make(pl, seed = r_seed,
+              parallelism = "clustermq",
+              jobs = 6, ## 6 jobs, for 6 surveys
+              console_log_file = here::here("outputs", "drake_log.log")
+              )
 }
 
 drake::vis_drake_graph(drake_config(pl, seed = r_seed),
