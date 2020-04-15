@@ -1,6 +1,4 @@
 #' Libraries
-##Drake
-library(drake)
 ## Tidyverse
 library(purrr)
 ##Parallel
@@ -22,6 +20,8 @@ library(ggplot2)
 library(ggthemes)
 ##Support
 library(here)
+##Drake
+library(drake)
 
 #' Custom Functions
 split_surv <- function(combined_copepod,
