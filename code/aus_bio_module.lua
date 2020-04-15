@@ -10,12 +10,15 @@ whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR")) 
 
+singularity = "/sw/Containers/singularity/bin/run_singularity"
+aus_bio_sif = "/30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/gqy77ym0w7hzpk37h4y40mhknfprsz63-docker-image-r-singularity-aus_bio_singularity_conversion.sif"
+
 load("singularity/3.5.0")
 -- Run Rscript on stdin
-set_alias("Rscript","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript")
-set_alias("R","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif R --vanilla" )
-set_alias("drake_build","/sw/Containers/singularity/bin/run_singularity exec /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif Rscript --vanilla" )
-set_alias("shell","/sw/Containers/singularity/bin/run_singularity shell /30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/n7dqlaqjdvh7hqyvxm23fb3nslig47xk-docker-image-r-singularity-aus_bio_singularity_conversion.sif " )
+set_alias("Rscript", singularity .. " exec " .. aus_bio_sif ..  " Rscript")
+set_alias("R", singularity .. " exec " .. aus_bio_sif .. " R --vanilla" )
+set_alias("drake_build", singularity .. " exec " .. aus_bio_sif .. " Rscript --vanilla" )
+set_alias("shell", singularity .. " shell " .. aus_bio_sif )
 help([[
   Modulefile to provide a bespoke R package set and system library.
   The application runs within a NixOS based container.
