@@ -409,7 +409,7 @@ pl <- drake::drake_plan(
                ##has used this extent and the full sampling of the GoC is useful
                env_extent = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24)),
-               gf_trees = 500,
+               gf_trees = 50,
                gf_bins = 201,
                gf_corr_thres = 0.5,
                extrap = TRUE,
@@ -713,7 +713,7 @@ pl <- drake::drake_plan(
                             ),
 
          ##cluster, using CAST
-         aff_sweep = seq(0.05, 0.95, 0.05),
+         aff_sweep = seq(0.05, 0.95, 0.25),
          cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
                                                 sim_mat = p_mat_diag_cov),
            transform = map(.id = aff_sweep,
@@ -775,7 +775,18 @@ pl <- drake::drake_plan(
 r_seed <- 20200219
 #' Make
 if (!interactive()) {
-   drake::make(pl, seed = r_seed)
+  
+  options(
+    clustermq.scheduler = "PBS",
+                                        # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
+    clustermq.template = "pbs_clustermq.tmpl"
+)
+   drake::make(pl, seed = r_seed,
+               parallelism = "clustermq",
+               jobs = 6, ## 6 jobs, for 6 surveys
+               console_log_file = here::here("outputs", "drake_log.log"),
+               template = list()
+               )
 }
 
 drake::vis_drake_graph(drake_config(pl, seed = r_seed),
