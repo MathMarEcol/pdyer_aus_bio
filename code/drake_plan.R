@@ -304,7 +304,7 @@ plot_temp <- function(env_data,
 
 }
 
-ggsave_wrapper <- function(filename, plot
+ggsave_wrapper <- function(filename, plot,
                            units = "cm",
                            width = 16,
                            height = 9,
@@ -752,7 +752,7 @@ pl <- drake::drake_plan(
                                            plot = gg_combined_bootstrapGF(copepod_combined_gf,
                                                                           n_curves = 30,
                                                                           debug = FALSE)
-                                       )
+                                       ),
          plot_range = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
