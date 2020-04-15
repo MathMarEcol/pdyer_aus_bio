@@ -25,6 +25,7 @@ mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
 rsync -irc $PBS_O_WORKDIR/../../../../Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 rsync -irc $PBS_O_WORKDIR/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 #Set up the .here file for the "here" package.
 #here() expects to find a git repo or a Rproj file, but I want to minimise folder copying,

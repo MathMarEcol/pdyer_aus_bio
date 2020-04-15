@@ -776,7 +776,7 @@ r_seed <- 20200219
 if (!interactive()) {
   
   options(
-    clustermq.scheduler = "pbs",
+    clustermq.scheduler = "PBS",
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
     clustermq.template = here::here("code", "pbs_clustermq.tmpl")
   )
