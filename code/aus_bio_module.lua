@@ -10,10 +10,10 @@ whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR")) 
 
-singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/gqy77ym0w7hzpk37h4y40mhknfprsz63-docker-image-r-singularity-aus_bio_singularity_conversion.sif"
 
 load("singularity/3.5.0")
+singularity = "/sw/Containers/singularity/bin/run_singularity"
+aus_bio_sif = "/30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/gqy77ym0w7hzpk37h4y40mhknfprsz63-docker-image-r-singularity-aus_bio_singularity_conversion.sif"
 -- Run Rscript on stdin
 set_alias("Rscript", singularity .. " exec " .. aus_bio_sif ..  " Rscript")
 set_alias("R", singularity .. " exec " .. aus_bio_sif .. " R --vanilla" )
