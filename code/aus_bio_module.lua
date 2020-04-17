@@ -8,7 +8,7 @@ whatis("20200122 ")
 whatis("For more detail, run ")
 whatis(" ")
 
-setenv("SINGULARITY_BIND", os.getenv("TMPDIR")) 
+setenv("SINGULARITY_BIND", os.getenv("TMPDIR") .. ",/opt/pbs,/sw7") 
 
 
 load("singularity/3.5.0")
