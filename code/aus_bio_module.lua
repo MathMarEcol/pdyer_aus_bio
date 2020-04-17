@@ -9,7 +9,7 @@ whatis("For more detail, run ")
 whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR") .. ",/opt/pbs,/sw7") 
-
+setenv("SINGULARITY_PREPEND_PATH", "/opt/pbs/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
