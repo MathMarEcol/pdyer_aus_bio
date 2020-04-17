@@ -8,12 +8,12 @@
   ? import
     (builtins.fetchGit {
   # Descriptive name to make the store path easier to identify
-  name = "nixos-unstable-2020-03-09";
+  name = "nixos-unstable-2020-04-17";
   # url = https://github.com/nixos/nixpkgs-channels/;
   url = https://github.com/PhDyellow/nixpkgs/;
   # Commit hash for nixos-unstable as of 2020-01-20
   # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
-  ref = "refs/heads/f_rzmq"; #using bleeding edge packages
+  ref = "refs/heads/f_rzmq_unstable"; #using bleeding edge packages
   rev = (import ./nixpkgs_rev.nix);
 	})
     { #the attributes to import
