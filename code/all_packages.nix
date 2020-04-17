@@ -21,7 +21,7 @@ with pkgs;[
           # clang
           # rustc
           # cargo
-          binutils
+          # binutils
           coreutils
 
           pandoc #needed for rMarkdown
