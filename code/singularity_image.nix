@@ -29,28 +29,16 @@ let
 
 
 in
-with pkgs; dockerTools.buildImage { 
-  #breaks because buildImage evals extraCommands BEFORE mkdir $out
-  #in addition, the builder is isolated and I won't be able to look up the result
-  #make singularity
-
-  extraCommands = '' 
-###stuff to make layer singularity compatible here
-
-###
-'';
-  config = {
-    Cmd = [];
-    Entrypoint = [
-      (writeScript "entrypoint.sh" ''
-    #!${pkgs.stdenv.shell}
-  #    set -e
-    #!${pkgs.stdenv.shell}
-  #    exec /bin/bash
-  ''
-      )
-    ];
-  };
-  contents = allpackages;
+with pkgs; singularity-tools.buildImage { 
   name = name;
+  contents = allpackages;
+  diskSize = 1192;
+  runAsRoot = ''
+  mkdir -p /etc
+touch /etc/passwd
+touch /etc/group
+mkdir -p /.singularity.d
+mkdir -p /.singularity.d/env
+echo "export LC_ALL=C" >> /.singularity.d/env/91-environment.sh
+'';
   }

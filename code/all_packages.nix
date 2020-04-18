@@ -21,10 +21,10 @@ with pkgs;[
           # clang
           # rustc
           # cargo
-          binutils
+          # binutils
           coreutils
 
-          pandoc #needed for rMarkdown
+          # pandoc #needed for rMarkdown
 
           #gnutar
           #gzip
@@ -35,17 +35,18 @@ with pkgs;[
           #glibc
           #glibcLocales
 
-          which #explicity include which that R compiled against, rather than fall back to system `which``, for some reason the Rshell which and system which are not identical
+          # which #explicity include which that R compiled against, rather than fall back to system `which``, for some reason the Rshell which and system which are not identical
 
           #needs a shell in the container
-          bashInteractive
+          # bashInteractive
           
+          openssh
+          iputils
 
-
-          (rWrapper.override {
-              packages = [
-              ] ++ rpackages;
-            })
+          # (rWrapper.override {
+          #     packages = [
+          #     ] ++ rpackages;
+          #   })
 
           #don't need rStudio, won't run on server anyway
           # (rstudioWrapper.override {
