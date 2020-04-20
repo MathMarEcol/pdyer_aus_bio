@@ -21,7 +21,7 @@ with pkgs;[
           # clang
           # rustc
           # cargo
-          # binutils
+          binutils
           coreutils
 
           # pandoc #needed for rMarkdown
@@ -35,10 +35,12 @@ with pkgs;[
           #glibc
           #glibcLocales
 
-          # which #explicity include which that R compiled against, rather than fall back to system `which``, for some reason the Rshell which and system which are not identical
+          which #explicity include which that R compiled against, rather than fall back to system `which``, for some reason the Rshell which and system which are not identical
 
           #needs a shell in the container
           # bashInteractive
+          # bash_5
+  
           
           openssh
           iputils

@@ -774,9 +774,8 @@ pl <- drake::drake_plan(
 r_seed <- 20200219
 #' Make
 if (!interactive()) {
-  
   options(
-    clustermq.scheduler = "PBS",
+    clustermq.scheduler = "multicore",
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
     clustermq.template = here::here("code", "pbs_clustermq.tmpl")
   )

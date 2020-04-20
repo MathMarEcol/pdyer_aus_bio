@@ -32,7 +32,7 @@ in
 with pkgs; singularity-tools.buildImage { 
   name = name;
   contents = allpackages;
-  diskSize = 1192;
+  diskSize = 8192;
   runAsRoot = ''
   mkdir -p /etc
 touch /etc/passwd
@@ -40,5 +40,21 @@ touch /etc/group
 mkdir -p /.singularity.d
 mkdir -p /.singularity.d/env
 echo "export LC_ALL=C" >> /.singularity.d/env/91-environment.sh
+chmod ugo+x /.singularity.d/env/91-environment.sh
+touch /.singularity.d/env/94-appbase.sh
+chmod ugo+x /.singularity.d/env/94-appbase.sh
+
+mkdir -p /opt
+mkdir -p /scratch
+# mkdir -p /etc/localtime #this is actually a symlink to another directory. don't hardcode it
+# mkdir -p /etc/hosts #already done by singularity in version 3.5+
+mkdir -p /30days
+mkdir -p /90days
+mkdir -p /QRISdata
+mkdir -p /nvme
+mkdir -p /state/partition1
+
+mkdir -p /bin
+ln -s ${runtimeShell} /bin/bash
 '';
   }
