@@ -19,6 +19,7 @@
     { #the attributes to import
 	overlays = [ 
 		(import /vmshare/cust-nix/Rshell/packages/rpackages_overlay.nix)
+   (import /vmshare/cust-nix/singularity/singularity_overlay.nix)
 	];
   }
 }:
@@ -32,11 +33,13 @@ in
 with pkgs; singularity-tools.buildImage { 
   name = name;
   contents = allpackages;
-  diskSize = 8192;
+  diskSize = 12192;
   runAsRoot = ''
   mkdir -p /etc
 touch /etc/passwd
+echo "root:x:0:0:System administrator:/root:/bin/sh" > /etc/passwd
 touch /etc/group
+echo "root:x:0:" > /etc/group
 mkdir -p /.singularity.d
 mkdir -p /.singularity.d/env
 echo "export LC_ALL=C" >> /.singularity.d/env/91-environment.sh
