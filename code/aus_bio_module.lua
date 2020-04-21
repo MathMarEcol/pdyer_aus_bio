@@ -8,13 +8,14 @@ whatis("20200122 ")
 whatis("For more detail, run ")
 whatis(" ")
 
-setenv("SINGULARITY_BIND", os.getenv("TMPDIR")) 
-
+--setenv("SINGULARITY_BIND", os.getenv("TMPDIR") .. ",/opt,/sw7,/sw,/sw6,/gpfs1/scratch/30days:/30days,/gpfs1/homes:/home") 
+--setenv("SINGULARITYENV_PREPEND_PATH", "/opt/pbs/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/30days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/gqy77ym0w7hzpk37h4y40mhknfprsz63-docker-image-r-singularity-aus_bio_singularity_conversion.sif"
+aus_bio_sif = "/home/uqpdyer/aus_bio_test.sif"
 -- Run Rscript on stdin
+execute{cmd="shopt -s expand_aliases", modeA={"all"}}
 set_alias("Rscript", singularity .. " exec " .. aus_bio_sif ..  " Rscript")
 set_alias("R", singularity .. " exec " .. aus_bio_sif .. " R --vanilla" )
 set_alias("drake_build", singularity .. " exec " .. aus_bio_sif .. " Rscript --vanilla" )

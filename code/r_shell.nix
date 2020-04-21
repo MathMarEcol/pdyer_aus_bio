@@ -31,10 +31,11 @@ pkgs.stdenv.mkDerivation {
   nativeBuildInputs = with pkgs; [
   ];
   buildInputs = allpackages ++ [
-    (pkgs.rstudioWrapper.override {
-      packages = [
-      ] ++ rpackages;
-    })
+    (pkgs.callPackage ../../../../projects/nix_r_combined/nix_r_combined.nix {rPa = rpackages;})
+    # (pkgs.rstudioWrapper.override {
+    #   packages = [
+    #   ] ++ rpackages;
+    # })
   ];
   }
 

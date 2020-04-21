@@ -8,17 +8,18 @@
   ? import
     (builtins.fetchGit {
   # Descriptive name to make the store path easier to identify
-  name = "nixos-unstable-2020-03-09";
+  name = "nixos-unstable-2020-04-17";
   # url = https://github.com/nixos/nixpkgs-channels/;
   url = https://github.com/PhDyellow/nixpkgs/;
   # Commit hash for nixos-unstable as of 2020-01-20
   # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
-  ref = "refs/heads/f_rzmq"; #using bleeding edge packages
+  ref = "refs/heads/f_rzmq_unstable"; #using bleeding edge packages
   rev = (import ./nixpkgs_rev.nix);
 	})
     { #the attributes to import
 	overlays = [ 
 		(import /vmshare/cust-nix/Rshell/packages/rpackages_overlay.nix)
+   (import /vmshare/cust-nix/singularity/singularity_overlay.nix)
 	];
   }
 }:
@@ -29,28 +30,34 @@ let
 
 
 in
-with pkgs; dockerTools.buildImage { 
-  #breaks because buildImage evals extraCommands BEFORE mkdir $out
-  #in addition, the builder is isolated and I won't be able to look up the result
-  #make singularity
-
-  extraCommands = '' 
-###stuff to make layer singularity compatible here
-
-###
-'';
-  config = {
-    Cmd = [];
-    Entrypoint = [
-      (writeScript "entrypoint.sh" ''
-    #!${pkgs.stdenv.shell}
-  #    set -e
-    #!${pkgs.stdenv.shell}
-  #    exec /bin/bash
-  ''
-      )
-    ];
-  };
-  contents = allpackages;
+with pkgs; singularity-tools.buildImage { 
   name = name;
+  contents = allpackages;
+  diskSize = 12192;
+  runAsRoot = ''
+  mkdir -p /etc
+touch /etc/passwd
+echo "root:x:0:0:System administrator:/root:/bin/sh" > /etc/passwd
+touch /etc/group
+echo "root:x:0:" > /etc/group
+mkdir -p /.singularity.d
+mkdir -p /.singularity.d/env
+echo "export LC_ALL=C" >> /.singularity.d/env/91-environment.sh
+chmod ugo+x /.singularity.d/env/91-environment.sh
+touch /.singularity.d/env/94-appbase.sh
+chmod ugo+x /.singularity.d/env/94-appbase.sh
+
+mkdir -p /opt
+mkdir -p /scratch
+# mkdir -p /etc/localtime #this is actually a symlink to another directory. don't hardcode it
+# mkdir -p /etc/hosts #already done by singularity in version 3.5+
+mkdir -p /30days
+mkdir -p /90days
+mkdir -p /QRISdata
+mkdir -p /nvme
+mkdir -p /state/partition1
+
+mkdir -p /bin
+ln -s ${runtimeShell} /bin/bash
+'';
   }
