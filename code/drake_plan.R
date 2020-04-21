@@ -228,6 +228,7 @@ env_merge_spatial <- function(env_predicted, env_spatial, spatial_vars) {
 env_wide_list <- function(env_data){
   assertthat::assert_that("predict.combinedBootstrapGF" %in% class(env_data))
   type_names <- unique(env_data$type)
+  type_names <- type_names[type_names != "points" ]
   env_wide <- lapply(type_names, function(ty, env_data) {
     tmp <- tidyr::pivot_wider(env_data[env_data$type == ty, c("var", "x_row", "y") ], names_from = "var", values_from = "y")
     tmp <- tmp[order(tmp$x_row), ]
@@ -247,6 +248,48 @@ cast_compact_stats <- function(aff_thres, sim_mat) {
 
   stats <- data.frame(aff = aff_thres, type = "compact", norm_z = TRUE, h = h_com, k = k_com)
   return(list(stats = stats, aff_thres = aff_thres, cast_compact = cast_combi_com))
+}
+
+get_cast_stats <- function(cast_sweep){
+  all_stats <- do.call("rbind", lapply(cast_sweep, function(x) {
+    x$stats
+  }))
+  return(all_stats)
+}
+
+get_cast_spatial <- function(cast_ob, spatial_env, spatial_vars){
+  clustering <- do.call("rbind",
+                        lapply(seq_along(cast_ob), function(i, cast) {
+                          data.frame(x_row = cast[[i]], clust = rep(i, length(cast[[i]])))
+                        }, cast = cast_ob)
+                        )
+
+  clust_spat <- unique(merge(x = spatial_env[,c("x_row", spatial_vars)], y = clustering, by = "x_row" ))
+  return(clust_spat)
+}
+
+all_pairs_diag <- function(n) {
+
+  d_ij <- expand.grid(i = seq.int(n), j = seq.int(n))
+
+  d_ij_diag <- d_ij[d_ij$i <= d_ij$j, ]
+
+}
+
+
+pair_dist <- function(r, pairs, env_trans, env_vars) {
+ 	i <- pairs[r, 1]
+  j <- pairs[r, 2]
+  if(i == j){
+    return(c(i = i, j = j, dist = 1))
+  }
+
+  assertthat::assert_that(assertthat::is.element(env_trans$type, "point")) 
+  i_points <- env_trans[env_trans$x_row == i & env_trans$type == "point", env_vars]
+  j_points <- env_trans[env_trans$x_row == j & env_trans$type == "point", env_vars]
+
+  dist <- rrcov::T2.test(x = i_points, y = j_points)
+  return(data.frame(i = c(i, j), j = c(j,i ), dist = dist$p.value))
 }
 
 plot_extents <- function(marine_map,
@@ -371,6 +414,13 @@ pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
 
 pl_gfboot_cumimp_file <- here::here("outputs", "gfboot_cumimp.png")
 
+pl_copepod_aff_h_file <- here::here("outputs", "copepod_aff_h.png")
+pl_copepod_clust_map_file <- here::here("outputs", "copepod_clust_map.png")
+pl_copepod_p_mat_diag_file <- here::here("outputs", "copepod_p_mat_diag.png")
+
+pl_copepod_aff_h_full_file <- here::here("outputs", "copepod_aff_h_full.png")
+pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.png")
+pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
 pl <- drake::drake_plan(
                ##parameters
@@ -702,10 +752,10 @@ pl <- drake::drake_plan(
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap,
                                           extrap_pow = extrap_pow),
+         env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
 
 
          ##Hotellings p-value similiarity matrix, using diagonal covariance
-         env_trans_wide = env_wide_list(env_trans),
 
          p_mat_diag_cov = rmethods:::hotellings_bulk(
                               means = env_trans_wide$mean[, env_vars],
@@ -716,20 +766,114 @@ pl <- drake::drake_plan(
          cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
                                                 sim_mat = p_mat_diag_cov),
            transform = map(.id = aff_sweep,
-                           aff_sweep = seq(0.05, 0.95, 0.25))
+                           aff_sweep = !!(seq(0.05, 0.95, 0.25)))
          ),
 
          ##add lat and lon to env_trans_wide
-         ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
 
-
-         ##TODO hotellings with point clouds
 
 
          ##Cluster the combined copepods
-         
-         
+         ##choos the peak Hubert Gama
+         cast_stats = target(dplyr::bind_rows(cast_sweep[["stats"]]),
+                              transform = combine(cast_sweep,
+                                                  .id = aff_sweep)),
 
+         max_h_ind = which.max(cast_stats$h),
+         max_aff = cast_stats$aff[max_h_ind],
+
+         ##plot the cast clustering
+         save_copepod_aff_h = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
+                                             plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)))
+                                            ),
+         save_copepod_pmat_diag = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_diag_file),
+                                                 gg_sim_mat(sim_mat = p_mat_diag_cov,
+                                                            cast_ob = cast_sweep[[max_h_ind]]$cast_compact,
+                                                            highlight = TRUE,
+                                                            sort_between = TRUE,
+                                                            sort_within = TRUE)),
+
+         cast_spatial = get_cast_spatial(cast_sweep[[max_h_ind]]$cast_compact, env_trans_spatial, spatial_vars),
+         save_copepod_clust_map =
+           ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
+                          plot =
+                            ggplot2::ggplot(
+                                       data = cast_spatial,
+                                       mapping =
+                                         ggplot2::aes(x = spatial_vars[1],
+                                                      y = spatial_vars[2],
+                                                      fill = as.factor(clust))
+                                     ) +
+                            ggplot2::geom_raster(),
+         ),
+
+
+         ##TODO hotellings with point clouds
+         ##create pair list
+         ##map over pair list
+         ##for each pair, extract the point cloud and calculate the hotellings T^2
+         ##for each pair, return an ij dist and ji dist (symmetric)
+         ##return the long form of the pairs
+         ##add in the ii 1 casses, sort by i, then j, 
+         ##assign to a matrix by feeding the dist column into a matrix()
+         pairs = all_pairs_diag(n=nrow(env_round)),
+
+         dist_long = target(
+           pair_dist(pair, pairs, env_trans),
+           transform = map(.id = pair,
+                           pair = seq.int(nrow(pairs))
+
+                           )
+         ),
+         p_mat_full_cov_long = target(
+           rbind(dist_long),
+           transform = combine(dist_long)
+         ),
+         p_mat_full_cov = matrix(p_mat_full_cov_long[
+           order(p_mat_full_cov_long[,c("i", "j")]), "dist" ],
+           nrow = nrow(env_round), ncol = nrow(env_round)),
+         ##cluster, using CAST
+         cast_sweep_full = target(cast_compact_stats(aff_thres = aff_sweep,
+                                                sim_mat = p_mat_full_cov),
+           transform = map(.id = aff_sweep,
+                           aff_sweep)
+         ),
+
+
+         ##Cluster the combined copepods
+         ##choos the peak Hubert Gama
+         cast_stats_full = target(dplyr::bind_rows(cast_sweep_full[["stats"]]),
+                                  transform = combine(cast_sweep_full,
+                                                      .id = aff_sweep)
+                                  ),
+
+         max_h_ind_full = which.max(cast_stats_full$h),
+         max_aff_full = cast_stats_full$aff[max_h_ind_full],
+
+         ##plot the cast clustering
+         save_copepod_aff_h_full = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
+                                             plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)))
+                                            ),
+         save_copepod_pmat_diag_full = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_full_file),
+                                                 gg_sim_mat(sim_mat = p_mat_full_cov,
+                                                            cast_ob = cast_sweep_full[[max_h_ind_full]]$cast_compact,
+                                                            highlight = TRUE,
+                                                            sort_between = TRUE,
+                                                            sort_within = TRUE)),
+
+         cast_spatial_full = get_cast_spatial(cast_sweep_full[[max_h_ind_full]]$cast_compact, env_trans_spatial, spatial_vars),
+         save_copepod_clust_full_map =
+           ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
+                          plot =
+                            ggplot2::ggplot(
+                                       data = cast_spatial_full,
+                                       mapping =
+                                         ggplot2::aes(x = spatial_vars[1],
+                                                      y = spatial_vars[2],
+                                                      fill = as.factor(clust))
+                                     ) +
+                            ggplot2::geom_raster(),
+         ),
          #Keep going, but get some outputs eventually
 #
 #
@@ -779,9 +923,20 @@ if (!interactive()) {
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
     clustermq.template = here::here("code", "pbs_clustermq.tmpl")
   )
+
+  jobs <- future::availableCores(methods= c("PBS"), default = 1) - 1 ##number of cores, leave one for master
+  parallelism <- "clustermq"
+  if(jobs <= 0){
+    ##not in a PBS job
+    jobs <- future::availableCores(methods= c("mc.cores"))
+  }
+  if(jobs <= 1) {
+    jobs <- 1
+    parallelism <- "loop"
+  }
   drake::make(pl, seed = r_seed,
-              parallelism = "clustermq",
-              jobs = 6, ## 6 jobs, for 6 surveys
+              parallelism = parallelism,
+              jobs = jobs, ## 6 jobs, for 6 surveys
               console_log_file = here::here("outputs", "drake_log.log")
               )
 }
