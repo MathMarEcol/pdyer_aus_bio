@@ -919,9 +919,9 @@ r_seed <- 20200219
 #' Make
 if (!interactive()) {
   options(
-    clustermq.scheduler = "multicore",
+    clustermq.scheduler = "MULTICORE"
                                         # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-    clustermq.template = here::here("code", "pbs_clustermq.tmpl")
+    ## clustermq.template = here::here("code", "pbs_clustermq.tmpl")
   )
 
   jobs <- future::availableCores(methods= c("PBS"), default = 1) - 1 ##number of cores, leave one for master
