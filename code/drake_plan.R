@@ -398,6 +398,10 @@ mapfile_location <- here::here(
                             "..", "..", "..",
                             "Q1215", "ShapeFiles", "World_EEZ_v8"
                           )
+biooracle_folder <- here::here(
+                                          "..", "..", "..",
+                                          "Q1215", "bioORACLE"
+                                        ),
 copepod_data <- here::here(
                         "..", "..", "..",
                         "Q1215", "AusCPR", "combined_copeped_jul19.csv"
@@ -430,10 +434,6 @@ pl <- drake::drake_plan(
                cov_min = 1.0,
                mapfile =  file_in(!!mapfile_location),
                mapLayer =  "World_EEZ_v8_2014_HR",
-               biooracle_folder = here::here(
-                                          "..", "..", "..",
-                                          "Q1215", "bioORACLE"
-                                        ),
                pred = list(),
                env_vars = c("depth",
                             "temp",
@@ -571,7 +571,7 @@ pl <- drake::drake_plan(
                ),
                marine_map = sf::st_read(mapfile, layer = mapLayer),
                ausEEZ = marine_map[marine_map$Country == "Australia", ],
-               env_complete = env_aus_eez(bio_oracle_cache = biooracle_folder,
+               env_complete = env_aus_eez(bio_oracle_cache = file_in(!!biooracle_folder),
                                           env_vars = env_vars,
                                           env_modes = env_modes,
                                           env_extent = env_extent,

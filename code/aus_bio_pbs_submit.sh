@@ -1,13 +1,14 @@
 #!/bin/bash
 #PBS -A UQ-SCI-SMP
-#PBS -l select=1:ncpus=1:mem=4GB
+#PBS -l select=1:ncpus=6:mem=24GB
 #PBS -l walltime=00:10:00
 
 
 
 #by default, PBS begins in the home dir, but the env var $PBS_O_WORKDIR contains the path to this script.
 #Assuming that this job was called from /???30days???/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code
-cd $PBS_O_WORKDIR
+ROOT_STORE_DIR="/90days/uqpdyer/rdm_mirror" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
+cd $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 #capture current git hash for use later
 git_hash=$(git rev-parse --short HEAD)
 date_run=$(date +%Y-%m-%d_%H-%M-%S)
@@ -17,15 +18,25 @@ mkdir -p $TMPDIR/Q1215
 mkdir -p $TMPDIR/Q1216
 
 #Have to carefully make sure all files make it over
+#"Input" files are stored in 90days
+#sync root directories up front, either from QRIS or 90 days
+#I think I should manually sync between 90days and QRIS
+# and automatically between 90days and $TMPDIR
+#which means I don't need $PBS_O_WORKDIR
+#Inputs
 mkdir -p $TMPDIR/Q1215/BioORACLE
-rsync -irc $PBS_O_WORKDIR/../../../../Q1215/BioORACLE $TMPDIR/Q1215/BioORACLE
+rsync -irc $ROOT_STORE_DIR/Q1215/BioORACLE $TMPDIR/Q1215/BioORACLE
 mkdir -p $TMPDIR/Q1215/AusCPR
-rsync -irc $PBS_O_WORKDIR/../../../../Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
+rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
 mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
-rsync -irc $PBS_O_WORKDIR/../../../../Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
+rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
+
+#Essential Code
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
-rsync -irc $PBS_O_WORKDIR/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
-rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+#The drake cache contains previous results, and is needed to avoid recaclulating stuff.
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/.drake $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+# rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 #Set up the .here file for the "here" package.
 #here() expects to find a git repo or a Rproj file, but I want to minimise folder copying,
@@ -34,7 +45,10 @@ rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/c
 touch $TMPDIR/Q1216/pdyer/pdyer_aus_bio/.here
 
 #Set up the output directory
+#I put in current outputs, in order to avoid replotting 
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs \
+          $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Then run from the local disk
 cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
@@ -44,7 +58,8 @@ cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 shopt -s expand_aliases
 
 #Always use the latest module, so I don't need to remember to copy it manually
-cp $PBS_O_WORKDIR/aus_bio_module.lua ~/privatemodules/aus_bio_module.lua
+cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/aus_bio_module.lua \
+      ~/privatemodules/aus_bio_module.lua
 
 module load use.own
 module load aus_bio_module
@@ -53,14 +68,14 @@ Rscript $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 
 
 #Store the drake cache
-rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $PBS_O_WORKDIR
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/
 #Store the outputs
-rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $PBS_O_WORKDIR/../outputs/
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 #copy outputs to an archive
-mkdir -p ${PBS_O_WORKDIR}/../outputs_history
+mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
 for file in $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
-    cp "$file" "${PBS_O_WORKDIR}/../outputs_history/${date_run}_${git_hash}_${file##*/}"
+    cp "$file" "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history/${date_run}_${git_hash}_${file##*/}"
 done
 
 #The downloaded variables from bioORACLE are also worth saving
-rsync -irc $TMPDIR/Q1215/BioORACLE $PBS_O_WORKDIR/../../../../Q1215/BioORACLE
+rsync -irc $TMPDIR/Q1215/BioORACLE $ROOT_STORE_DIR/Q1215/BioORACLE
