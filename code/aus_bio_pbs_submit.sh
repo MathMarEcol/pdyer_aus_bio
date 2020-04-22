@@ -47,7 +47,7 @@ touch $TMPDIR/Q1216/pdyer/pdyer_aus_bio/.here
 #Set up the output directory
 #I put in current outputs, in order to avoid replotting 
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
-rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs \
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/ \
           $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Then run from the local disk
@@ -68,7 +68,7 @@ Rscript $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 
 
 #Store the drake cache
-rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code
 #Store the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 #copy outputs to an archive
