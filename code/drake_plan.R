@@ -925,15 +925,20 @@ if (!interactive()) {
   )
 
   jobs <- future::availableCores(methods= c("PBS"), default = 1) - 1 ##number of cores, leave one for master
+  print(jobs)
   parallelism <- "clustermq"
   if(jobs <= 0){
     ##not in a PBS job
     jobs <- future::availableCores(methods= c("mc.cores"))
+print(jobs)
   }
   if(jobs <= 1) {
     jobs <- 1
+print(jobs)
     parallelism <- "loop"
   }
+print(jobs)
+  print(parallelism)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
