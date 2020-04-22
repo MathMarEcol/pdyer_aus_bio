@@ -399,9 +399,9 @@ mapfile_location <- here::here(
                             "Q1215", "ShapeFiles", "World_EEZ_v8"
                           )
 biooracle_folder <- here::here(
-                                          "..", "..", "..",
-                                          "Q1215", "bioORACLE"
-                                        ),
+                            "..", "..", "..",
+                            "Q1215", "bioORACLE"
+                          )
 copepod_data <- here::here(
                         "..", "..", "..",
                         "Q1215", "AusCPR", "combined_copeped_jul19.csv"
