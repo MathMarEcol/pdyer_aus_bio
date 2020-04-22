@@ -48,14 +48,14 @@ touch /.singularity.d/env/94-appbase.sh
 chmod ugo+x /.singularity.d/env/94-appbase.sh
 
 mkdir -p /opt
-mkdir -p /scratch
 # mkdir -p /etc/localtime #this is actually a symlink to another directory. don't hardcode it
 # mkdir -p /etc/hosts #already done by singularity in version 3.5+
 mkdir -p /30days
 mkdir -p /90days
 mkdir -p /QRISdata
-mkdir -p /nvme
-mkdir -p /state/partition1
+mkdir -p /sw
+mkdir -p /sw7
+mkdir -p /groups
 
 mkdir -p /bin
 ln -s ${runtimeShell} /bin/bash
