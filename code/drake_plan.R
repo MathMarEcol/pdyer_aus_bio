@@ -754,6 +754,7 @@ pl <- drake::drake_plan(
                                           extrap_pow = extrap_pow),
          env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
 
+         env_trans_wide = env_wide_list(env_trans_spatial),
 
          ##Hotellings p-value similiarity matrix, using diagonal covariance
 
