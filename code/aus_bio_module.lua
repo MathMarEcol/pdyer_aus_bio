@@ -8,12 +8,22 @@ whatis("20200122 ")
 whatis("For more detail, run ")
 whatis(" ")
 
---setenv("SINGULARITY_BIND", os.getenv("TMPDIR") .. ",/opt,/sw7,/sw,/sw6,/gpfs1/scratch/30days:/30days,/gpfs1/homes:/home") 
+setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
+         ",/gpfs1/scratch/30days:/30days" ..
+         ",/gpfs1/scratch/90days:/90days" ..
+         ",/gpfs1/groups:/groups" ..
+         ",/gpfs1/homes:/home" ..
+         ",/gpfs1/sw1:/sw" ..
+         ",/gpfs1/sw7:/sw7" ..
+         ",/QRISdata"
+
+       )
 --setenv("SINGULARITYENV_PREPEND_PATH", "/opt/pbs/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/home/uqpdyer/aus_bio_test.sif"
+aus_bio_sif = "/90days/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code/pj5fi2lynxf9116533xkn18cgpssk8lw-singularity-image-r-singularity-aus_bio.img" --as recommended by RCC, 90days for references, and input data files
+
 -- Run Rscript on stdin
 execute{cmd="shopt -s expand_aliases", modeA={"all"}}
 set_alias("Rscript", singularity .. " exec " .. aus_bio_sif ..  " Rscript")
