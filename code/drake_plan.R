@@ -946,7 +946,7 @@ print(jobs)
               console_log_file = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt")),
               verbose = 4,
-              cache = drake::drake_cache(here::here("drake_cache")))
+              cache = drake::drake_cache(here::here("drake_cache"))
               )
 }
 
