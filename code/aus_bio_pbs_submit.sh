@@ -79,3 +79,4 @@ done
 
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMPDIR/Q1215/bioORACLE $ROOT_STORE_DIR/Q1215/
+# $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/rdm_up.sh
