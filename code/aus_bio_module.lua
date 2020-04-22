@@ -12,7 +12,6 @@ setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
          ",/gpfs1/scratch/30days:/30days" ..
          ",/gpfs1/scratch/90days:/90days" ..
          ",/gpfs1/groups:/groups" ..
-         ",/gpfs1/homes:/home" ..
          ",/gpfs1/sw1:/sw" ..
          ",/gpfs1/sw7:/sw7" ..
          ",/QRISdata"
