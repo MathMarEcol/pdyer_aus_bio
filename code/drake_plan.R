@@ -943,7 +943,10 @@ print(jobs)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
-              console_log_file = here::here("outputs", "drake_log.log")
+              console_log_file = here::here("outputs", "drake_log.log"),
+              template = list(log_file = here::here("outputs", "drake_worker_log.txt")),
+              verbose = 4,
+              cache = drake::drake_cache(here::here("drake_cache")))
               )
 }
 

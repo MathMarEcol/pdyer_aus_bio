@@ -35,7 +35,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFile
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 #The drake cache contains previous results, and is needed to avoid recaclulating stuff.
-rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/.drake $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache $TMPDIR/Q1216/pdyer/pdyer_aus_bio
 # rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 #Set up the .here file for the "here" package.
@@ -68,7 +68,7 @@ Rscript $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 
 
 #Store the drake cache
-rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code
+rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/drake_cache $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 #Store the outputs
 rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 #copy outputs to an archive
