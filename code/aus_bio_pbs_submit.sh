@@ -24,8 +24,8 @@ mkdir -p $TMPDIR/Q1216
 # and automatically between 90days and $TMPDIR
 #which means I don't need $PBS_O_WORKDIR
 #Inputs
-mkdir -p $TMPDIR/Q1215/BioORACLE
-rsync -irc $ROOT_STORE_DIR/Q1215/BioORACLE $TMPDIR/Q1215/BioORACLE
+mkdir -p $TMPDIR/Q1215/bioORACLE
+rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR/Q1215/bioORACLE
 mkdir -p $TMPDIR/Q1215/AusCPR
 rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
 mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
@@ -78,4 +78,4 @@ for file in $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
 done
 
 #The downloaded variables from bioORACLE are also worth saving
-rsync -irc $TMPDIR/Q1215/BioORACLE $ROOT_STORE_DIR/Q1215/BioORACLE
+rsync -irc $TMPDIR/Q1215/bioORACLE $ROOT_STORE_DIR/Q1215/bioORACLE
