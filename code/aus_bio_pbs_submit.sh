@@ -25,7 +25,7 @@ mkdir -p $TMPDIR/Q1216
 #which means I don't need $PBS_O_WORKDIR
 #Inputs
 mkdir -p $TMPDIR/Q1215/bioORACLE
-rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR/Q1215/bioORACLE
+rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR/Q1215/
 mkdir -p $TMPDIR/Q1215/AusCPR
 rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
 mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
