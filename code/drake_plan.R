@@ -282,7 +282,7 @@ all_pairs_diag <- function(n) {
 
 pair_dist <- function(pairs, env_trans, env_vars) {
 
-  assertthat::assert_that(assertthat::is.element(env_trans$type, "point"))
+  assertthat::assert_that(is.element("point", env_trans$type))
 
   dists <- apply(pairs, 1, function(p, env_trans, env_vars){
     i <- p[1]
