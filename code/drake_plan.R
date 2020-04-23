@@ -277,19 +277,24 @@ all_pairs_diag <- function(n) {
 }
 
 
-pair_dist <- function(r, pairs, env_trans, env_vars) {
- 	i <- pairs[r, 1]
-  j <- pairs[r, 2]
-  if(i == j){
-    return(c(i = i, j = j, dist = 1))
-  }
+pair_dist <- function(pairs, env_trans, env_vars) {
 
-  assertthat::assert_that(assertthat::is.element(env_trans$type, "point")) 
-  i_points <- env_trans[env_trans$x_row == i & env_trans$type == "point", env_vars]
-  j_points <- env_trans[env_trans$x_row == j & env_trans$type == "point", env_vars]
+  assertthat::assert_that(assertthat::is.element(env_trans$type, "point"))
 
-  dist <- rrcov::T2.test(x = i_points, y = j_points)
-  return(data.frame(i = c(i, j), j = c(j,i ), dist = dist$p.value))
+  dists <- apply(pairs, 1, function(p, env_trans, env_vars){
+    i <- p[1]
+    j <- p[2]
+    if (i == j) {
+      return(c(i = i, j = j, dist = 1))
+    }
+
+    i_points <- env_trans[env_trans$x_row == i & env_trans$type == "point", env_vars]
+    j_points <- env_trans[env_trans$x_row == j & env_trans$type == "point", env_vars]
+
+    dist <- rrcov::T2.test(x = i_points, y = j_points)
+    return(data.frame(i = c(i, j), j = c(j, i), dist = dist$p.value))
+  }, env_trans = env_trans, env_vars = env_vars)
+  return(dplyr::bind_rows(dists))
 }
 
 plot_extents <- function(marine_map,
@@ -819,17 +824,19 @@ pl <- drake::drake_plan(
          ##assign to a matrix by feeding the dist column into a matrix()
          pairs = all_pairs_diag(n=nrow(env_round)),
 
+         
          dist_long = target(
-           pair_dist(pair, pairs, env_trans),
-           transform = map(.id = pair,
-                           pair = seq.int(nrow(pairs))
-
-                           )
+           pair_dist(pairs, env_trans),
+           transform = split(pairs,
+                             slices = 1000
+                             )
          ),
+
          p_mat_full_cov_long = target(
-           rbind(dist_long),
+           dplyr::bind_rows(dist_long),
            transform = combine(dist_long)
          ),
+
          p_mat_full_cov = matrix(p_mat_full_cov_long[
            order(p_mat_full_cov_long[,c("i", "j")]), "dist" ],
            nrow = nrow(env_round), ncol = nrow(env_round)),
