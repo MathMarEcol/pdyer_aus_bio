@@ -221,7 +221,7 @@ env_merge_spatial <- function(env_predicted, env_spatial, spatial_vars) {
   assertthat::assert_that(assertthat::has_name(env_predicted, "x_row"))
   assertthat::assert_that(assertthat::has_name(env_spatial, spatial_vars))
 
-  env_spatial_x_row <- cbind(x_row = seq.int(1, nrow(env_data)), env_spatial)
+  env_spatial_x_row <- cbind(x_row = seq.int(1, nrow(env_spatial)), env_spatial)
   return(merge(env_predicted, env_spatial_x_row[, c("x_row", spatial_vars)]))
 }
 
