@@ -915,8 +915,17 @@ pl <- drake::drake_plan(
                                       out_file = file_out(!!pl_gf_perf_file))
          )
 
-
+##Set seed
 r_seed <- 20200219
+
+##Set cache
+cache_dir <- here::here("drake_cache")
+cache_ob <- drake::drake_cache(cache_dir)
+if(is.null(cache_ob)){
+  drake::new_cache(cache_dir)
+  cache_ob <- drake::drake_cache(cache_dir)
+}
+
 #' Make
 if (!interactive()) {
   options(
@@ -946,16 +955,16 @@ print(jobs)
               console_log_file = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt")),
               verbose = 4,
-              cache = drake::drake_cache(here::here("drake_cache"))
+              cache = cache_ob
               )
 }
 
-drake::vis_drake_graph(drake_config(pl, seed = r_seed),
+drake::vis_drake_graph(drake_config(pl, cache = cache_ob, seed = r_seed),
                        file = here::here("outputs", "drake_graph.html"),
                        selfcontained = TRUE,
                        hover = TRUE)
-drake::sankey_drake_graph(drake_config(pl, seed = r_seed),
+drake::sankey_drake_graph(drake_config(pl, seed = r_seed, cache = cache_ob),
                           file = here::here("outputs", "drake_graph_sankey.html"),
                           selfcontained = TRUE)
 ggsave(filename = here::here("outputs", "drake_ggplot.png"),
-       drake::drake_ggraph(drake_config(pl, seed = r_seed)))
+       drake::drake_ggraph(drake_config(pl, seed = r_seed, cache = cache_ob)))
