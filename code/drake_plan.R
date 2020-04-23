@@ -234,6 +234,7 @@ env_wide_list <- function(env_data){
     return(tmp)
   }, env_data = env_data)
   names(env_wide) <- type_names
+  return(env_wide)
 }
 
 cast_compact_stats <- function(aff_thres, sim_mat) {
