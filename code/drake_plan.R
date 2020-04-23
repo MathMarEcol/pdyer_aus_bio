@@ -227,13 +227,20 @@ env_merge_spatial <- function(env_predicted, env_spatial, spatial_vars) {
 
 env_wide_list <- function(env_data){
   type_names <- unique(env_data$type)
-  type_names <- type_names[type_names != "points" ]
-  env_wide <- lapply(type_names, function(ty, env_data) {
+  type_names_compact <- type_names[type_names != "points" ]
+  env_wide <- lapply(type_names_compact, function(ty, env_data) {
     tmp <- tidyr::pivot_wider(env_data[env_data$type == ty, c("var", "x_row", "y") ], names_from = "var", values_from = "y")
     tmp <- tmp[order(tmp$x_row), ]
     return(tmp)
   }, env_data = env_data)
-  names(env_wide) <- type_names
+  names(env_wide) <- type_names_compact
+  ##add in points, as a wide-long
+  if(points %in% type_names){
+    env_wide$points <- tidyr::pivot_wider(
+                                env_data[env_data$type == "points",
+                                         c("var", "x_row", "y", "gf_model") ],
+                                names_from = "var", values_from = "y")
+  }
   return(env_wide)
 }
 
@@ -279,7 +286,8 @@ all_pairs_diag <- function(n) {
 
 }
 
-
+##awkward version, assumes that the env_trans_wide is
+##just the points
 pair_dist <- function(pairs, env_trans_wide, env_vars) {
 
   assertthat::assert_that(all(env_vars %in% names(env_trans_wide)))
@@ -841,7 +849,7 @@ pl <- drake::drake_plan(
 
          
          dist_long = target(
-           pair_dist(pairs, env_trans_wide, env_names),
+           pair_dist(pairs, env_trans_wide$points, env_names),
            transform = split(pairs,
                              slices = !!jobs
                              )
