@@ -830,7 +830,7 @@ pl <- drake::drake_plan(
 
          
          dist_long = target(
-           pair_dist(pairs, env_trans),
+           pair_dist(pairs, env_trans, env_names),
            transform = split(pairs,
                              slices = 1000
                              )
