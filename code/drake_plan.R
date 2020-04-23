@@ -226,7 +226,6 @@ env_merge_spatial <- function(env_predicted, env_spatial, spatial_vars) {
 }
 
 env_wide_list <- function(env_data){
-  assertthat::assert_that("predict.combinedBootstrapGF" %in% class(env_data))
   type_names <- unique(env_data$type)
   type_names <- type_names[type_names != "points" ]
   env_wide <- lapply(type_names, function(ty, env_data) {
