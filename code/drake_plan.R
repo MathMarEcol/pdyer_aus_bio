@@ -292,7 +292,7 @@ pair_dist <- function(pairs, env_trans_wide, env_vars) {
 
   assertthat::assert_that(all(env_vars %in% names(env_trans_wide)))
 
-  avg_points <- nrow(env_trans_wide) / unique(env_trans_wide$x_row)
+  avg_points <- nrow(env_trans_wide) / length(unique(env_trans_wide$x_row))
   assertthat::assert_that(length(env_vars) <= avg_points)
 
   dists <- apply(pairs, 1, function(p, env_trans, env_vars){
