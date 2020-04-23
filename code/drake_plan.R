@@ -299,8 +299,8 @@ pair_dist <- function(pairs, env_trans_wide, env_vars) {
       return(c(i = i, j = j, dist = 1))
     }
 
-    i_points <- env_trans[env_trans$x_row == i & env_trans$type == "point", env_vars]
-    j_points <- env_trans[env_trans$x_row == j & env_trans$type == "point", env_vars]
+    i_points <- env_trans[env_trans$x_row == i, env_vars]
+    j_points <- env_trans[env_trans$x_row == j, env_vars]
 
     dist <- rrcov::T2.test(x = i_points, y = j_points)
     return(data.frame(i = c(i, j), j = c(j, i), dist = dist$p.value))
