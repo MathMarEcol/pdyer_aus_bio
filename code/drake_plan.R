@@ -292,9 +292,12 @@ pair_dist <- function(pairs, env_trans_wide, env_vars) {
 
   assertthat::assert_that(all(env_vars %in% names(env_trans_wide)))
 
+  avg_points <- nrow(env_trans_wide) / unique(env_trans_wide$x_row)
+  assertthat::assert_that(length(env_vars) <= avg_points)
+
   dists <- apply(pairs, 1, function(p, env_trans, env_vars){
-    i <- p[1]
-    j <- p[2]
+    i <- p[ , 1]
+    j <- p[ , 2]
     if (i == j) {
       return(c(i = i, j = j, dist = 1))
     }
@@ -847,7 +850,6 @@ pl <- drake::drake_plan(
          ##assign to a matrix by feeding the dist column into a matrix()
          pairs = all_pairs_diag(n=nrow(env_round)),
 
-         
          dist_long = target(
            pair_dist(pairs, env_trans_wide$points, env_names),
            transform = split(pairs,
