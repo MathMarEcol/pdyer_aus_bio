@@ -648,9 +648,7 @@ pl <- drake::drake_plan(
                                            env_res = regrid_resolution,
                                            env_offset = env_offset,
                                            env_id_col = env_id_col),
-               env_names = get_env_names(env_round = env_round,
-                                         spatial_vars = spatial_vars,
-                                         env_id_col = env_id_col),
+               env_names = names(env_round)[!names(env_round) %in% c(spatial_vars, env_id_col)][c(15,17,1,5,9)],
                ## here I have referred to a variable defined above,
                ##copepod_csv copepod_csv is just a string, which will
                ##be passed to read_csv. first, I wrap the string inside
