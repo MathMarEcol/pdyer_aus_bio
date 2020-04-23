@@ -280,9 +280,9 @@ all_pairs_diag <- function(n) {
 }
 
 
-pair_dist <- function(pairs, env_trans, env_vars) {
+pair_dist <- function(pairs, env_trans_wide, env_vars) {
 
-  assertthat::assert_that(is.element("points", env_trans$type))
+  assertthat::assert_that(is.element("points", env_trans_wide$type))
 
   dists <- apply(pairs, 1, function(p, env_trans, env_vars){
     i <- p[1]
@@ -296,7 +296,7 @@ pair_dist <- function(pairs, env_trans, env_vars) {
 
     dist <- rrcov::T2.test(x = i_points, y = j_points)
     return(data.frame(i = c(i, j), j = c(j, i), dist = dist$p.value))
-  }, env_trans = env_trans, env_vars = env_vars)
+  }, env_trans = env_trans_wide, env_vars = env_vars)
   return(dplyr::bind_rows(dists))
 }
 
@@ -841,7 +841,7 @@ pl <- drake::drake_plan(
 
          
          dist_long = target(
-           pair_dist(pairs, env_trans, env_names),
+           pair_dist(pairs, env_trans_wide, env_names),
            transform = split(pairs,
                              slices = !!jobs
                              )
