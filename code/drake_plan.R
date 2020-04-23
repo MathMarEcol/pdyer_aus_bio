@@ -434,6 +434,17 @@ pl_copepod_aff_h_full_file <- here::here("outputs", "copepod_aff_h_full.png")
 pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.png")
 pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
+jobs <- future::availableCores(methods = c("PBS"), default = 1) - 1 ## number of cores, leave one for master
+parallelism <- "clustermq"
+if (jobs <= 0) {
+  ## not in a PBS job
+  jobs <- future::availableCores(methods = c("mc.cores"))
+}
+if (jobs <= 1) {
+  jobs <- 1
+  parallelism <- "loop"
+}
+
 pl <- drake::drake_plan(
                ##parameters
                epi_depth = 200,
@@ -832,7 +843,7 @@ pl <- drake::drake_plan(
          dist_long = target(
            pair_dist(pairs, env_trans, env_names),
            transform = split(pairs,
-                             slices = 1000
+                             slices = !!jobs
                              )
          ),
 
@@ -945,21 +956,6 @@ if (!interactive()) {
     ## clustermq.template = here::here("code", "pbs_clustermq.tmpl")
   )
 
-  jobs <- future::availableCores(methods= c("PBS"), default = 1) - 1 ##number of cores, leave one for master
-  print(jobs)
-  parallelism <- "clustermq"
-  if(jobs <= 0){
-    ##not in a PBS job
-    jobs <- future::availableCores(methods= c("mc.cores"))
-print(jobs)
-  }
-  if(jobs <= 1) {
-    jobs <- 1
-print(jobs)
-    parallelism <- "loop"
-  }
-print(jobs)
-  print(parallelism)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
