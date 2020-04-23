@@ -756,7 +756,7 @@ pl <- drake::drake_plan(
 
 
          ##Transform the environment. No need for target(), I am not mapping or combining
-         env_trans = predict.combinedBootstrapGF(object = copepod_combined_gf,
+         env_trans = predict(object = copepod_combined_gf,
                                           newdata = env_round,
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap,
