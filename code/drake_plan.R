@@ -598,6 +598,7 @@ pl <- drake::drake_plan(
                                            env_res = regrid_resolution,
                                            env_offset = env_offset,
                                            env_id_col = env_id_col),
+               env_names <- names(env_round)[!names(env_round) %in% c(spatial_vars, env_id_col)],
                ## here I have referred to a variable defined above,
                ##copepod_csv copepod_csv is just a string, which will
                ##be passed to read_csv. first, I wrap the string inside
@@ -717,7 +718,7 @@ pl <- drake::drake_plan(
                            surv_sp_names = surv_sp_keep,
                            env_id_col = env_id_col,
                            spatial_vars = spatial_vars,
-                           env_vars = base::names(env_round)
+                           env_vars = env_names
            ),
            transform = map(
              surv_env,
@@ -729,7 +730,7 @@ pl <- drake::drake_plan(
          surv_gf = target(
            gfbootstrap::bootstrapGradientForest(
                              as.data.frame(surv_env_filter),
-                             predictor.vars = base::names(env_round),
+                             predictor.vars = env_names,
                              response.vars = surv_sp_keep,
                              nbootstrap = gf_trees,
                              compact = T,
@@ -767,8 +768,8 @@ pl <- drake::drake_plan(
          ##Hotellings p-value similiarity matrix, using diagonal covariance
 
          p_mat_diag_cov = rmethods:::hotellings_bulk(
-                              means = env_trans_wide$mean[, env_vars],
-                              res_sq = env_trans_wide$variance[, env_vars]
+                              means = env_trans_wide$mean[, env_names],
+                              res_sq = env_trans_wide$variance[, env_names]
                             ),
 
          ##cluster, using CAST
