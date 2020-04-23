@@ -268,6 +268,9 @@ get_cast_spatial <- function(cast_ob, spatial_env, spatial_vars){
   return(clust_spat)
 }
 
+##TODO: this is not scaleable to more than about 10,000 sites
+##More sites should increase the sparsity, but would require a lot of
+##code and algorithm modifications
 all_pairs_diag <- function(n) {
 
   d_ij <- expand.grid(i = seq.int(n), j = seq.int(n))
