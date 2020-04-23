@@ -235,7 +235,7 @@ env_wide_list <- function(env_data){
   }, env_data = env_data)
   names(env_wide) <- type_names_compact
   ##add in points, as a wide-long
-  if(points %in% type_names){
+  if("points" %in% type_names){
     env_wide$points <- tidyr::pivot_wider(
                                 env_data[env_data$type == "points",
                                          c("var", "x_row", "y", "gf_model") ],
