@@ -556,7 +556,7 @@ jobs <- 5
                  "BO2_ironmin_ss" = c(-Inf, -5.75),
                  ##Upper extreme in Bight, clipped ~1.4std, lower
                  ##extremes on tropical coasts ~2std
-                 "BO2_salinitymin_ss" = c(32.15, 35.72),
+                 #"BO2_salinitymin_ss" = c(32.15, 35.72),
                  ##Log, lower extreme in bight and other southern
                  ##coasts, ~3std. No upper extremes
                  "BO2_curvelmin_ss" = c(-3.32, Inf),
@@ -578,7 +578,7 @@ jobs <- 5
                  ##PNG ~2.5std
                  "BO2_ironmax_ss" = c(-11, -5.2),
                  ##Upper and lower extremes along coasts ~2.5std
-                 "BO2_salinitymax_ss" = c(34.2, 36.6),
+                 #"BO2_salinitymax_ss" = c(34.2, 36.6),
                  ##Log, no upper extremes, lower extremes are randomly
                  ##placed ~2.5std
                  "BO2_curvelmax_ss" = c(-2.5, 0.5),
@@ -597,7 +597,7 @@ jobs <- 5
                  ##mostly in GoC and Bight
                  "BO2_ironmean_ss" = c(-12, -5.6),
                  ##extremes are all coastal
-                 "BO2_salinitymean_ss" = c(33.7, 36.1),
+                 #"BO2_salinitymean_ss" = c(33.7, 36.1),
                  ##Log, lower extremes are randomly placed, no upper extremes,
                  "BO2_curvelmean_ss" = c(-4.7, 0),
                  ##no lower extremes, upper extremes are coastal
@@ -614,7 +614,7 @@ jobs <- 5
                  "BO2_ironrange_ss" = c(-10.7, -6),
                  ##no lower extreme, upper extremes are all tropical coastal
                  ##~2std
-                 "BO2_salinityrange_ss" = c(0, 2.9),
+                 #"BO2_salinityrange_ss" = c(0, 2.9),
                  ##Log, no upper extreme, lower extremes are random ~2std
                  "BO2_curvelrange_ss" = c(-4.6, 0.4),
                  ##lower extremes in deep trences. no upper extremes
