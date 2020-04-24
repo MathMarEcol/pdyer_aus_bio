@@ -804,7 +804,7 @@ pl <- drake::drake_plan(
 
 
          cast_sweep_list = target(list(cast_sweep),
-                              transform = map(cast_sweep,
+                              transform = combine(cast_sweep,
                                                   .id = aff_sweep)),
 
          ##Cluster the combined copepods
@@ -827,7 +827,7 @@ pl <- drake::drake_plan(
                                             ),
          save_copepod_pmat_diag = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
                                                  gg_sim_mat(sim_mat = p_mat_diag_cov,
-                                                            cast_ob = cast_sweep[[max_h_ind]]$cast_compact,
+                                                            cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact,
                                                             highlight = TRUE,
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
@@ -879,9 +879,10 @@ pl <- drake::drake_plan(
                            aff_sweep)
          ),
 
-         cast_stats_full_list = target(list(cast_sweep_full),
-                              transform = map(cast_sweep_full,
+         cast_sweep_full_list = target(list(cast_sweep_full),
+                              transform = combine(cast_sweep_full,
                                                   .id = aff_sweep)),
+
          cast_stats_full_split = target(cast_sweep_full[["stats"]],
                               transform = map(cast_sweep_full,
                                                   .id = aff_sweep)),
@@ -905,12 +906,13 @@ pl <- drake::drake_plan(
                                             ),
          save_copepod_pmat_diag_full = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
                                                  gg_sim_mat(sim_mat = p_mat_full_cov,
-                                                            cast_ob = cast_sweep_full[[max_h_ind_full]]$cast_compact,
+                                                            cast_ob = cast_sweep_full_list[[max_h_ind_full]]$cast_compact,
                                                             highlight = TRUE,
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
 
          cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact, env_trans_spatial, spatial_vars),
+
          save_copepod_clust_full_map =
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
                           plot =
