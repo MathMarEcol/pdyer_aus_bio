@@ -299,7 +299,7 @@ pair_dist <- function(pairs, env_trans_wide, env_vars) {
     i <- p[1]
     j <- p[2]
     if (i == j) {
-      return(c(i = i, j = j, dist = 1))
+      return(data.frame(i = i, j = j, dist = 1))
     }
 
     i_points <- env_trans[env_trans$x_row == i, env_vars]
