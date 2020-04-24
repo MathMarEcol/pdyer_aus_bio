@@ -825,7 +825,7 @@ pl <- drake::drake_plan(
                                              plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
                                                geom_line()
                                             ),
-         save_copepod_pmat_diag = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_diag_file),
+         save_copepod_pmat_diag = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
                                                  gg_sim_mat(sim_mat = p_mat_diag_cov,
                                                             cast_ob = cast_sweep[[max_h_ind]]$cast_compact,
                                                             highlight = TRUE,
@@ -903,7 +903,7 @@ pl <- drake::drake_plan(
 
                                                                 )
                                             ),
-         save_copepod_pmat_diag_full = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_full_file),
+         save_copepod_pmat_diag_full = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
                                                  gg_sim_mat(sim_mat = p_mat_full_cov,
                                                             cast_ob = cast_sweep_full[[max_h_ind_full]]$cast_compact,
                                                             highlight = TRUE,
