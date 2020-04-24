@@ -820,7 +820,8 @@ pl <- drake::drake_plan(
 
          ##plot the cast clustering
          save_copepod_aff_h = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
-                                             plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)))
+                                             plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
+                                               geom_line()
                                             ),
          save_copepod_pmat_diag = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_diag_file),
                                                  gg_sim_mat(sim_mat = p_mat_diag_cov,
@@ -892,7 +893,10 @@ pl <- drake::drake_plan(
 
          ##plot the cast clustering
          save_copepod_aff_h_full = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
-                                             plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)))
+                                                  plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)) +
+                                                                                                                                              geom_line()
+
+                                                                )
                                             ),
          save_copepod_pmat_diag_full = ggsave_wrapper(filemname = file_out(!!pl_copepod_p_mat_full_file),
                                                  gg_sim_mat(sim_mat = p_mat_full_cov,
