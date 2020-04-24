@@ -807,8 +807,12 @@ pl <- drake::drake_plan(
 
          ##Cluster the combined copepods
          ##choos the peak Hubert Gama
-         cast_stats = target(dplyr::bind_rows(cast_sweep[["stats"]]),
-                              transform = combine(cast_sweep,
+         cast_stats_split = target(cast_sweep[["stats"]],
+                              transform = map(cast_sweep,
+                                                  .id = aff_sweep)),
+
+         cast_stats = target(dplyr::bind_rows(cast_stats_split),
+                              transform = combine(cast_stats_split,
                                                   .id = aff_sweep)),
 
          max_h_ind = which.max(cast_stats$h),
