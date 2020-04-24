@@ -801,9 +801,11 @@ pl <- drake::drake_plan(
                            aff_sweep = !!(seq(0.05, 0.95, 0.25)))
          ),
 
-         ##add lat and lon to env_trans_wide
 
 
+         cast_sweep_list = target(list(cast_sweep),
+                              transform = map(cast_sweep,
+                                                  .id = aff_sweep)),
 
          ##Cluster the combined copepods
          ##choos the peak Hubert Gama
@@ -830,7 +832,7 @@ pl <- drake::drake_plan(
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
 
-         cast_spatial = get_cast_spatial(cast_sweep[[max_h_ind]]$cast_compact, env_trans_spatial, spatial_vars),
+         cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact, env_trans_spatial, spatial_vars),
          save_copepod_clust_map =
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
                           plot =
@@ -877,6 +879,9 @@ pl <- drake::drake_plan(
                            aff_sweep)
          ),
 
+         cast_stats_full_list = target(list(cast_sweep_full),
+                              transform = map(cast_sweep_full,
+                                                  .id = aff_sweep)),
          cast_stats_full_split = target(cast_sweep_full[["stats"]],
                               transform = map(cast_sweep_full,
                                                   .id = aff_sweep)),
@@ -905,7 +910,7 @@ pl <- drake::drake_plan(
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
 
-         cast_spatial_full = get_cast_spatial(cast_sweep_full[[max_h_ind_full]]$cast_compact, env_trans_spatial, spatial_vars),
+         cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact, env_trans_spatial, spatial_vars),
          save_copepod_clust_full_map =
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
                           plot =
