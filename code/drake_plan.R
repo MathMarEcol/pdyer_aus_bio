@@ -867,7 +867,7 @@ pl <- drake::drake_plan(
          ),
 
          p_mat_full_cov = matrix(p_mat_full_cov_long[
-           order(p_mat_full_cov_long[,c("i", "j")]), "dist" ],
+           order(p_mat_full_cov_long$i, p_mat_full_cov_long$j), "dist" ],
            nrow = nrow(env_round), ncol = nrow(env_round)),
          ##cluster, using CAST
          cast_sweep_full = target(cast_compact_stats(aff_thres = aff_sweep,
@@ -876,13 +876,16 @@ pl <- drake::drake_plan(
                            aff_sweep)
          ),
 
+         cast_stats_full_split = target(cast_sweep_full[["stats"]],
+                              transform = map(cast_sweep_full,
+                                                  .id = aff_sweep)),
+
+         cast_stats_full = target(dplyr::bind_rows(cast_stats_full_split),
+                              transform = combine(cast_stats_full_split,
+                                                  .id = aff_sweep)),
 
          ##Cluster the combined copepods
          ##choos the peak Hubert Gama
-         cast_stats_full = target(dplyr::bind_rows(cast_sweep_full[["stats"]]),
-                                  transform = combine(cast_sweep_full,
-                                                      .id = aff_sweep)
-                                  ),
 
          max_h_ind_full = which.max(cast_stats_full$h),
          max_aff_full = cast_stats_full$aff[max_h_ind_full],
