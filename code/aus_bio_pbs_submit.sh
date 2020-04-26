@@ -29,7 +29,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR/Q1215/
 mkdir -p $TMPDIR/Q1215/AusCPR
 rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR/Q1215/AusCPR
 mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
-rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
+rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/
 
 #Essential Code
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
