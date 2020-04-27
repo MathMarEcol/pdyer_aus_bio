@@ -60,6 +60,12 @@ shopt -s expand_aliases
 #Always use the latest module, so I don't need to remember to copy it manually
 cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/aus_bio_module.lua \
       ~/privatemodules/aus_bio_module.lua
+#Also make sure I have a wrapped version of qsub and qstat for the containers
+cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qsub_wrapper.sh \
+   ~/bin/qsub
+cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qstat_wrapper.sh \
+   ~/bin/qstat
+
 
 module load use.own
 module load aus_bio_module
