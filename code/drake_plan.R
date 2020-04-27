@@ -984,7 +984,7 @@ if (!interactive()) {
     jobs <- future::availableCores(methods = c("PBS"), default = 1) - 1 ## number of cores, leave one for master
     parallelism <- "clustermq"
     options(
-      clustermq.scheduler = "MULTICORE",
+      clustermq.scheduler = "MULTICORE"
     )
     if (jobs <= 0) {
       ## not in a PBS job
