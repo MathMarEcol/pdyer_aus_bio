@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -A UQ-SCI-SMP
-#PBS -l select=1:ncpus=10:mem=48GB
-#PBS -l walltime=10:00:00
+#PBS -l select=1:ncpus=4:mem=60GB
+#PBS -l walltime=20:00:00
 
 
 
