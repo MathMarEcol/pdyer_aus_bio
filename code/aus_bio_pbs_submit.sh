@@ -80,7 +80,7 @@ rsync -irc $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/ $ROOT_STORE_DIR/Q1216/pdye
 #copy outputs to an archive
 mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
 for file in $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
-    cp "$file" "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history/${date_run}_${git_hash}_${file##*/}"
+    cp -r "$file" "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history/${date_run}_${git_hash}_${file##*/}"
 done
 
 #The downloaded variables from bioORACLE are also worth saving
