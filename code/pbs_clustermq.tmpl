@@ -6,6 +6,7 @@
 #PBS -l walltime={{ walltime | 1:00:00 }} # wall time
 #PBS -o {{ log_file | /dev/null }}        # output file
 #PBS -j oe                                # join stdour and stderr streams
+#PBS -q @awonmgr2                         #require job to start on awoonga
 module load use.own
 module load aus_bio_module
 ulimit -v $(( 1024 * {{ memory | 4096 }} ))
