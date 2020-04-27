@@ -832,9 +832,9 @@ pl <- drake::drake_plan(
                             ggplot2::ggplot(
                                        data = cast_spatial,
                                        mapping =
-                                         ggplot2::aes(x = spatial_vars[1],
+                                         ggplot2::aes_string(x = spatial_vars[1],
                                                       y = spatial_vars[2],
-                                                      fill = as.factor(clust))
+                                                      fill = as.factor(cast_spatial$clust))
                                      ) +
                             ggplot2::geom_raster(),
          ),
@@ -912,9 +912,11 @@ pl <- drake::drake_plan(
                             ggplot2::ggplot(
                                        data = cast_spatial_full,
                                        mapping =
-                                         ggplot2::aes(x = spatial_vars[1],
-                                                      y = spatial_vars[2],
-                                                      fill = as.factor(clust))
+                                         ggplot2::aes_string(
+                                                    x = spatial_vars[1],
+                                                    y = spatial_vars[2],
+                                                    fill = as.factor(cast_spatial_full$clust)
+                                                    )
                                      ) +
                             ggplot2::geom_raster(),
          ),
