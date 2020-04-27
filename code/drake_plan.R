@@ -445,16 +445,9 @@ pl_copepod_aff_h_full_file <- here::here("outputs", "copepod_aff_h_full.png")
 pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.png")
 pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
-jobs <- future::availableCores(methods = c("PBS"), default = 1) - 1 ## number of cores, leave one for master
-parallelism <- "clustermq"
-if (jobs <= 0) {
-  ## not in a PBS job
-  jobs <- future::availableCores(methods = c("mc.cores"))
-}
-if (jobs <= 1) {
-  jobs <- 1
-  parallelism <- "loop"
-}
+
+jobs <- 10
+
 
 pl <- drake::drake_plan(
                ##parameters
@@ -978,11 +971,31 @@ if(is.null(cache_ob)){
 
 #' Make
 if (!interactive()) {
-  options(
-    clustermq.scheduler = "PBS",
-                                        # Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-    clustermq.template = here::here("code", "pbs_clustermq.tmpl")
-  )
+  if(system2("qstat") == 0 ){
+    ##We are in a system where qstat is present and working
+    options(
+      clustermq.scheduler = "PBS",
+      ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
+      clustermq.template = here::here("code", "pbs_clustermq.tmpl")
+    )
+    parallelism <- "clustermq"
+  } else {
+    ##no access to qstat/qsub, run multicore/serial
+    jobs <- future::availableCores(methods = c("PBS"), default = 1) - 1 ## number of cores, leave one for master
+    parallelism <- "clustermq"
+    options(
+      clustermq.scheduler = "MULTICORE",
+    )
+    if (jobs <= 0) {
+      ## not in a PBS job
+      jobs <- future::availableCores(methods = c("mc.cores"))
+    }
+    if (jobs <= 1) {
+      jobs <- 1
+      parallelism <- "loop"
+    }
+
+  }
 
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
