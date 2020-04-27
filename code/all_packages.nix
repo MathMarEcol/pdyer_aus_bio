@@ -24,7 +24,7 @@ with pkgs;[
           # binutils
           coreutils
 
-          # pandoc #needed for rMarkdown
+          pandoc #needed for rMarkdown
 
           #gnutar
           #gzip
