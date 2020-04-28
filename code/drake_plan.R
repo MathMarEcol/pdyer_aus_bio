@@ -996,7 +996,7 @@ if (!interactive()) {
     options(
       clustermq.scheduler = "PBS",
       ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-      clustermq.template = here::here("code", "pbs_clustermq")
+      clustermq.template = here::here("code", "pbs_clustermq.tmpl")
     )
     parallelism <- "clustermq"
   } else {
@@ -1016,6 +1016,8 @@ if (!interactive()) {
     }
 
   }
+  print(parallelism)
+print(getOption("clustermq.template", "PBS"))
 
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
