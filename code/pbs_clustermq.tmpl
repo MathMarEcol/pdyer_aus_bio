@@ -1,11 +1,17 @@
 #!/bin/bash
+#Phil Dyer account string
 #PBS -A UQ-SCI-SMP  
 #PBS -N {{ job_name }}                    
-#PBS -l select=1:ncpus={{ cores | 1 }}:mem={{ memory | 4096 }}MB
+#Submit a job array
+#PBS -J 1-{{ n_jobs }}
+#Each job gets one task with `cores` and `memory` specified
+#PBS -l select=1:ncpus={{ cores | 1 }}:mpiprocs={{ cores | 1 }}:mem={{ memory | 4096 }}MB
 #PBS -l walltime={{ walltime | 1:00:00 }} 
 #PBS -o {{ log_file | /dev/null }}        
 #PBS -j oe                                
 #PBS -q @awonmgr2                         
+
+cd {{ workdir | "$PBS_O_HOME" }}
 module load use.own
 module load aus_bio_module
 ulimit -v $(( 1024 * {{ memory | 4096 }} ))
