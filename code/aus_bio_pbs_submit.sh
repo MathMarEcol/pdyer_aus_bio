@@ -51,10 +51,10 @@ rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/pbs_clustermq.tmpl $TM
 touch $TMPDIR/Q1216/pdyer/pdyer_aus_bio/.here
 
 #Set up the output directory
-#I put in current outputs, in order to avoid replotting 
+#I put in current outputs, in order to avoid replotting. Update, I want to replot
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
-rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/ \
-          $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
+# rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/ \
+#           $TMPDIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Then run from the local disk
 cd $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
