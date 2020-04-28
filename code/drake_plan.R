@@ -71,6 +71,10 @@ env_round_label <- function(env_data,
   return(env_round)
 }
 
+get_env_names <- function(env_round, spatial_vars, env_id_col){
+  names(env_round)[!names(env_round) %in% c(spatial_vars, env_id_col)]
+}
+
 align_env_samp <- function(surv,
                            spatial_vars,
                            env_res,
@@ -459,17 +463,15 @@ pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
 jobs <- 10
 
+## parameters
 
-pl <- drake::drake_plan(
-               ##parameters
-               epi_depth = 200,
-               freq_range = c(0.05, 1),
-               min_occurrence = 6,
-               cov_min = 1.0,
-               mapfile =  target(file_in(!!mapfile_location),
-                                 hpc = FALSE),
-               mapLayer =  "World_EEZ_v8_2014_HR",
-               pred = list(),
+               epi_depth = 200
+               freq_range = c(0.05, 1)
+               min_occurrence = 6
+               cov_min = 1.0
+
+               mapLayer =  "World_EEZ_v8_2014_HR"
+               pred = list()
                env_vars = c("depth",
                             "temp",
                             "nitrate",
@@ -477,28 +479,28 @@ pl <- drake::drake_plan(
                             "chlo",
                             "iron",
                             "salinity",
-                            "curvel"),
-               env_modes = c("min", "max", "mean", "range"),
-               spatial_vars =  c("lon", "lat"),
-               env_id_col = "env_id",
-               bio_oracle_str_template = "BO2_%s%s_ss",
-               env_offset = 0,
-               max_depth = 1500,
+                            "curvel")
+               env_modes = c("min", "max", "mean", "range")
+               spatial_vars =  c("lon", "lat")
+               env_id_col = "env_id"
+               bio_oracle_str_template = "BO2_%s%s_ss"
+               env_offset = 0
+               max_depth = 1500
                ##in lat lon degrees, use 1/integer fraction
                ##for proper rastering later,
                ##currently 1/12 to allign with BioORACLE
-               regrid_resolution = 1/ 2,#TODO: 1 / 12,
+               regrid_resolution = 1/ 2#TODO: 1 / 12,
                ##Extent chosen to match the largest extents of
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
                env_extent = list(x = c(109 + 1 / 24, 163 + 23 / 24),
-                                 y = c(-47 - 23 / 24, -8 - 1 / 24)),
-               gf_trees = 50,
-               gf_bins = 201,
-               gf_corr_thres = 0.5,
-               extrap = TRUE,
-               extrap_pow = 1/4,
+                                 y = c(-47 - 23 / 24, -8 - 1 / 24))
+               gf_trees = 50
+               gf_bins = 201
+               gf_corr_thres = 0.5
+               extrap = TRUE
+               extrap_pow = 1/4
                ##The following variables work better in log scale.
                ##If a variable is log transformed,
                ##clipping will take place on the log scale
@@ -519,7 +521,7 @@ pl <- drake::drake_plan(
                  "BO2_silicaterange_ss",
                  "BO2_ironrange_ss",
                  "BO2_curvelrange_ss"
-               ),
+               )
                ##For each predictor, I have specified limits.
                ##Not all variables hit the limits, shwon in comment
                ##The limits are generally around 3 standard deviations
@@ -603,10 +605,15 @@ pl <- drake::drake_plan(
                  "BO2_curvelrange_ss" = c(-4.6, 0.4),
                  ##lower extremes in deep trences. no upper extremes
                  "MS_bathy_5m" = c(-6000, 0)
-               ),
-               marine_map = target(sf::st_read(mapfile, layer = mapLayer),
+               )
+
+
+
+pl <- drake::drake_plan(
+               marine_map = target(sf::st_read(file_in(!!mapfile_location),
+                                               layer = mapLayer),
                                    hpc = FALSE), #Workers can't see the same TMPDIR
-               ausEEZ = marine_map[marine_map$Country == "Australia", ],
+               ## ausEEZ = marine_map[marine_map$Country == "Australia", ],
                env_complete = target(env_aus_eez(bio_oracle_cache = file_in(!!biooracle_folder),
                                           env_vars = env_vars,
                                           env_modes = env_modes,
@@ -627,7 +634,7 @@ pl <- drake::drake_plan(
                                            env_res = regrid_resolution,
                                            env_offset = env_offset,
                                            env_id_col = env_id_col),
-               env_names = names(env_round)[!names(env_round) %in% c(spatial_vars, env_id_col)],
+               env_names = get_env_names(env_round, spatial_vars, env_id_col),
                ## here I have referred to a variable defined above,
                ##copepod_csv copepod_csv is just a string, which will
                ##be passed to read_csv. first, I wrap the string inside
