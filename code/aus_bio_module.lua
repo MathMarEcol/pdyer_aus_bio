@@ -17,7 +17,7 @@ setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
          ",/QRISdata"
 
        )
---setenv("SINGULARITYENV_PREPEND_PATH", "/opt/pbs/bin")
+setenv("SINGULARITYENV_APPEND_PATH", "/home/uqpdyer/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
