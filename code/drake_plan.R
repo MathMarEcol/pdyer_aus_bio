@@ -919,7 +919,10 @@ pl <- drake::drake_plan(
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
 
-         cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact, env_trans_spatial, spatial_vars),
+         cluster_order_full = sort_between(sim_mat = p_mat_diag_cov,
+                                      cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
+
+         cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact[cluster_order_full], env_trans_spatial, spatial_vars),
 
          save_copepod_clust_full_map =
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
