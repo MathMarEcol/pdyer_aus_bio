@@ -13,6 +13,10 @@ cd $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 git_hash=$(git rev-parse --short HEAD)
 date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
+#make sure old runs are not polluting the disk
+rm -r $TMPDIR/Q1215
+rm -r $TMPDIR/Q1216
+
 #For best performance, copy all needed files to the node local disk. This may break when drake submits jobs for me.
 mkdir -p $TMPDIR/Q1215
 mkdir -p $TMPDIR/Q1216
@@ -24,6 +28,7 @@ mkdir -p $TMPDIR/Q1216
 # and automatically between 90days and $TMPDIR
 #which means I don't need $PBS_O_WORKDIR
 #Inputs
+
 mkdir -p $TMPDIR/Q1215/bioORACLE
 rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR/Q1215/
 mkdir -p $TMPDIR/Q1215/AusCPR
@@ -32,6 +37,7 @@ mkdir -p $TMPDIR/Q1215/ShapeFiles/World_EEZ_v8
 rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR/Q1215/ShapeFiles/
 
 #Essential Code
+
 mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 #The drake cache contains previous results, and is needed to avoid recaclulating stuff.
