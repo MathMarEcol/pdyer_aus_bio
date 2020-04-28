@@ -1069,9 +1069,9 @@ print(getOption("clustermq.template", "PBS"))
               jobs = jobs, ## 6 jobs, for 6 surveys
               console_log_file = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
-                              memory = 16000,
-                              cores = 4,
-                              walltime = "20:00:00"),
+                              memory = "12GB",
+                              cores = 1,
+                              walltime = "10:00:00"),
               verbose = 4,
               cache = cache_ob,
               caching = "worker",
