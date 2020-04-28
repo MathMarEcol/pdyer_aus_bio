@@ -7,7 +7,7 @@
 #Each job gets one task with `cores` and `memory` specified
 #PBS -l select=1:ncpus={{ cores | 1 }}:mpiprocs={{ cores | 1 }}:mem={{ memory | 4096 }}MB
 #PBS -l walltime={{ walltime | 1:00:00 }} 
-#PBS -o {{ log_file | /dev/null }}        
+#PBS -o {{ log_file | /dev/null }}.{{ job_name}}.txt        
 #PBS -j oe                                
 
 cd {{ workdir | "$PBS_O_HOME" }}
