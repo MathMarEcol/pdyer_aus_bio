@@ -603,9 +603,10 @@ pl <- drake::drake_plan(
                  ##lower extremes in deep trences. no upper extremes
                  "MS_bathy_5m" = c(-6000, 0)
                ),
-               marine_map = sf::st_read(mapfile, layer = mapLayer),
+               marine_map = target(sf::st_read(mapfile, layer = mapLayer),
+                                   hpc = FALSE), #Workers can't see the same TMPDIR
                ausEEZ = marine_map[marine_map$Country == "Australia", ],
-               env_complete = env_aus_eez(bio_oracle_cache = file_in(!!biooracle_folder),
+               env_complete = target(env_aus_eez(bio_oracle_cache = file_in(!!biooracle_folder),
                                           env_vars = env_vars,
                                           env_modes = env_modes,
                                           env_extent = env_extent,
@@ -613,6 +614,7 @@ pl <- drake::drake_plan(
                                           regrid_res = regrid_resolution,
                                           bio_oracle_str_template =
                                             "BO2_%s%s_ss"),
+                                   hpc = FALSE), #Workers can't see the same TMPDIR
                env_logged = env_log_transform(env_data = env_complete,
                                               env_log = env_log),
                env_clipped = env_clip_extremes(env_data = env_logged,
@@ -631,7 +633,7 @@ pl <- drake::drake_plan(
                ##file_in, so that drake knows it is a filename, that
                ##I read from the file, and that the file should be tracked.
                ##files cannot be stored in variables, must be a string.
-               combined_copepod =
+               combined_copepod = target(
                  readr::read_csv(
                           file_in(!!copepod_data),
                           na = c("(null)", "."),
@@ -639,6 +641,7 @@ pl <- drake::drake_plan(
                             readr::cols(PROJECT_ID = col_character(),
                                         SAMPLE_DEPTH = col_number()),
                           ),
+                 hpc = FALSE), #Workers can't see the same TMPDIR
                ##I had a lambda (unnamed) function here, but moved it to the
                ##custom funtion section
 #
@@ -825,23 +828,25 @@ pl <- drake::drake_plan(
          max_aff = cast_stats$aff[max_h_ind],
 
          ##plot the cast clustering
-         save_copepod_aff_h = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
+         save_copepod_aff_h = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
                                              plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
                                                geom_line()
                                             ),
-         save_copepod_pmat_diag = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
+                                     hpc = FALSE),
+         save_copepod_pmat_diag = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
                                                  gg_sim_mat(sim_mat = p_mat_diag_cov,
                                                             cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact,
                                                             highlight = TRUE,
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
+                                     hpc = FALSE),
 
          cluster_order = sort_between(sim_mat = p_mat_diag_cov,
                                       cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
 
          cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact[cluster_order], env_trans_spatial, spatial_vars),
 
-         save_copepod_clust_map =
+         save_copepod_clust_map = target(
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
                           plot =
                             ggplot2::ggplot(
@@ -853,6 +858,7 @@ pl <- drake::drake_plan(
                                      ) +
                             ggplot2::geom_raster(),
          ),
+                                     hpc = FALSE),
 
 
          ##TODO hotellings with point clouds
@@ -906,25 +912,25 @@ pl <- drake::drake_plan(
          max_aff_full = cast_stats_full$aff[max_h_ind_full],
 
          ##plot the cast clustering
-         save_copepod_aff_h_full = ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
-                                                  plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type)) +
-                                                                                                                                              geom_line()
-
-                                                                )
-                                            ),
-         save_copepod_pmat_diag_full = ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
+         save_copepod_aff_h_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
+                                                  plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
+                                                    geom_line()
+                                                                ),
+                                     hpc = FALSE),
+         save_copepod_pmat_diag_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
                                                  gg_sim_mat(sim_mat = p_mat_full_cov,
                                                             cast_ob = cast_sweep_full_list[[max_h_ind_full]]$cast_compact,
                                                             highlight = TRUE,
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
+                                     hpc = FALSE),
 
          cluster_order_full = sort_between(sim_mat = p_mat_diag_cov,
                                       cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
 
          cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact[cluster_order_full], env_trans_spatial, spatial_vars),
 
-         save_copepod_clust_full_map =
+         save_copepod_clust_full_map = target(
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
                           plot =
                             ggplot2::ggplot(
@@ -938,44 +944,54 @@ pl <- drake::drake_plan(
                                      ) +
                             ggplot2::geom_raster(),
          ),
+                                     hpc = FALSE),
          #Keep going, but get some outputs eventually
 #
 #
          #plotting a bit
-         ext_pl = plot_extents(marine_map,
+         ext_pl = target(plot_extents(marine_map,
                                env_extent,
                                file_out(!!ext_pl_map_file)
                                ),
+                                     hpc = FALSE),
 #
-         ext_pl_biooracle = plot_temp(env_final,
+         ext_pl_biooracle = target(plot_temp(env_final,
                                       spatial_vars,
                                       marine_map,
                                       env_extent,
                                       file_out(!!ext_pl_temp_file)
                                       ),
-         track_state = state_rds(file_out(!!state_rds_file),
+                                     hpc = FALSE),
+         track_state = target(state_rds(file_out(!!state_rds_file),
                                  file_out(!!state_yaml_file)),
-         save_copepod_gfboot_cumimp = ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
+                                     hpc = FALSE),
+         save_copepod_gfboot_cumimp = target(ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
                                            plot = gg_combined_bootstrapGF(copepod_combined_gf,
                                                                           n_curves = 30,
                                                                           debug = FALSE)
                                        ),
-         plot_range = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+                                     hpc = FALSE),
+
+         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_range_file)),
-         plot_density = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+                                     hpc = FALSE),
+         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Density",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_density_file)),
-         plot_cumimp = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+                                     hpc = FALSE),
+         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Cumulative.Importance",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_cumimp_file)),
-         plot_perf = gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+                                     hpc = FALSE),
+         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Performance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_gf_perf_file))
+                                      out_file = file_out(!!pl_gf_perf_file)),
+                                     hpc = FALSE)
          )
 
 ##Set seed
