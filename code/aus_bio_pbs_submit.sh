@@ -63,6 +63,8 @@ cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/aus_bio_module.lua \
 #Also make sure I have a wrapped version of qsub and qstat for the containers
 cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qsub_wrap.sh \
    ~/bin/qsub
+cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qdel_wrap.sh \
+~/bin/qdel
 cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qstat_wrap.sh \
    ~/bin/qstat
 

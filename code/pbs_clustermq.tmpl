@@ -9,7 +9,6 @@
 #PBS -l walltime={{ walltime | 1:00:00 }} 
 #PBS -o {{ log_file | /dev/null }}        
 #PBS -j oe                                
-#PBS -q @awonmgr2                         
 
 cd {{ workdir | "$PBS_O_HOME" }}
 module load use.own
