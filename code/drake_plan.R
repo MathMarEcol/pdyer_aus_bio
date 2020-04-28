@@ -286,6 +286,17 @@ all_pairs_diag <- function(n) {
 
 }
 
+sort_between <- function(sim_mat, cast_ob) {
+  aff_btw <- aff_cluster_between(sim_mat = sim_mat, cast_obj = cast_ob)
+
+  aff_btw_wide <- matrix(aff_btw$affs, sqrt(nrow(aff_btw)), sqrt(nrow(aff_btw)))
+
+  aff_dist <- dist(aff_btw_wide)
+  aff_sort <- hclust(aff_dist)
+
+  return(aff_sort$order)
+}
+
 ##awkward version, assumes that the env_trans_wide is
 ##just the points
 pair_dist <- function(pairs, env_trans_wide, env_vars) {
@@ -825,7 +836,11 @@ pl <- drake::drake_plan(
                                                             sort_between = TRUE,
                                                             sort_within = TRUE)),
 
-         cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact, env_trans_spatial, spatial_vars),
+         cluster_order = sort_between(sim_mat = p_mat_diag_cov,
+                                      cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
+
+         cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact[cluster_order], env_trans_spatial, spatial_vars),
+
          save_copepod_clust_map =
            ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
                           plot =
