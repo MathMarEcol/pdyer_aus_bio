@@ -36,7 +36,7 @@ mkdir -p $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 #The drake cache contains previous results, and is needed to avoid recaclulating stuff.
 rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache $TMPDIR/Q1216/pdyer/pdyer_aus_bio
-# rsync -irc $PBS_O_WORKDIR/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/pbs_clustermq.tmpl $TMPDIR/Q1216/pdyer/pdyer_aus_bio/code
 
 #Set up the .here file for the "here" package.
 #here() expects to find a git repo or a Rproj file, but I want to minimise folder copying,

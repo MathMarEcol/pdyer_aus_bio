@@ -1021,7 +1021,10 @@ if (!interactive()) {
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
               console_log_file = here::here("outputs", "drake_log.log"),
-              template = list(log_file = here::here("outputs", "drake_worker_log.txt")),
+              template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
+                              memory = "12GB",
+                              cores = 1,
+                              walltime = "10:00:00"),
               verbose = 4,
               cache = cache_ob
               )
