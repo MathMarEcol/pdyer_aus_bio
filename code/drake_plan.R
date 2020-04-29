@@ -489,14 +489,14 @@ jobs <- 10
                ##in lat lon degrees, use 1/integer fraction
                ##for proper rastering later,
                ##currently 1/12 to allign with BioORACLE
-               regrid_resolution = 1/ 2#TODO: 1 / 12,
+               regrid_resolution = 1/ 4#TODO: 1 / 12,
                ##Extent chosen to match the largest extents of
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
                env_extent = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24))
-               gf_trees = 50
+               gf_trees = 200
                gf_bins = 201
                gf_corr_thres = 0.5
                extrap = TRUE
@@ -816,7 +816,7 @@ pl <- drake::drake_plan(
          cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
                                                 sim_mat = p_mat_diag_cov),
            transform = map(.id = aff_sweep,
-                           aff_sweep = !!(seq(0.05, 0.95, 0.25)))
+                           aff_sweep = !!(seq(0.05, 0.95, 0.05)))
          ),
 
 
