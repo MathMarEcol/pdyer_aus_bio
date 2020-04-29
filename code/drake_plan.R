@@ -202,16 +202,29 @@ env_log_transform <- function(env_data, env_log) {
   return(env_data)
 }
 
-env_clip_extremes <- function(env_data, env_limits) {
+env_clip_extremes_tuned <- function(env_data, env_limits) {
 
   ## Clipping extremes, post logging
-  purrr::walk(names(env_limits), ~{
+  purrr::walk(names(env_limits), ~ {
     min_x <- min(env_limits[[.x]])
     max_x <- max(env_limits[[.x]])
     env_data[[.x]] <- pmax(min_x, pmin(env_data[[.x]], max_x))
   })
   return(env_data)
 }
+env_clip_extremes <- function(env_data, std_thres) {
+
+  ## Clipping extremes, post logging
+  purrr::walk(names(env_data), ~{
+    x_sd <- sd(env_data[[.x]])
+    x_mean <- mean(env_data[[.x]])
+    min_x <- x_mean - x_sd * std_thres
+    max_x <- x_mean + x_sd * std_thres
+    env_data[[.x]] <- pmax(min_x, pmin(env_data[[.x]], max_x))
+  })
+  return(env_data)
+}
+
 env_name_spatial <- function(env_data, spatial_vars) {
   names(env_data)[1:2] <- spatial_vars
   return(env_data)
