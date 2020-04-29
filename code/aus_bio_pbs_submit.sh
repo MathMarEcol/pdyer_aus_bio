@@ -13,9 +13,6 @@ cd $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 git_hash=$(git rev-parse --short HEAD)
 date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
-#make sure old runs are not polluting the disk
-rm -r $TMPDIR/Q1215
-rm -r $TMPDIR/Q1216
 
 #For best performance, copy all needed files to the node local disk. This may break when drake submits jobs for me.
 mkdir -p $TMPDIR/Q1215
