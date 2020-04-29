@@ -85,6 +85,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         doRNG
         future
         future_apply
+        future_callr
         furrr
         doFuture
         randomForestSRC

@@ -474,7 +474,7 @@ pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.
 pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
 
-jobs <- 10
+jobs <- 5
 
 ## parameters
 
@@ -1077,13 +1077,14 @@ print(getOption("clustermq.template", "PBS"))
               jobs = jobs, ## 6 jobs, for 6 surveys
               console_log_file = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
-                              memory = 12000,
-                              cores = 1,
+                              memory = 16000,
+                              cores = 4,
                               walltime = "20:00:00"),
               verbose = 4,
               cache = cache_ob,
               caching = "worker",
-              garbage_collection = TRUE
+              garbage_collection = TRUE,
+              prework <- quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
               )
 
 drake::vis_drake_graph(drake_config(pl, cache = cache_ob, seed = r_seed),
