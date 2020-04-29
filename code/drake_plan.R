@@ -526,6 +526,7 @@ jobs <- 10
                ##Not all variables hit the limits, shwon in comment
                ##The limits are generally around 3 standard deviations
                ##from the mean, unless specified in comments
+               env_limits_sd <- 3
                env_limits = list(
                  ##no clipping
                  "BO2_tempmin_ss" = c(0, 30),
@@ -623,10 +624,10 @@ pl <- drake::drake_plan(
                                           bio_oracle_str_template =
                                             "BO2_%s%s_ss"),
                                    hpc = FALSE), #Workers can't see the same TMPDIR
-               env_logged = env_log_transform(env_data = env_complete,
-                                              env_log = env_log),
-               env_clipped = env_clip_extremes(env_data = env_logged,
-                                               env_limits = env_limits),
+               ## env_logged = env_log_transform(env_data = env_complete,
+               ##                                env_log = env_log),
+               env_clipped = env_clip_extremes(env_data = env_complete,
+                                               env_limits = env_limits_sd),
                env_final = env_name_spatial(env_data = env_clipped,
                                             spatial_vars = spatial_vars),
                env_round = env_round_label(env_data = env_final,
