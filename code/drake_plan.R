@@ -1067,7 +1067,9 @@ print(getOption("clustermq.template", "PBS"))
                               cores = 1,
                               walltime = "10:00:00"),
               verbose = 4,
-              cache = cache_ob
+              cache = cache_ob,
+              caching = "worker",
+              garbage_collection = TRUE
               )
 
 drake::vis_drake_graph(drake_config(pl, cache = cache_ob, seed = r_seed),
