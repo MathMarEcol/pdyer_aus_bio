@@ -1079,7 +1079,7 @@ print(getOption("clustermq.template", "PBS"))
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
                               memory = 12000,
                               cores = 1,
-                              walltime = "10:00:00"),
+                              walltime = "20:00:00"),
               verbose = 4,
               cache = cache_ob,
               caching = "worker",
