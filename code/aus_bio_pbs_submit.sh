@@ -76,7 +76,8 @@ cp $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/qstat_wrap.sh \
 module load use.own
 module load aus_bio_module
 #Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
-TMPDIR_REAL=realpath $TMPDIR_SHARE
+TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
+cd $TMPDIR_REAL
 Rscript $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R
 
 
