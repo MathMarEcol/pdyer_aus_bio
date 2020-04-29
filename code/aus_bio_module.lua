@@ -9,7 +9,9 @@ whatis("For more detail, run ")
 whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
+         ",/gpfs1/scratch/30days/uqpdyer" ..
          ",/gpfs1/scratch/30days:/30days" ..
+         ",/gpfs1/scratch/90days/uqpdyer" ..
          ",/gpfs1/scratch/90days:/90days" ..
          ",/gpfs1/groups:/groups" ..
          ",/gpfs1/sw1:/sw" ..
