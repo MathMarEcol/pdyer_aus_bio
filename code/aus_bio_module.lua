@@ -23,7 +23,7 @@ setenv("SINGULARITYENV_APPEND_PATH", "/home/uqpdyer/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/90days/uqpdyer/rdm_mirror/Q1216/pdyer/pdyer_aus_bio/code/j41wlj5qrcgj28c5xsijwds6pi3is8fv-singularity-image-r-singularity-aus_bio.img" --as recommended by RCC, 90days for references, and input data files
+aus_bio_sif = "/90days/uqpdyer/rdm_mirror/Q1216/pdyer/pdyer_aus_bio/code/6qf8hsmy2lfrbh1cald22983r1yc8874-singularity-image-r-singularity-aus_bio.img" --as recommended by RCC, 90days for references, and input data files
 
 -- Run Rscript on stdin
 execute{cmd="shopt -s expand_aliases", modeA={"all"}}
