@@ -33,7 +33,7 @@ in
 with pkgs; singularity-tools.buildImage { 
   name = name;
   contents = allpackages;
-  diskSize = 16192;
+  diskSize = 14192;
   runAsRoot = ''
   mkdir -p /etc
 touch /etc/passwd
