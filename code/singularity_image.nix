@@ -8,7 +8,7 @@
   ? import
     (builtins.fetchGit {
   # Descriptive name to make the store path easier to identify
-  name = "nixos-unstable-2020-04-17";
+  name = "nixos-unstable-2020-05-01";
   # url = https://github.com/nixos/nixpkgs-channels/;
   url = https://github.com/PhDyellow/nixpkgs/;
   # Commit hash for nixos-unstable as of 2020-01-20
