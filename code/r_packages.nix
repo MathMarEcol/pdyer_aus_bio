@@ -49,7 +49,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         #data sources
         sdmpredictors
         robis
-        seaaroundus
+        #seaaroundus #removed from CRAN
         raster
 
         #simulated data

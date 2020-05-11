@@ -1029,18 +1029,18 @@ if(is.null(cache_ob)){
   cache_ob <- drake::drake_cache(cache_dir)
 }
 
-drake::vis_drake_graph(drake_config(pl, cache = cache_ob, seed = r_seed),
+drake::vis_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
   file = here::here("outputs", "drake_graph_pre.html"),
   selfcontained = TRUE,
   hover = TRUE
 )
-drake::sankey_drake_graph(drake_config(pl, seed = r_seed, cache = cache_ob),
-  file = here::here("outputs", "drake_graph_pre_sankey.html"),
+drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
+                          file = here::here("outputs", "drake_graph_pre_sankey.html"),
   selfcontained = TRUE
 )
 ggsave(
   filename = here::here("outputs", "drake_ggplot_pre.png"),
-  drake::drake_ggraph(drake_config(pl, seed = r_seed, cache = cache_ob))
+  drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
 )
 #' Make
 if (!interactive()) {
@@ -1087,14 +1087,15 @@ print(getOption("clustermq.template", "PBS"))
               prework <- quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
               )
 
-drake::vis_drake_graph(drake_config(pl, cache = cache_ob, seed = r_seed),
-                       file = here::here("outputs", "drake_graph.html"),
+  drake::vis_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
+                         file = here::here("outputs", "drake_graph.html"),
                        selfcontained = TRUE,
                        hover = TRUE)
-drake::sankey_drake_graph(drake_config(pl, seed = r_seed, cache = cache_ob),
+drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
                           file = here::here("outputs", "drake_graph_sankey.html"),
                           selfcontained = TRUE)
 ggsave(filename = here::here("outputs", "drake_ggplot.png"),
-       drake::drake_ggraph(drake_config(pl, seed = r_seed, cache = cache_ob)))
+       drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
+       )
 
 }
