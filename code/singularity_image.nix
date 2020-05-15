@@ -19,7 +19,6 @@
     { #the attributes to import
 	overlays = [ 
 		(import /vmshare/cust-nix/Rshell/packages/rpackages_overlay.nix)
-   (import /vmshare/cust-nix/singularity/singularity_overlay.nix)
 	];
   }
 }:
