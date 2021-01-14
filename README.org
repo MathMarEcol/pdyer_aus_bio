@@ -1,0 +1,86 @@
+#+TITLE: Project for finding a Bioregionalisation around Australia
+* Build project
+:PROPERTIES:
+:ID:       org:a5ee9fee-f00d-435e-b85e-85bb6e0428b8
+:END:
+#+begin_src sh
+  module load use.own
+  module load aus_bio_module.lua #assumes you have copied this to ~/privatemodules/
+  cd code/
+  Rscript drake_plan.R #Rscript is an alias to call the singularity container and run Rscript from there.
+#+end_src
+* The singularity .sif files are large, and are not in the repo
+:PROPERTIES:
+:ID:       org:76b953b3-3016-497e-bb02-f354644e7903
+:END:
+The *.sif files, which contain R and all relevant packages and system software, are synced via ~scp~ or ~rsync~.
+* Components
+:PROPERTIES:
+:ID:       org:9141685d-4154-42ec-91b5-287b5d201f43
+:END:
+** aus_bio_module.lua
+:PROPERTIES:
+:ID:       org:ee2fa59e-b577-4112-9a10-9c89fa7e52f1
+:END:
+Mostly a convenience script, but may be needed for HPC.
+Defines a module.
+To use:
+#+begin_src 
+module load use.own
+module load aus_bio_module.lua
+#+end_src
+Now the singularity module is loaded, and the container specifically for this project can be access by using ~R~ and ~Rscript~.
+** The .sif file
+:PROPERTIES:
+:ID:       org:4c36674c-46fe-40fd-997d-19edcc893d7b
+:END:
+The .sif file is a singularity container. 
+It will have some very long name like this: 
+
+~8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif~
+
+The .sif file contains a specific version of R, R packages and system libraries.
+
+The purpose is easy addition of packages, even if they are not supported by HPC, and reproducibility.
+Later on I can give the .sif file and the source code, and they will get the same results.
+** *.nix
+:PROPERTIES:
+:ID:       org:08572e87-3196-4198-a161-18df33698dc1
+:END:
+All the *.nix files (all_packages.nix, r_packages.nix, singularity_image.nix and r_shell.nix) are files for the Nix package manager, and are the definitive way to reproduce the environment. 
+
+Using the package manager Nix, you can rebuild the .sif file with the following code:
+      #+begin_src sh
+        nix build -f singularity_image.nix -o ~/docker_result  #runs on "singularity_image.nix" in current folder
+        sif_image=$(readlink ~/docker_result | sed -e "s/\/nix\/store\///" -e "s/.tar.gz//" )_singularity_conversion #strip leading /nix/store and trailing .tar.gz
+        echo $sif_image
+        sudo singularity build ${sif_image}.sif  docker-archive:$(readlink ~/docker_result) #build a sif file and store in current folder
+      #+end_src
+      
+The end result is guarenteed to be the exact image I generated with the same commands.
+
+The one thing that must be taken care of is that the git revision in r_shell.nix and singularity_image.nix are supposed to be the same, but I don't know how to do that automatically yet.
+** drake_plan.R
+:PROPERTIES:
+:ID:       org:f3d9a7ad-3801-42fb-b165-3c812b2778bc
+:END:
+The master R script that builds the project.
+
+Run with:
+#+begin_src sh
+Rscript drake_plan.R
+#+end_src
+* Directory structure 
+:PROPERTIES:
+:ID:       org:09e255e4-a92d-439c-b959-6b998e00880f
+:END:
+
+The whole project is assumed to be inside the MathMarEcol QRIScloud collection ~Q1216/pdyer~.
+The
+
+The ~code/~ folder contains the drake_plan.R and other scripts and code for the project.
+
+The data are all stored in a different QRIScloud collection, ~Q1215~.
+Different HPC systems have a different folder for the QRIScloud data, but Q1215 and Q1216 are always sibling folders, so relative paths will work, and will be more reliable than hard paths.
+
+Given that HPC code should not be run over the network, I copy the relevant parts of ~Q1215~ and ~Q1216~ into ~30days~ or something similar on Awoonga, before running ~Rscript drake_plan.R~
