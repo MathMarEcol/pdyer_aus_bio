@@ -25,7 +25,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
 
         #Maths and statistics
         emmix 
-        EMMIXcskew
+        # EMMIXcskew
         #(pkgs.callPackage ./packages/emmix_mfa.nix {})
         mclust
         mixtools
@@ -44,7 +44,8 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         Hotelling
         ICSNP
         rrcov
- 
+
+
 
         #data sources
         sdmpredictors
@@ -138,10 +139,26 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
 
         #vim support
         nvimcom
-		    languageserver
+        languageserver
         lintr
 
         ##fixing RcppArmadillo
         RcppArmadillo
 
-	]
+        #Prioritizr
+        lwgeom
+        rfishbase
+        readr
+        kader
+        rgdal
+        exactextractr
+        VoCC
+        prioritizr
+        gurobi
+        slam
+        rnaturalearth
+        patchwork
+        spatstat
+        reldist
+
+]

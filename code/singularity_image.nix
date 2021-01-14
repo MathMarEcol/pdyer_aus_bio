@@ -5,22 +5,7 @@
 # sudo singularity build ${sif_image}.sif  docker-archive:$(readlink ~/docker_result) #build a sif file and store in current folder
 #
 { pkgs
-  ? import
-    (builtins.fetchGit {
-  # Descriptive name to make the store path easier to identify
-  name = "nixos-unstable-2020-05-01";
-  # url = https://github.com/nixos/nixpkgs-channels/;
-  url = https://github.com/PhDyellow/nixpkgs/;
-  # Commit hash for nixos-unstable as of 2020-01-20
-  # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
-  ref = "refs/heads/f_rzmq_unstable"; #using bleeding edge packages
-  rev = (import ./nixpkgs_rev.nix);
-	})
-    { #the attributes to import
-	overlays = [ 
-		(import /vmshare/cust-nix/Rshell/packages/rpackages_overlay.nix)
-	];
-  }
+  ? import ./nixpkgs_rev.nix
 }:
 
 let
