@@ -16,7 +16,7 @@ pkgs.stdenv.mkDerivation {
   nativeBuildInputs = with pkgs; [
   ];
   buildInputs = allpackages ++ [
-    (pkgs.callPackage ../../../../projects/nix_r_combined/nix_r_combined.nix {rPa = rpackages;})
+    (pkgs.callPackage /vmshare/cust-nix/Rshell/nix_r_combined.nix {rPa = rpackages;})
     # (pkgs.rstudioWrapper.override {
     #   packages = [
     #   ] ++ rpackages;
