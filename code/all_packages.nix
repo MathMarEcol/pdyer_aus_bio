@@ -47,7 +47,7 @@ with pkgs;[
           openssh
           iputils
 
-          (pkgs.callPackage ../../../../projects/nix_r_combined/nix_r_combined.nix {rPa = rpackages;})
+          (pkgs.callPackage /vmshare/cust-nix/Rshell/nix_r_combined.nix {rPa = rpackages;})
           # (rWrapper.override {
           #     packages = [
           #     ] ++ rpackages;
