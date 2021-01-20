@@ -42,7 +42,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR_SHARE/Q1215/Sha
 #mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 mkdir -p $TMPDIR_SHARE/Q1216/pdyer
 cd $TMPDIR_SHARE/Q1216/pdyer
-git clone https://github.com/MathMarEcol/pdyer_aus_bio.git
+git clone -b $GIT_BRANCH --single-branch https://github.com/MathMarEcol/pdyer_aus_bio.git
 
 #capture current git hash for use later
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
