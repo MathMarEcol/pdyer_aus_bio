@@ -502,7 +502,7 @@ jobs <- 5
                ##in lat lon degrees, use 1/integer fraction
                ##for proper rastering later,
                ##currently 1/12 to allign with BioORACLE
-               regrid_resolution = 1/ 4#TODO: 1 / 12,
+               regrid_resolution = 1 / 4#TODO: 1 / 12,
                ##Extent chosen to match the largest extents of
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
