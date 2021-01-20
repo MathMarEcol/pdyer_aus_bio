@@ -1084,7 +1084,7 @@ print(getOption("clustermq.template", "PBS"))
               cache = cache_ob,
               caching = "worker",
               garbage_collection = TRUE,
-              prework <- quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
+              prework = quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
               )
 
   drake::vis_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
