@@ -45,6 +45,7 @@ cd $TMPDIR_SHARE/Q1216/pdyer
 git clone https://github.com/MathMarEcol/pdyer_aus_bio.git
 
 #capture current git hash for use later
+cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 git_hash=$(git rev-parse --short HEAD)
 date_run=$(date +%Y-%m-%d_%H-%M-%S)
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
@@ -63,7 +64,7 @@ cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #-s means set, expand_aliases is only default for interactive shells, not non-interactive
 shopt -s expand_aliases
 
-if [ $COPY_MODULES -gt 0]
+if [ $COPY_MODULES -gt 0 ]
 then
 #Always use the latest module, so I don't need to remember to copy it manually
 #but only if I really am on the HPC
@@ -99,4 +100,6 @@ done
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMPDIR_SHARE/Q1215/bioORACLE $ROOT_STORE_DIR/Q1215/
 
+#clean up TMPDIR_SHARE
+rm -r $TMPDIR_SHARE
 #done
