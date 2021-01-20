@@ -1075,7 +1075,7 @@ print(getOption("clustermq.template", "PBS"))
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
-              console_log_file = here::here("outputs", "drake_log.log"),
+              log_make = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
                               memory = 16000,
                               cores = 4,
