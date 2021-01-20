@@ -23,7 +23,7 @@ with pkgs;[
           # cargo
           binutils
           coreutils
-          utillinux
+          util-linux
           inetutils
 
           pandoc #needed for rMarkdown

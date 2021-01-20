@@ -5,8 +5,10 @@ import (builtins.fetchGit {
   url = https://github.com/PhDyellow/nixpkgs/;
   # Commit hash for nixos-unstable as of 2020-01-20
   # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
-  ref = "refs/heads/p_update_r_4.0.3"; #using bleeding edge packages
-  rev = "4b2dd431f1e4c4652538bdd73deb2cb76d08e6b8";
+  ref = "refs/heads/master_plus_patches_3"; #using bleeding edge packages
+  rev = "a10b00e080415531e09eb4c9ec6b195f54a50625";
+
+
 
 
 
