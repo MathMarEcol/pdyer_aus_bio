@@ -98,7 +98,7 @@ foc_cov_filter <- function(surv_env,
                            ) {
 
   surv_sp_freq <- surv_env %>%
-    dplyr::select(sp_names) %>%
+    dplyr::select(all_of(sp_names)) %>%
       dplyr::summarise_all(
                function(x) {
                  sum(x != 0) / length(x)
@@ -107,7 +107,7 @@ foc_cov_filter <- function(surv_env,
         tidyr::gather(key = "species", value = "freq")
 
   surv_sp_occ <- surv_env %>%
-    dplyr::select(sp_names) %>%
+    dplyr::select(all_of(sp_names)) %>%
     dplyr::summarise_all(
              function(x) {
                sum(x != 0)
@@ -116,7 +116,7 @@ foc_cov_filter <- function(surv_env,
     tidyr::gather(key = "species", value = "occ")
 
   surv_sp_cov <- surv_env %>%
-    dplyr::select(sp_names) %>%
+    dplyr::select(all_of(sp_names)) %>%
     dplyr::summarise_all(
              function(x) {
                sd(x) / mean(x)
