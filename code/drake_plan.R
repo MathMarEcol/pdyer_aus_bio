@@ -512,8 +512,7 @@ jobs <- 5
                gf_trees = 200
                gf_bins = 201
                gf_corr_thres = 0.5
-               extrap = TRUE
-               extrap_pow = 1/4
+               extrap = 1 / 4
                ##The following variables work better in log scale.
                ##If a variable is log transformed,
                ##clipping will take place on the log scale
@@ -781,11 +780,11 @@ pl <- drake::drake_plan(
          ),
          ##Fit GF models
          surv_gf = target(
-           gfbootstrap::bootstrapGradientForest(
-                             as.data.frame(surv_env_filter),
+           gradientForest::gradientForest(
+                             data = as.data.frame(surv_env_filter),
                              predictor.vars = env_names,
                              response.vars = surv_sp_keep,
-                             nbootstrap = gf_trees,
+                             ntree = gf_trees,
                              compact = T,
                              nbin = gf_bins,
                              transform = NULL,
@@ -801,9 +800,8 @@ pl <- drake::drake_plan(
          ),
          ##combined GF for copepods
          copepod_combined_gf = target(
-           gfbootstrap::combinedBootstrapGF(surv_gf,
-                                            nbin = gf_bins,
-                                            n_samp = gf_trees),
+           gradientForest::combinedGradientForest(surv_gf,
+                                            nbin = gf_bins),
            transform = combine(surv_gf)
          ),
 
@@ -811,165 +809,198 @@ pl <- drake::drake_plan(
          ##Transform the environment. No need for target(), I am not mapping or combining
          env_trans = predict(object = copepod_combined_gf,
                                           newdata = env_round[, env_names],
-                                          type = c("mean", "variance", "points"),
-                                          extrap = extrap,
-                                          extrap_pow = extrap_pow),
+                                          extrap = extrap),
          env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
 
          env_trans_wide = env_wide_list(env_trans_spatial),
 
-         ##Hotellings p-value similiarity matrix, using diagonal covariance
+         ## ## CASTeR variant of clustering
 
-         p_mat_diag_cov = rmethods:::hotellings_bulk(
-                              means = env_trans_wide$mean[, env_names],
-                              res_sq = env_trans_wide$variance[, env_names]
-                            ),
+         ## ##Fit GF models
+         ## surv_gf = target(
+         ##   gfbootstrap::bootstrapGradientForest(
+         ##                     as.data.frame(surv_env_filter),
+         ##                     predictor.vars = env_names,
+         ##                     response.vars = surv_sp_keep,
+         ##                     nbootstrap = gf_trees,
+         ##                     compact = T,
+         ##                     nbin = gf_bins,
+         ##                     transform = NULL,
+         ##                     corr.threshold = gf_corr_thres,
+         ##                     maxLevel = floor(log2(length(surv_sp_keep) * 0.368 / 2)),
+         ##                     trace = TRUE
+         ##                   ),
+         ##   transform = map(
+         ##     surv_env_filter,
+         ##     surv_sp_keep,
+         ##     .id = surv_names
+         ##   )
+         ## ),
 
-         ##cluster, using CAST
-         cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
-                                                sim_mat = p_mat_diag_cov),
-           transform = map(.id = aff_sweep,
-                           aff_sweep = !!(seq(0.05, 0.95, 0.05)))
-         ),
+         ## ##combined GF for copepods
+         ## copepod_combined_gf = target(
+         ##   gfbootstrap::combinedBootstrapGF(surv_gf,
+         ##                                    nbin = gf_bins,
+         ##                                    n_samp = gf_trees),
+         ##   transform = combine(surv_gf)
+         ## ),
 
+         ## env_trans = predict(object = copepod_combined_gf,
+         ##                                  newdata = env_round[, env_names],
+         ##                                  type = c("mean", "variance", "points"),
+         ##                                  extrap = extrap,
+         ##                                  extrap_pow = extrap_pow),
+         ## ##Hotellings p-value similiarity matrix, using diagonal covariance
+         ## p_mat_diag_cov = rmethods:::hotellings_bulk(
+         ##                      means = env_trans_wide$mean[, env_names],
+         ##                      res_sq = env_trans_wide$variance[, env_names]
+         ##                    ),
 
-
-         cast_sweep_list = target(list(cast_sweep),
-                              transform = combine(cast_sweep,
-                                                  .id = aff_sweep)),
-
-         ##Cluster the combined copepods
-         ##choos the peak Hubert Gama
-         cast_stats_split = target(cast_sweep[["stats"]],
-                              transform = map(cast_sweep,
-                                                  .id = aff_sweep)),
-
-         cast_stats = target(dplyr::bind_rows(cast_stats_split),
-                              transform = combine(cast_stats_split,
-                                                  .id = aff_sweep)),
-
-         max_h_ind = which.max(cast_stats$h),
-         max_aff = cast_stats$aff[max_h_ind],
-
-         ##plot the cast clustering
-         save_copepod_aff_h = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
-                                             plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
-                                               geom_line()
-                                            ),
-                                     hpc = FALSE),
-         save_copepod_pmat_diag = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
-                                                 gg_sim_mat(sim_mat = p_mat_diag_cov,
-                                                            cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact,
-                                                            highlight = TRUE,
-                                                            sort_between = TRUE,
-                                                            sort_within = TRUE)),
-                                     hpc = FALSE),
-
-         cluster_order = sort_between(sim_mat = p_mat_diag_cov,
-                                      cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
-
-         cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact[cluster_order], env_trans_spatial, spatial_vars),
-
-         save_copepod_clust_map = target(
-           ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
-                          plot =
-                            ggplot2::ggplot(
-                                       data = cast_spatial,
-                                       mapping =
-                                         ggplot2::aes_string(x = spatial_vars[1],
-                                                      y = spatial_vars[2],
-                                                      fill = as.factor(cast_spatial$clust))
-                                     ) +
-                            ggplot2::geom_raster(),
-         ),
-                                     hpc = FALSE),
+         ## ##cluster, using CAST
+         ## cast_sweep = target(cast_compact_stats(aff_thres = aff_sweep,
+         ##                                        sim_mat = p_mat_diag_cov),
+         ##   transform = map(.id = aff_sweep,
+         ##                   aff_sweep = !!(seq(0.05, 0.95, 0.05)))
+         ## ),
 
 
-         ##TODO hotellings with point clouds
-         ##create pair list
-         ##map over pair list
-         ##for each pair, extract the point cloud and calculate the hotellings T^2
-         ##for each pair, return an ij dist and ji dist (symmetric)
-         ##return the long form of the pairs
-         ##add in the ii 1 casses, sort by i, then j, 
-         ##assign to a matrix by feeding the dist column into a matrix()
-         pairs = all_pairs_diag(n=nrow(env_round)),
 
-         dist_long = target(
-           pair_dist(pairs, env_trans_wide$points, env_names),
-           transform = split(pairs,
-                             slices = !!jobs
-                             )
-         ),
+         ## cast_sweep_list = target(list(cast_sweep),
+         ##                      transform = combine(cast_sweep,
+         ##                                          .id = aff_sweep)),
 
-         p_mat_full_cov_long = target(
-           dplyr::bind_rows(dist_long),
-           transform = combine(dist_long)
-         ),
+         ## ##Cluster the combined copepods
+         ## ##choos the peak Hubert Gama
+         ## cast_stats_split = target(cast_sweep[["stats"]],
+         ##                      transform = map(cast_sweep,
+         ##                                          .id = aff_sweep)),
 
-         p_mat_full_cov = matrix(p_mat_full_cov_long[
-           order(p_mat_full_cov_long$i, p_mat_full_cov_long$j), "dist" ],
-           nrow = nrow(env_round), ncol = nrow(env_round)),
-         ##cluster, using CAST
-         cast_sweep_full = target(cast_compact_stats(aff_thres = aff_sweep,
-                                                sim_mat = p_mat_full_cov),
-           transform = map(.id = aff_sweep,
-                           aff_sweep)
-         ),
+         ## cast_stats = target(dplyr::bind_rows(cast_stats_split),
+         ##                      transform = combine(cast_stats_split,
+         ##                                          .id = aff_sweep)),
 
-         cast_sweep_full_list = target(list(cast_sweep_full),
-                              transform = combine(cast_sweep_full,
-                                                  .id = aff_sweep)),
+         ## max_h_ind = which.max(cast_stats$h),
+         ## max_aff = cast_stats$aff[max_h_ind],
 
-         cast_stats_full_split = target(cast_sweep_full[["stats"]],
-                              transform = map(cast_sweep_full,
-                                                  .id = aff_sweep)),
+         ## ##plot the cast clustering
+         ## save_copepod_aff_h = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_file),
+         ##                                     plot = ggplot(cast_stats[cast_stats$norm_z & cast_stats$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
+         ##                                       geom_line()
+         ##                                    ),
+         ##                             hpc = FALSE),
+         ## save_copepod_pmat_diag = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_diag_file),
+         ##                                         gg_sim_mat(sim_mat = p_mat_diag_cov,
+         ##                                                    cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact,
+         ##                                                    highlight = TRUE,
+         ##                                                    sort_between = TRUE,
+         ##                                                    sort_within = TRUE)),
+         ##                             hpc = FALSE),
 
-         cast_stats_full = target(dplyr::bind_rows(cast_stats_full_split),
-                              transform = combine(cast_stats_full_split,
-                                                  .id = aff_sweep)),
+         ## cluster_order = sort_between(sim_mat = p_mat_diag_cov,
+         ##                              cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
 
-         ##Cluster the combined copepods
-         ##choos the peak Hubert Gama
+         ## cast_spatial = get_cast_spatial(cast_sweep_list[[max_h_ind]]$cast_compact[cluster_order], env_trans_spatial, spatial_vars),
 
-         max_h_ind_full = which.max(cast_stats_full$h),
-         max_aff_full = cast_stats_full$aff[max_h_ind_full],
+         ## save_copepod_clust_map = target(
+         ##   ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_file),
+         ##                  plot =
+         ##                    ggplot2::ggplot(
+         ##                               data = cast_spatial,
+         ##                               mapping =
+         ##                                 ggplot2::aes_string(x = spatial_vars[1],
+         ##                                              y = spatial_vars[2],
+         ##                                              fill = as.factor(cast_spatial$clust))
+         ##                             ) +
+         ##                    ggplot2::geom_raster(),
+         ## ),
+         ##                             hpc = FALSE),
 
-         ##plot the cast clustering
-         save_copepod_aff_h_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
-                                                  plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
-                                                    geom_line()
-                                                                ),
-                                     hpc = FALSE),
-         save_copepod_pmat_diag_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
-                                                 gg_sim_mat(sim_mat = p_mat_full_cov,
-                                                            cast_ob = cast_sweep_full_list[[max_h_ind_full]]$cast_compact,
-                                                            highlight = TRUE,
-                                                            sort_between = TRUE,
-                                                            sort_within = TRUE)),
-                                     hpc = FALSE),
 
-         cluster_order_full = sort_between(sim_mat = p_mat_diag_cov,
-                                      cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
+         ## ##TODO hotellings with point clouds
+         ## ##create pair list
+         ## ##map over pair list
+         ## ##for each pair, extract the point cloud and calculate the hotellings T^2
+         ## ##for each pair, return an ij dist and ji dist (symmetric)
+         ## ##return the long form of the pairs
+         ## ##add in the ii 1 casses, sort by i, then j,
+         ## ##assign to a matrix by feeding the dist column into a matrix()
+         ## pairs = all_pairs_diag(n=nrow(env_round)),
 
-         cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact[cluster_order_full], env_trans_spatial, spatial_vars),
+         ## dist_long = target(
+         ##   pair_dist(pairs, env_trans_wide$points, env_names),
+         ##   transform = split(pairs,
+         ##                     slices = !!jobs
+         ##                     )
+         ## ),
 
-         save_copepod_clust_full_map = target(
-           ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
-                          plot =
-                            ggplot2::ggplot(
-                                       data = cast_spatial_full,
-                                       mapping =
-                                         ggplot2::aes_string(
-                                                    x = spatial_vars[1],
-                                                    y = spatial_vars[2],
-                                                    fill = as.factor(cast_spatial_full$clust)
-                                                    )
-                                     ) +
-                            ggplot2::geom_raster(),
-         ),
-                                     hpc = FALSE),
-         #Keep going, but get some outputs eventually
+         ## p_mat_full_cov_long = target(
+         ##   dplyr::bind_rows(dist_long),
+         ##   transform = combine(dist_long)
+         ## ),
+
+         ## p_mat_full_cov = matrix(p_mat_full_cov_long[
+         ##   order(p_mat_full_cov_long$i, p_mat_full_cov_long$j), "dist" ],
+         ##   nrow = nrow(env_round), ncol = nrow(env_round)),
+         ## ##cluster, using CAST
+         ## cast_sweep_full = target(cast_compact_stats(aff_thres = aff_sweep,
+         ##                                        sim_mat = p_mat_full_cov),
+         ##   transform = map(.id = aff_sweep,
+         ##                   aff_sweep)
+         ## ),
+
+         ## cast_sweep_full_list = target(list(cast_sweep_full),
+         ##                      transform = combine(cast_sweep_full,
+         ##                                          .id = aff_sweep)),
+
+         ## cast_stats_full_split = target(cast_sweep_full[["stats"]],
+         ##                      transform = map(cast_sweep_full,
+         ##                                          .id = aff_sweep)),
+
+         ## cast_stats_full = target(dplyr::bind_rows(cast_stats_full_split),
+         ##                      transform = combine(cast_stats_full_split,
+         ##                                          .id = aff_sweep)),
+
+         ## ##Cluster the combined copepods
+         ## ##choos the peak Hubert Gama
+
+         ## max_h_ind_full = which.max(cast_stats_full$h),
+         ## max_aff_full = cast_stats_full$aff[max_h_ind_full],
+
+         ## ##plot the cast clustering
+         ## save_copepod_aff_h_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_aff_h_full_file),
+         ##                                          plot = ggplot(cast_stats_full[cast_stats_full$norm_z & cast_stats_full$type == "compact",], aes(x = aff, y = h, group = type, colour = as.factor(type))) +
+         ##                                            geom_line()
+         ##                                                        ),
+         ##                             hpc = FALSE),
+         ## save_copepod_pmat_diag_full = target(ggsave_wrapper(filename = file_out(!!pl_copepod_p_mat_full_file),
+         ##                                         gg_sim_mat(sim_mat = p_mat_full_cov,
+         ##                                                    cast_ob = cast_sweep_full_list[[max_h_ind_full]]$cast_compact,
+         ##                                                    highlight = TRUE,
+         ##                                                    sort_between = TRUE,
+         ##                                                    sort_within = TRUE)),
+         ##                             hpc = FALSE),
+
+         ## cluster_order_full = sort_between(sim_mat = p_mat_diag_cov,
+         ##                              cast_ob = cast_sweep_list[[max_h_ind]]$cast_compact),
+
+         ## cast_spatial_full = get_cast_spatial(cast_sweep_full_list[[max_h_ind_full]]$cast_compact[cluster_order_full], env_trans_spatial, spatial_vars),
+
+         ## save_copepod_clust_full_map = target(
+         ##   ggsave_wrapper(filename = file_out(!!pl_copepod_clust_map_full_file),
+         ##                  plot =
+         ##                    ggplot2::ggplot(
+         ##                               data = cast_spatial_full,
+         ##                               mapping =
+         ##                                 ggplot2::aes_string(
+         ##                                            x = spatial_vars[1],
+         ##                                            y = spatial_vars[2],
+         ##                                            fill = as.factor(cast_spatial_full$clust)
+         ##                                            )
+         ##                             ) +
+         ##                    ggplot2::geom_raster(),
+         ## ),
+         ##                             hpc = FALSE),
+         ## #Keep going, but get some outputs eventually
 #
 #
          #plotting a bit
