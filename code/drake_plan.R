@@ -1020,12 +1020,12 @@ pl <- drake::drake_plan(
          track_state = target(state_rds(file_out(!!state_rds_file),
                                  file_out(!!state_yaml_file)),
                                      hpc = FALSE),
-         save_copepod_gfboot_cumimp = target(ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
-                                           plot = gg_combined_bootstrapGF(copepod_combined_gf,
-                                                                          n_curves = 30,
-                                                                          debug = FALSE)
-                                       ),
-                                     hpc = FALSE),
+         ## save_copepod_gfboot_cumimp = target(ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
+         ##                                   plot = gg_combined_bootstrapGF(copepod_combined_gf,
+         ##                                                                  n_curves = 30,
+         ##                                                                  debug = FALSE)
+         ##                               ),
+         ##                             hpc = FALSE),
 
          plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
                                       plot_type = "Predictor.Ranges",
