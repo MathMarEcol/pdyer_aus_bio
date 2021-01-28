@@ -1050,7 +1050,7 @@ pl <- drake::drake_plan(
          ##                              file_out(!!ext_pl_temp_file)
          ##                              ),
          ##                             hpc = FALSE),
-         ext_pl_biooracle = target(plot_temp(env_spatial,
+         ext_pl_biooracle = target(plot_temp(env_trans_spatial,
                                       spatial_vars,
                                       marine_map,
                                       env_extent,
