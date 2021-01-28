@@ -815,9 +815,10 @@ pl <- drake::drake_plan(
          env_trans = predict(object = copepod_combined_gf,
                                           newdata = env_round[, env_names],
                                           extrap = extrap),
-         env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
 
-         env_trans_wide = env_wide_list(env_trans_spatial),
+         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans)
+         ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
+         ## env_trans_wide = env_wide_list(env_trans_spatial),
 
          ## ## CASTeR variant of clustering
 
@@ -1042,7 +1043,14 @@ pl <- drake::drake_plan(
                                ),
                                      hpc = FALSE),
 #
-         ext_pl_biooracle = target(plot_temp(env_final,
+         ## ext_pl_biooracle = target(plot_temp(env_final,
+         ##                              spatial_vars,
+         ##                              marine_map,
+         ##                              env_extent,
+         ##                              file_out(!!ext_pl_temp_file)
+         ##                              ),
+         ##                             hpc = FALSE),
+         ext_pl_biooracle = target(plot_temp(env_spatial,
                                       spatial_vars,
                                       marine_map,
                                       env_extent,
@@ -1073,6 +1081,11 @@ pl <- drake::drake_plan(
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_perf_file)),
                                      hpc = FALSE)
+
+
+         plot_
+
+
          )
 
 ##Set seed
