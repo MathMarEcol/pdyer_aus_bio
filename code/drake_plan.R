@@ -463,6 +463,11 @@ pl_gf_density_file <- here::here("outputs", "gf_density.png")
 pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
 pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
 
+pl_gfboot_range_file <- here::here("outputs", "gfboot_range.png")
+pl_gfboot_density_file <- here::here("outputs", "gfboot_density.png")
+pl_gfboot_cumimp_file <- here::here("outputs", "gfboot_cumimp.png")
+pl_gfboot_perf_file <- here::here("outputs", "gfboot_perf.png")
+
 pl_gfboot_cumimp_file <- here::here("outputs", "gfboot_cumimp.png")
 
 pl_copepod_aff_h_file <- here::here("outputs", "copepod_aff_h.png")
@@ -1001,6 +1006,33 @@ pl <- drake::drake_plan(
          ## ),
          ##                             hpc = FALSE),
          ## #Keep going, but get some outputs eventually
+         ## save_copepod_gfboot_cumimp = target(ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
+         ##                                   plot = gg_combined_bootstrapGF(copepod_combined_gf,
+         ##                                                                  n_curves = 30,
+         ##                                                                  debug = FALSE)
+         ##                               ),
+         ##                             hpc = FALSE),
+
+         ## plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         ##                              plot_type = "Predictor.Ranges",
+         ##                              vars = 1:9,
+         ##                              out_file = file_out(!!pl_gfboot_range_file)),
+         ##                             hpc = FALSE),
+         ## plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         ##                              plot_type = "Predictor.Density",
+         ##                              vars = 1:9,
+         ##                              out_file = file_out(!!pl_gfboot_density_file)),
+         ##                             hpc = FALSE),
+         ## plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         ##                              plot_type = "Cumulative.Importance",
+         ##                              vars = 1:9,
+         ##                              out_file = file_out(!!pl_gfboot_cumimp_file)),
+         ##                             hpc = FALSE),
+         ## plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         ##                              plot_type = "Performance",
+         ##                              vars = 1:9,
+         ##                              out_file = file_out(!!pl_gfboot_perf_file)),
+         ##                             hpc = FALSE)
 #
 #
          #plotting a bit
@@ -1020,29 +1052,23 @@ pl <- drake::drake_plan(
          track_state = target(state_rds(file_out(!!state_rds_file),
                                  file_out(!!state_yaml_file)),
                                      hpc = FALSE),
-         ## save_copepod_gfboot_cumimp = target(ggsave_wrapper(filename =  file_out(!!pl_gfboot_cumimp_file),
-         ##                                   plot = gg_combined_bootstrapGF(copepod_combined_gf,
-         ##                                                                  n_curves = 30,
-         ##                                                                  debug = FALSE)
-         ##                               ),
-         ##                             hpc = FALSE),
 
-         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_range_file)),
                                      hpc = FALSE),
-         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
                                       plot_type = "Predictor.Density",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_density_file)),
                                      hpc = FALSE),
-         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
                                       plot_type = "Cumulative.Importance",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_cumimp_file)),
                                      hpc = FALSE),
-         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf$gf_list[[1]],
+         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
                                       plot_type = "Performance",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_perf_file)),
