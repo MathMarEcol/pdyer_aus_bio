@@ -1082,10 +1082,6 @@ pl <- drake::drake_plan(
                                       out_file = file_out(!!pl_gf_perf_file)),
                                      hpc = FALSE)
 
-
-         plot_
-
-
          )
 
 ##Set seed
