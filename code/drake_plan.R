@@ -816,7 +816,7 @@ pl <- drake::drake_plan(
                                           newdata = env_round[, env_names],
                                           extrap = extrap),
 
-         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans)
+         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans),
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
 
