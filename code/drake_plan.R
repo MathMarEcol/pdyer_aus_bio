@@ -893,7 +893,7 @@ pl <- drake::drake_plan(
            plot = ggplot(cluster_all_df, mapping = aes(x = k, y = min_clust_ratio)) +
              geom_point() +
              facet_wrap(vars(dataname)),
-         )
+         ),
 
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
