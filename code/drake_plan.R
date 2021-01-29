@@ -842,10 +842,10 @@ pl <- drake::drake_plan(
          ),
 
          env_trans_all = target(
-           predict(object = gf_all,
+           predict(object = gf_all_list,
                    newdata = env_round[, env_names],
                    extrap = extrap),
-           transform = map(gf_all_list = !!gf_all)
+           transform = map(gf_all_list = gf_all)
          ),
          env_trans_spatial_all = target(
            cbind(env_round[, spatial_vars], env_trans_all),
