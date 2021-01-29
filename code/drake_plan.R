@@ -885,7 +885,7 @@ pl <- drake::drake_plan(
 
          cluster_all_df = target(
            rbind(cluster_all),
-           transform = (combine(cluster_all))
+           transform = combine(cluster_all)
          ),
 
          pl_clust_perfs = ggsave_wrapper(
