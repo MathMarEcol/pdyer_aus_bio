@@ -435,6 +435,18 @@ state_rds <- function(rds_path, yaml_path) {
   cat(yaml::as.yaml(total_state, line.sep = "\n", column.major = FALSE), file = yaml_path)
 }
 
+cluster_capture <- function(dname, data, k, ...) {
+#' fit k-medoids to dataset, and return relevant 1% rule stats
+
+  n_sites <- base::nrow(data)
+  clust <- cluster::clara(x = data, k = k, ...)
+  min_clust <- min(clust$clusinfo$size)
+  min_clust_ratio <- min_clust / n_sites
+
+  ret <- data.frame(dataname = dname, k = k, min_clust = min_clust, min_clust_ratio = min_clust_ratio)
+  return(ret)
+}
+
 ## I am taking my code from here:
 ## [[file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd][file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd]]
 #' Plan
@@ -462,6 +474,8 @@ pl_gf_range_file <- here::here("outputs", "gf_range.png")
 pl_gf_density_file <- here::here("outputs", "gf_density.png")
 pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
 pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
+
+pl_kmed_perf <- here::here("outputs", "kmed_perf.png")
 
 pl_gfboot_range_file <- here::here("outputs", "gfboot_range.png")
 pl_gfboot_density_file <- here::here("outputs", "gfboot_density.png")
@@ -518,6 +532,15 @@ jobs <- 5
                gf_bins = 201
                gf_corr_thres = 0.5
                extrap = 1 / 4
+
+               k_range = seq.int(2,30)
+               clara_samples = 20
+               clara_sampsize = 50
+               clara_trace = 0
+               clara_rngR = TRUE
+               clara_pamLike = TRUE
+               clara_correct.d = TRUE
+
                ##The following variables work better in log scale.
                ##If a variable is log transformed,
                ##clipping will take place on the log scale
@@ -812,11 +835,67 @@ pl <- drake::drake_plan(
 
 
          ##Transform the environment. No need for target(), I am not mapping or combining
+         gf_all = target(
+           list(surv_gf, copepod_combined_gf),
+           transform = combine(surv_gf)
+         ),
+
+         env_trans_all = target(
+           predict(object = gf_all,
+                   newdata = env_round[, env_names],
+                   extrap = extrap),
+           transform = map(gf_all)
+         ),
+         env_trans_spatial_all = target(
+           cbind(env_round[, spatial_vars], env_trans_all),
+           transform = map(env_trans_all)
+         ),
+
          env_trans = predict(object = copepod_combined_gf,
                                           newdata = env_round[, env_names],
                                           extrap = extrap),
 
          env_trans_spatial = cbind(env_round[, spatial_vars], env_trans),
+
+
+         ## Cluster, with k-means
+         ## I will use the drake plan to parallelise, rather than relying on the clustering function.
+         ## Does not transfer as well, but avoids having to tweak the parallel setup to accomodate a single function that wants multiple nodes.
+         ## for each env_trans_all, sweep over k using clara. a cross() transform
+         ## find the min cluster size for each env_trans_all x k combination
+         ## for each env_trans_all, plot min size vs k
+         ## for each env_trans_all, return best k and associated clustering
+         ## plot best k and associated clustering
+
+         cluster_all = target(
+           cluster_capture(dname, env_trans_all,
+                           k,
+               samples = clara_samples,
+               sampsize = clara_sampsize,
+               trace = clara_trace,
+               rngR = clara_rngR,
+               pamLike = clara_pamLike,
+               correct.d = clara_correct.d),
+           transform = cross(
+             env_trans_all,
+             k = k_range,
+             .id = env_trans_all
+           )
+         ),
+
+         cluster_all_df = target(
+           rbind(cluster_all),
+           transform(combine(cluster_all))
+         ),
+
+         pl_clust_perfs = ggsave_wrapper(
+           filename = file_out(!!pl_kmed_perf),
+           plot = ggplot(cluster_all_df, mapping = aes(x = k, y = min_clust_ratio)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         )
+
+
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
 
