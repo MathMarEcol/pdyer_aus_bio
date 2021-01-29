@@ -2807,6 +2807,7 @@ print(getOption("clustermq.template", "PBS"))
 #future::plan(future.callr::callr)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
+              max_expand = 10,
               jobs = jobs, ## 6 jobs, for 6 surveys
               log_make = here::here("outputs", "drake_log.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
