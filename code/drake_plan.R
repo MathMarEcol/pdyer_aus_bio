@@ -836,15 +836,16 @@ pl <- drake::drake_plan(
 
          ##Transform the environment. No need for target(), I am not mapping or combining
          gf_all = target(
-           list(surv_gf, copepod_combined_gf),
-           transform = combine(surv_gf)
+           list(surv_gf, copepod_combined_gf = copepod_combined_gf),
+           transform = combine(surv_gf,
+                               .id = surv_names)
          ),
 
          env_trans_all = target(
            predict(object = gf_all,
                    newdata = env_round[, env_names],
                    extrap = extrap),
-           transform = map(gf_all)
+           transform = map(gf_all_list = !!gf_all)
          ),
          env_trans_spatial_all = target(
            cbind(env_round[, spatial_vars], env_trans_all),
