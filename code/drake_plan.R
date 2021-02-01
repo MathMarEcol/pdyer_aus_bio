@@ -905,14 +905,17 @@ pl <- drake::drake_plan(
            )
          ),
 
-         cluster_all_df = target(
+         cluster_copepod_df = target(
            rbind(cluster_all),
-           transform = combine(cluster_all)
+           transform = combine(cluster_copepod)
          ),
 
+         cluster_copepod_all_df = target(
+           rbind(cluster_copepod_df, cluster_copepod_combined),
+         ),
          pl_clust_perfs = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf),
-           plot = ggplot(cluster_all_df, mapping = aes(x = k, y = min_clust_ratio)) +
+           plot = ggplot(cluster_copepod_all_df, mapping = aes(x = k, y = min_clust_ratio)) +
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
