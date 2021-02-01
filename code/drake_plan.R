@@ -906,7 +906,7 @@ pl <- drake::drake_plan(
          ),
 
          cluster_copepod_df = target(
-           rbind(cluster_all),
+           rbind(cluster_copepod),
            transform = combine(cluster_copepod)
          ),
 
