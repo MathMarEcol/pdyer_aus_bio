@@ -864,7 +864,7 @@ pl <- drake::drake_plan(
          ## ),
 
 
-         ## env_trans_spatial = cbind(env_round[, spatial_vars], env_trans),
+         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans_copepod_combined),
 
 
          ## Cluster, with k-means
