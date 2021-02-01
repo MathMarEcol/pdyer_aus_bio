@@ -443,7 +443,10 @@ cluster_capture <- function(dname, data, k, ...) {
   min_clust <- min(clust$clusinfo$size)
   min_clust_ratio <- min_clust / n_sites
 
-  ret <- data.frame(dataname = dname, k = k, min_clust = min_clust, min_clust_ratio = min_clust_ratio)
+  sf <- cluster::silhouette(clust, full = TRUE)
+
+
+  ret <- data.frame(dataname = dname, k = k, min_clust = min_clust, min_clust_ratio = min_clust_ratio, sil_avg = mean(sf[, 3]))
   return(ret)
 }
 
@@ -835,28 +838,33 @@ pl <- drake::drake_plan(
 
 
          ##Transform the environment. No need for target(), I am not mapping or combining
-         gf_all = target(
-           list(surv_gf, copepod_combined_gf = copepod_combined_gf),
-           transform = combine(surv_gf,
-                               .id = surv_names)
-         ),
+         ##NOTE: don't try to hack the drake transforms, just run a parallel pipeline, use functions
+         ## to reuse effort.
+         ## gf_all = target(
+         ##   list(surv_gf, copepod_combined_gf = copepod_combined_gf),
+         ##   transform = combine(surv_gf,
+         ##                       .id = surv_names)
+         ## ),
 
-         env_trans_all = target(
+         env_trans_copepod_combined =
+           predict(object = copepod_combined_gf,
+                   newdata = env_round[, env_names],
+                   extrap = extrap),
+
+         env_trans_copepod = target(
            predict(object = gf_all_list,
                    newdata = env_round[, env_names],
                    extrap = extrap),
-           transform = map(gf_all_list = gf_all)
+           transform = map(surv_gf,
+                           .id =surv_names)
          ),
-         env_trans_spatial_all = target(
-           cbind(env_round[, spatial_vars], env_trans_all),
-           transform = map(env_trans_all)
-         ),
+         ## env_trans_spatial_all = target(
+         ##   cbind(env_round[, spatial_vars], env_trans_all),
+         ##   transform = map(env_trans_all)
+         ## ),
 
-         env_trans = predict(object = copepod_combined_gf,
-                                          newdata = env_round[, env_names],
-                                          extrap = extrap),
 
-         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans),
+         ## env_trans_spatial = cbind(env_round[, spatial_vars], env_trans),
 
 
          ## Cluster, with k-means
@@ -869,7 +877,7 @@ pl <- drake::drake_plan(
          ## plot best k and associated clustering
 
          cluster_all = target(
-           cluster_capture(dname, env_trans_all,
+           cluster_capture(.id, env_trans_copepod,
                            k,
                samples = clara_samples,
                sampsize = clara_sampsize,
@@ -878,9 +886,9 @@ pl <- drake::drake_plan(
                pamLike = clara_pamLike,
                correct.d = clara_correct.d),
            transform = cross(
-             env_trans_all,
+             env_trans_copepod,
              k = k_range,
-             .id = env_trans_all
+             .id = surv_names
            )
          ),
 
@@ -896,6 +904,7 @@ pl <- drake::drake_plan(
              facet_wrap(vars(dataname)),
          ),
 
+         ##also use silhouette witdth with cluster
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
