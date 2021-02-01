@@ -852,7 +852,7 @@ pl <- drake::drake_plan(
                    extrap = extrap),
 
          env_trans_copepod = target(
-           predict(object = gf_all_list,
+           predict(object = surv_gf,
                    newdata = env_round[, env_names],
                    extrap = extrap),
            transform = map(surv_gf,
@@ -876,7 +876,7 @@ pl <- drake::drake_plan(
          ## for each env_trans_all, return best k and associated clustering
          ## plot best k and associated clustering
 
-         cluster_all = target(
+         cluster_copepod = target(
            cluster_capture(.id, env_trans_copepod,
                            k,
                samples = clara_samples,
@@ -887,8 +887,21 @@ pl <- drake::drake_plan(
                correct.d = clara_correct.d),
            transform = cross(
              env_trans_copepod,
-             k = k_range,
+             k = !!k_range,
              .id = surv_names
+           )
+         ),
+         cluster_copepod_combined = target(
+           cluster_capture("copepod_combined", env_trans_copepod_combined,
+                           k,
+               samples = clara_samples,
+               sampsize = clara_sampsize,
+               trace = clara_trace,
+               rngR = clara_rngR,
+               pamLike = clara_pamLike,
+               correct.d = clara_correct.d),
+           transform = map(
+             k = !!k_range
            )
          ),
 
