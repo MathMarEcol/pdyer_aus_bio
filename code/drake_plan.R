@@ -435,19 +435,31 @@ state_rds <- function(rds_path, yaml_path) {
   cat(yaml::as.yaml(total_state, line.sep = "\n", column.major = FALSE), file = yaml_path)
 }
 
-cluster_capture <- function(dname, data, k, ...) {
+cluster_capture <- function(dname, data, k, nrep, ...) {
 #' fit k-medoids to dataset, and return relevant 1% rule stats
 
   n_sites <- base::nrow(data)
   clust <- cluster::clara(x = data, k = k, ...)
-  min_clust <- min(clust$clusinfo$size)
+  min_clust <- min(clust$clusinfo[, "size"])
   min_clust_ratio <- min_clust / n_sites
 
-  sf <- cluster::silhouette(clust, full = TRUE)
 
-
-  ret <- data.frame(dataname = dname, k = k, min_clust = min_clust, min_clust_ratio = min_clust_ratio, sil_avg = mean(sf[, 3]))
+  ret <- tibble_row(dataname = dname, k = k, nrep = nrep, min_clust = min_clust, min_clust_ratio = min_clust_ratio, sil_avg = clust$silinfo$avg.width, clust = list(clust))
   return(ret)
+}
+
+string_strip_counter <- function(x) {
+  assertthat::is.string(x)
+  spl <- sub("_\\d*$", "", x)
+  return(spl)
+}
+
+string_get_tail <- function(x, split = "_") {
+
+  assertthat::is.string(x)
+  spl <- strsplit(x, split)[[1]]
+  return(tail(spl, 1))
+
 }
 
 ## I am taking my code from here:
@@ -479,6 +491,9 @@ pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
 pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
 
 pl_kmed_perf <- here::here("outputs", "kmed_perf.png")
+pl_kmed_perf_sil <- here::here("outputs", "kmed_perf_sil.png")
+
+pl_test_cluster_rand_file <- here::here("outputs", "test_cluster_rand.png")
 
 pl_gfboot_range_file <- here::here("outputs", "gfboot_range.png")
 pl_gfboot_density_file <- here::here("outputs", "gfboot_density.png")
@@ -536,13 +551,16 @@ jobs <- 5
                gf_corr_thres = 0.5
                extrap = 1 / 4
 
-               k_range = seq.int(2,30)
+               k_range = seq.int(2,20)
+               cluster_reps = 1
                clara_samples = 20
                clara_sampsize = 50
                clara_trace = 0
                clara_rngR = TRUE
                clara_pamLike = TRUE
                clara_correct.d = TRUE
+
+               min_clust_thres = 0.01
 
                ##The following variables work better in log scale.
                ##If a variable is log transformed,
@@ -853,7 +871,7 @@ pl <- drake::drake_plan(
 
          env_trans_copepod = target(
            predict(object = surv_gf,
-                   newdata = env_round[, env_names],
+                   newdata = env_round[, as.character(unique(surv_gf$res$var))],
                    extrap = extrap),
            transform = map(surv_gf,
                            .id =surv_names)
@@ -877,8 +895,10 @@ pl <- drake::drake_plan(
          ## plot best k and associated clustering
 
          cluster_copepod = target(
-           cluster_capture(.id, env_trans_copepod,
-                           k,
+           cluster_capture(string_get_tail(string_strip_counter(.id_chr)),
+                                           env_trans_copepod,
+                                           k,
+                                           nrep,
                samples = clara_samples,
                sampsize = clara_sampsize,
                trace = clara_trace,
@@ -887,20 +907,22 @@ pl <- drake::drake_plan(
                correct.d = clara_correct.d),
            transform = cross(
              env_trans_copepod,
+             nrep = !!seq.int(1,cluster_reps),
              k = !!k_range,
-             .id = surv_names
+             .id = env_trans_copepod,
            )
          ),
          cluster_copepod_combined = target(
            cluster_capture("copepod_combined", env_trans_copepod_combined,
-                           k,
+                           k, nrep,
                samples = clara_samples,
                sampsize = clara_sampsize,
                trace = clara_trace,
                rngR = clara_rngR,
                pamLike = clara_pamLike,
                correct.d = clara_correct.d),
-           transform = map(
+           transform = cross(
+             nrep = !!seq.int(1,cluster_reps),
              k = !!k_range
            )
          ),
@@ -912,10 +934,23 @@ pl <- drake::drake_plan(
 
          cluster_copepod_all_df = target(
            rbind(cluster_copepod_df, cluster_copepod_combined),
+           transform = combine(cluster_copepod_combined)
          ),
          pl_clust_perfs = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf),
-           plot = ggplot(cluster_copepod_all_df, mapping = aes(x = k, y = min_clust_ratio)) +
+           plot = ggplot(
+             data.frame(cluster_copepod_all_df[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_copepod_all_df$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+         pl_clust_perfs_sil = ggsave_wrapper(
+           filename = file_out(!!pl_kmed_perf_sil),
+           plot = ggplot(
+             data.frame(cluster_copepod_all_df[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_copepod_all_df$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = sil_avg, colour = pass)) +
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
