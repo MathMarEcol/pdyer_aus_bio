@@ -1002,6 +1002,59 @@ pl <- drake::drake_plan(
            dynamic = map(cluster_copepod_best_df)
            ),
 
+
+         ## We want to see how much variability exists in the clustering algorithm due to random restarts
+         ## I want to reuse exising runs as much as possible
+
+         test_cluster_rand = target(
+           cluster_capture("copepod_combined", env_trans_copepod_combined,
+                           k, nrep,
+               samples = clara_samples,
+               sampsize = clara_sampsize,
+               trace = clara_trace,
+               rngR = clara_rngR,
+               pamLike = clara_pamLike,
+               correct.d = clara_correct.d,
+               keep.data = FALSE,
+               medoids.x = FALSE),
+           transform = cross(
+             nrep = !!seq.int(1, 100),
+             k = !!k_range
+           )
+         ),
+
+         test_cluster_bind = target(
+           rbind(test_cluster_rand),
+           transform = combine(test_cluster_rand)
+         ),
+
+         test_cluster_stats = plyr::ddply(test_cluster_bind, c("dataname", "k"),
+                                    summarise,
+                                    N = length(min_clust_ratio),
+                                    mean = mean(min_clust_ratio),
+                                    sd = sd(min_clust_ratio),
+                                    se = sd / sqrt(N),
+                                    max = max(min_clust_ratio)),
+
+         ## test_cluster_best = test_cluster_bind %>%
+         ##   dplyr::group_by(k) %>%
+         ##   dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+         ##   dplyr::first() %>%
+         ##   dplyr::ungroup(),
+
+         ## I really think error bars are the way to show it
+         pl_test_cluster_rand = ggsave_wrapper(
+           filename = file_out(!!pl_test_cluster_rand_file),
+           plot = ggplot(
+             test_cluster_stats[, c("dataname", "k", "max", "mean", "se")],
+             mapping = aes(x = k, y = mean)) +
+             geom_errorbar(aes(ymin = mean - se, ymax=mean+se), width = 0.2) +
+             geom_point() +
+             geom_point(data = test_cluster_stats[, c("dataname", "k", "max")], mapping = aes(x = k, y = max)) +
+             facet_wrap(vars(dataname)),
+         ),
+
+
          ##also use silhouette witdth with cluster
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
