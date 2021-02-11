@@ -394,6 +394,19 @@ plot_temp <- function(env_data,
 
 }
 
+plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent){
+
+ ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
+                            ggplot2::aes_string(x = spatial_vars[1], y = spatial_vars[2], fill = "clust")) +
+  ggplot2::geom_raster()  +
+  ggplot2::scale_fill_manual(values = rainbow(max(clustering))) +
+  ggplot2::labs(fill = "cluster") +
+  ggplot2::geom_sf(data = marine_map, inherit.aes = FALSE, color = "black", fill= NA)+
+  ggplot2::coord_sf(xlim = env_extent$x, ylim = env_extent$y)+
+  ggthemes::theme_tufte()
+  #ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = gf_name), data = gf_clust$all_samples, inherit.aes = FALSE)
+}
+
 ggsave_wrapper <- function(filename, plot,
                            units = "cm",
                            width = 16,
@@ -510,6 +523,16 @@ pl_copepod_aff_h_full_file <- here::here("outputs", "copepod_aff_h_full.png")
 pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.png")
 pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
 
+pl_copepod_clust_map_all_file <- tibble( file = c(
+                                           here::here("outputs", "copepod_clust_map_anita.png"),
+                                           here::here("outputs", "copepod_clust_map_combined.png"),
+                                           here::here("outputs", "copepod_clust_map_cpr.png"),
+                                           here::here("outputs", "copepod_clust_map_goc.png"),
+                                           here::here("outputs", "copepod_clust_map_mkinnon.png"),
+                                           here::here("outputs", "copepod_clust_map_nrs.png")
+                                           #here::here("outputs", "copepod_clust_map_nyan.png")
+                                         )
+                                        )
 
 jobs <- 5
 
@@ -954,6 +977,30 @@ pl <- drake::drake_plan(
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
+
+         cluster_copepod_best_df = cluster_copepod_all_df %>%
+           dplyr::group_by(dataname) %>%
+           dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
+           dplyr::filter(k == max(k)) %>%
+           dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+           dplyr::ungroup() %>%
+           dplyr::arrange(dataname),
+
+         ## plot best cluster for each group
+
+         pl_clusters = target(
+           ggsave_wrapper(
+             here::here("outputs", paste0("copepod_clust_map_",  cluster_copepod_best_df$dataname, ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_copepod_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_extent
+             )
+            ),
+           dynamic = map(cluster_copepod_best_df)
+           ),
 
          ##also use silhouette witdth with cluster
 
