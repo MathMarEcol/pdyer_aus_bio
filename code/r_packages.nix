@@ -154,11 +154,19 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         exactextractr
         VoCC
         prioritizr
+        prioritizrdata
         gurobi
         slam
         rnaturalearth
         patchwork
         spatstat
+        mapview
+        remotes
+        gridExtra
+        lpsymphony
+        #Rsymphony
+        units
         reldist
+        codetools
 
 ]

@@ -42,7 +42,8 @@ with pkgs;[
           #needs a shell in the container
           # bashInteractive
           # bash_5
-  
+
+          gurobi
           
           openssh
           iputils
