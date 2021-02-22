@@ -13,8 +13,7 @@ library(raster)
 library(gradientForest)
 library(gfbootstrap)
 library(castcluster)
-library(DBI)
-library(RSQLite)
+library(data.table)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -504,14 +503,6 @@ string_get_tail <- function(x, split = "_") {
 
 }
 
-## Function to allow drake to trigger a db reload
-test_sqlite <- function(file_db) {
-  file_stats <- list(
-   dbinfo =  system2("sqlite3", paste0(file_db, " .dbinfo"), stdout = TRUE),
-  mtime = file.mtime(file_db),
-  size =  file.size(file_db)
-  )
-}
 
 ##Microbes come in a 10GB long form CSV file, with a second CSV file holding the site data.
 ##From memory, the coversion from long to wide broke tidyverse.
@@ -588,87 +579,6 @@ dt_cont_size <- pryr::object_size(micro_sites)
 
 }
 
-#' Extract Microbe data from SQL and return as data.frame
-#'
-#' Assumes that Bacteria.csv is already in an SQLite database
-#'
-#' Returns a wide form table ready for passing into gradientForest
-#'
-#' Assumes the SQLite database was made with the following shell script
-#'
-#' sqlite3 bacteria.db 'CREATE TABLE bacteria(sample_id TEXT NOT null,
-#' otu TEXT NOT NULL,
-#' otu_count INTEGER NOT NULL,
-#' amplicon TEXT NOT NULL,
-#' t_kingdom TEXT NOT NULL,
-#' t_phylum TEXT NOT NULL,
-#' t_class TEXT NOT NULL,
-#' t_order TEXT NOT NULL,
-#' t_family TEXT NOT NULL,
-#' t_genus TEXT NOT NULL,
-#' t_species TEXT NOT NULL);'
-#' sqlite3 -csv bacteria.db '.import ./Bacteria.csv bacteria'
-#'
-#' @param database location of microbe abundance database file
-#' @param site_csv location of metadata csv
-#' @param freq_range min and max frequency of occurrence to include, as a two element vector between 0 and 1
-#' @param cov_min numeric minimum coefficient of variance to return
-#'
-#'
-filter_pull_microbe <- function(database,
-                                site_csv,
-                                freq_range = c(0.05, 0.95),
-                                cov_min = 1){
-
-    bact_db_conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = database, flags = SQLITE_RO)
-    microbe <- dplyr::tbl(bact_db_conn, "bacteria") #database and the "bacteria" table within the database
-
-    sites <- readr::read_csv(site_csv,
-                             col_types = readr::cols(
-                                                    Coastal = readr::col_character(),
-                                                    `Fine Sediment [%]` = readr::col_number(),
-                                                    `Total Nitrogen [%]` = readr::col_number(),
-                                                    `Total Carbon [%]` = readr::col_number()
-                             )
-    )
-
-    sites <- janitor::clean_names(sites)
-    names(sites)[1] <- "sample_id"
-
-    otu_counts <- microbe %>%
-        dplyr::group_by(otu) %>%
-        dplyr::count() %>%
-        dplyr::ungroup() %>%
-        collect()
-
-    otu_freq <- otu_counts /
-
-    top_otus <- otu_counts %>%
-        dplyr::top_n(n_otu, n)
-    top_microbe <- microbe %>%
-        dplyr::filter(otu %in% local(top_otus$otu)) #the local() function is needed because microbe is a database object, not an in-memory R object
-    wide_microbe_db <- top_microbe %>%
-        dplyr::select(sample_id, otu, otu_count) %>%
-        collect()
-    wide_microbe <- wide_microbe_db %>% tidyr::spread(fill = 0, key = otu, value = otu_count)
-    context_cols <- c("sample_id", "coastal", "date_sampled", "depth_m",
-                      "geo_loc_country_subregion", "latitude_decimal_degrees",
-                      "longitude_decimal_degrees", "microbial_abundance_cells_per_ml",
-                      "time_sampled")
-    sites_metadata <- sites[ , context_cols]
-
-    taxon_cols <- c("otu", "amplicon", "t_kingdom", "t_phylum", "t_class", "t_order", "t_family", "t_genus", "t_species")
-    taxon_lut <- microbe %>%
-        dplyr::select(taxon_cols) %>%
-        dplyr::distinct() %>%
-        collect()
-
-    wide_metadata <- dplyr::inner_join(sites_metadata, wide_microbe)
-
-    names(wide_metadata)[names(wide_metadata) == "latitude_decimal_degrees"] <- "lat"
-    names(wide_metadata)[names(wide_metadata) == "longitude_decimal_degrees"] <- "lon"
-
-}
 ## I am taking my code from here:
 ## [[file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd][file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd]]
 #' Plan
@@ -748,7 +658,7 @@ jobs <- 5
                freq_range = c(0.05, 1)
                min_occurrence = 6
                cov_min = 1.0
-               max_otu =2000
+               max_otu = 2000
 
                mapLayer =  "World_EEZ_v8_2014_HR"
                pred = list()
