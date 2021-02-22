@@ -13,6 +13,8 @@ library(raster)
 library(gradientForest)
 library(gfbootstrap)
 library(castcluster)
+library(DBI)
+library(RSQLite)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -88,6 +90,33 @@ align_env_samp <- function(surv,
                            fun = mean) %>%
     merge(env_round, by = spatial_vars) -> surv_env
   return(surv_env)
+}
+
+foc_cov_filter_microbe <- function(microbe_samples,
+                                   max_otu,
+                           freq_range,
+                           cov_min,
+                           min_occurrence) {
+  assertthat::assert_that(all(class(microbe_samples) == c("data.table", "data.frame")))
+  n_sites <- length(unique(microbe_samples$Sample.ID))
+
+  microbe_freq_cov <- microbe_samples[ , .(
+    occ = .N,
+    freq = .N/n_sites,
+    cov = sd(OTU.Count) / mean(OTU.Count)),
+    by = OTU]
+
+
+  keep <- microbe_freq_cov[occ >= min_occurrence &
+                           cov >= cov_min &
+                           freq >= min(freq_range) &
+                           freq <= max(freq_range),]
+
+  keep_capped <- head(keep[order(-cov)], n = max_otu)   
+
+  
+  return(microbe_samples[OTU %in% keep_capped$OTU,])
+
 }
 
 foc_cov_filter <- function(surv_env,
@@ -475,6 +504,171 @@ string_get_tail <- function(x, split = "_") {
 
 }
 
+## Function to allow drake to trigger a db reload
+test_sqlite <- function(file_db) {
+  file_stats <- list(
+   dbinfo =  system2("sqlite3", paste0(file_db, " .dbinfo"), stdout = TRUE),
+  mtime = file.mtime(file_db),
+  size =  file.size(file_db)
+  )
+}
+
+##Microbes come in a 10GB long form CSV file, with a second CSV file holding the site data.
+##From memory, the coversion from long to wide broke tidyverse.
+##I used sqlite to get frequencies of occurrence, and only pulled rows with common otu
+##then tidyr::spread actually worked
+##The ultimate goal is to get a site by OTU
+## Running some tests now.
+
+
+test_microbe_extract <- function(){
+stop("Not for actual use")
+
+library(microbenchmark)
+library(pryr)
+library(data.table)
+microbe_bacteria_csv <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "Bacteria.csv")
+microbe_bacteria_data <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "bacteria.db")
+microbe_bacteria_fst <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "bacteria.fst")
+microbe_bacteria_context <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "contextual.csv")
+##data needed:
+## Bacteria.csv - Sample ID, OTU, OTU Count
+## contextual.csv - Sample ID (for joining), Latitude, Longitude
+## May also want date of sample, depth, microbial abundance
+
+##There are a few approaches
+## 1. careful use of data.table::fread to only get the subset of data I need, then hope data.table gets me there
+## 2. Convert to SQL database, and use SQL to filter, then pull in and spread with tidyverse/data.table
+## 3. Figure out disk.frame, which works on chunks of the data and stores the rest on disk. Author of disk.frame suggests SQL is slower
+
+dt_time <- microbenchmark::microbenchmark({
+    micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID", "OTU" ), data.table = TRUE, stringsAsFactors = FALSE)
+  }, times= 1
+) 
+#only 300 seconds
+dt_size <- pryr::object_size(micro_dt)
+#only 500mb, stringsAsFactors may have helped
+#Never mind, just use data.table then.
+
+sites <- data.table::fread(microbe_bacteria_context, , sep = ",", select =c(
+                                                           "Sample ID",
+                                                           "Depth [m]",
+                                                           "Microbial Abundance [cells per ml]",
+                                                           "Date Sampled",
+                                                           "Latitude [decimal degrees]",
+                                                           "Longitude [decimal degrees]"),
+                                                           check.names = TRUE,
+                                                           key = c("Sample.ID"),
+                                                           data.table = TRUE, stringsAsFactors = FALSE)
+
+dt_cont_time <- microbenchmark::microbenchmark({
+micro_sites <- data.table::fread(microbe_bacteria_context, , sep = ",", select =c(
+                                                           "Sample ID",
+                                                           "Depth [m]",
+                                                           "Microbial Abundance [cells per ml]",
+                                                           "Date Sampled",
+                                                           "Latitude [decimal degrees]",
+                                                           "Longitude [decimal degrees]"),
+                                                          check.names = TRUE, key = c("Sample.ID"), data.table = TRUE, stringsAsFactors = FALSE)
+  }, times= 1
+) 
+#only 300 seconds
+dt_cont_size <- pryr::object_size(micro_sites)
+
+
+
+
+}
+
+#' Extract Microbe data from SQL and return as data.frame
+#'
+#' Assumes that Bacteria.csv is already in an SQLite database
+#'
+#' Returns a wide form table ready for passing into gradientForest
+#'
+#' Assumes the SQLite database was made with the following shell script
+#'
+#' sqlite3 bacteria.db 'CREATE TABLE bacteria(sample_id TEXT NOT null,
+#' otu TEXT NOT NULL,
+#' otu_count INTEGER NOT NULL,
+#' amplicon TEXT NOT NULL,
+#' t_kingdom TEXT NOT NULL,
+#' t_phylum TEXT NOT NULL,
+#' t_class TEXT NOT NULL,
+#' t_order TEXT NOT NULL,
+#' t_family TEXT NOT NULL,
+#' t_genus TEXT NOT NULL,
+#' t_species TEXT NOT NULL);'
+#' sqlite3 -csv bacteria.db '.import ./Bacteria.csv bacteria'
+#'
+#' @param database location of microbe abundance database file
+#' @param site_csv location of metadata csv
+#' @param freq_range min and max frequency of occurrence to include, as a two element vector between 0 and 1
+#' @param cov_min numeric minimum coefficient of variance to return
+#'
+#'
+filter_pull_microbe <- function(database,
+                                site_csv,
+                                freq_range = c(0.05, 0.95),
+                                cov_min = 1){
+
+    bact_db_conn <- DBI::dbConnect(RSQLite::SQLite(), dbname = database, flags = SQLITE_RO)
+    microbe <- dplyr::tbl(bact_db_conn, "bacteria") #database and the "bacteria" table within the database
+
+    sites <- readr::read_csv(site_csv,
+                             col_types = readr::cols(
+                                                    Coastal = readr::col_character(),
+                                                    `Fine Sediment [%]` = readr::col_number(),
+                                                    `Total Nitrogen [%]` = readr::col_number(),
+                                                    `Total Carbon [%]` = readr::col_number()
+                             )
+    )
+
+    sites <- janitor::clean_names(sites)
+    names(sites)[1] <- "sample_id"
+
+    otu_counts <- microbe %>%
+        dplyr::group_by(otu) %>%
+        dplyr::count() %>%
+        dplyr::ungroup() %>%
+        collect()
+
+    otu_freq <- otu_counts /
+
+    top_otus <- otu_counts %>%
+        dplyr::top_n(n_otu, n)
+    top_microbe <- microbe %>%
+        dplyr::filter(otu %in% local(top_otus$otu)) #the local() function is needed because microbe is a database object, not an in-memory R object
+    wide_microbe_db <- top_microbe %>%
+        dplyr::select(sample_id, otu, otu_count) %>%
+        collect()
+    wide_microbe <- wide_microbe_db %>% tidyr::spread(fill = 0, key = otu, value = otu_count)
+    context_cols <- c("sample_id", "coastal", "date_sampled", "depth_m",
+                      "geo_loc_country_subregion", "latitude_decimal_degrees",
+                      "longitude_decimal_degrees", "microbial_abundance_cells_per_ml",
+                      "time_sampled")
+    sites_metadata <- sites[ , context_cols]
+
+    taxon_cols <- c("otu", "amplicon", "t_kingdom", "t_phylum", "t_class", "t_order", "t_family", "t_genus", "t_species")
+    taxon_lut <- microbe %>%
+        dplyr::select(taxon_cols) %>%
+        dplyr::distinct() %>%
+        collect()
+
+    wide_metadata <- dplyr::inner_join(sites_metadata, wide_microbe)
+
+    names(wide_metadata)[names(wide_metadata) == "latitude_decimal_degrees"] <- "lat"
+    names(wide_metadata)[names(wide_metadata) == "longitude_decimal_degrees"] <- "lon"
+
+}
 ## I am taking my code from here:
 ## [[file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd][file:/vmshare/phd/projects/aus_bioregions_paper/experiments/2019-06-28-1618_gf_models_kmeans/method_copepod.Rmd]]
 #' Plan
@@ -493,6 +687,18 @@ copepod_data <- here::here(
                         "..", "..", "..",
                         "Q1215", "AusCPR", "combined_copeped_jul19.csv"
                       )
+
+microbe_bacteria_csv <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "Bacteria.csv")
+microbe_bacteria_context <- here::here(
+                        "..", "..", "..",
+                        "Q1215", "aus_microbiome", "marine_bacteria", "contextual.csv")
+pl_microbe_freq_file <-  here::here("outputs", "microbe_freq_range.png")
+pl_microbe_freq_cov_file <-  here::here("outputs", "microbe_freq_cov.png")
+pl_microbe_filtered_freq_file <-  here::here("outputs", "microbe_filtered_freq_range.png")
+
+
 ext_pl_temp_file <- here::here("outputs", "temps.png")
 ext_pl_map_file <- here::here("outputs", "extents.png")
 state_rds_file <- here::here("outputs", "state.rds")
@@ -542,6 +748,7 @@ jobs <- 5
                freq_range = c(0.05, 1)
                min_occurrence = 6
                cov_min = 1.0
+               max_otu =2000
 
                mapLayer =  "World_EEZ_v8_2014_HR"
                pred = list()
@@ -1274,8 +1481,94 @@ pl <- drake::drake_plan(
          ##                              vars = 1:9,
          ##                              out_file = file_out(!!pl_gfboot_perf_file)),
          ##                             hpc = FALSE)
-#
-#
+         ##
+
+         ##Microbe data
+         microbe_samples = target(
+           data.table::fread(file_in(!!microbe_bacteria_csv),
+                             sep = ",",
+                             select =1:3,
+                             check.names = TRUE,
+                             key = c("Sample.ID", "OTU" ),
+                             data.table = TRUE,
+                             stringsAsFactors = FALSE),
+           format = "fst_dt",
+           ),
+         microbe_filtered = target(
+           foc_cov_filter_microbe(microbe_samples,
+                                   max_otu,
+                           freq_range,
+                           cov_min,
+                           min_occurrence),
+           format = "fst_dt",
+           ),
+         microbe_n_sites = length(unique(microbe_samples$Sample.ID)),
+
+         pl_microbe_freq = ggsave_wrapper(
+           filename = file_out(!!pl_microbe_freq_file),
+           plot = ggplot(
+ data.frame(x = seq.int(1, nrow(microbe_samples[ , .(.N), by = OTU])),  as.data.frame(microbe_samples[ , .(.N), by = OTU][order(-N), .(N)])),
+             mapping = aes(x = x, y = N)) +
+             geom_point() 
+           ),
+         pl_microbe_freq_cov = ggsave_wrapper(
+           filename = file_out(!!pl_microbe_freq_cov_file),
+           plot = ggplot(
+  as.data.frame(microbe_samples[ , .(
+    occ = .N,
+    freq = .N/microbe_n_sites,
+    cov = sd(OTU.Count) / mean(OTU.Count)),
+    by = OTU][!is.na(cov), .(freq, cov)]),
+             mapping = aes(x = freq, y = cov)) +
+             geom_point() 
+           ),
+         pl_microbe_filtered_freq = ggsave_wrapper(
+           filename = file_out(!!pl_microbe_filtered_freq_file),
+           plot = ggplot(
+ data.frame(x = seq.int(1, nrow(microbe_filtered[ , .(.N), by = OTU])),  as.data.frame(microbe_filtered[ , .(.N), by = OTU][order(-N), .(N)])),
+             mapping = aes(x = x, y = N)) +
+             geom_point() 
+           ),
+         target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_range_file)),
+                
+                                     hpc = FALSE),
+         ##Size of matrix exceeds R limits, but is largely 0, about 0.7% are non-zero.
+         ##Remove rare OTU's first.
+         microbe_samples_wide = target(
+           data.table::dcast(microbe_filtered,
+                             formula = Sample.ID ~ OTU,
+                             value.var = "OTU.Count"),
+           format = "fst_dt"),
+
+         microbe_sites = target(
+           data.table::fread(file_in(!!microbe_bacteria_context),
+                             sep = ",",
+                             select =c(
+                               "Sample ID",
+                               "Depth [m]",
+                               "Microbial Abundance [cells per ml]",
+                               "Date Sampled",
+                               "Latitude [decimal degrees]",
+                               "Longitude [decimal degrees]"),
+                             col.names = c(
+                               "Sample.ID",
+                               "Depth",
+                               "Microbial.Abundance",
+                               "Date",
+                               "lat",
+                               "lon"),
+                             check.names = TRUE,
+                             key = c("Sample.ID"),
+                             data.table = TRUE,
+                             stringsAsFactors = FALSE),
+           format = "fst_dt",
+           ),
+
+
+
          #plotting a bit
          ext_pl = target(plot_extents(marine_map,
                                env_extent,
