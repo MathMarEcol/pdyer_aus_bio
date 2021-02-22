@@ -422,17 +422,35 @@ plot_temp <- function(env_data,
 
 }
 
-plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent){
+plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, samples = NULL, grids = NULL){
 
- ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
+  pl <- ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
                             ggplot2::aes_string(x = spatial_vars[1], y = spatial_vars[2], fill = "clust")) +
   ggplot2::geom_raster()  +
   ggplot2::scale_fill_manual(values = rainbow(max(clustering))) +
   ggplot2::labs(fill = "cluster") +
   ggplot2::geom_sf(data = marine_map, inherit.aes = FALSE, color = "black", fill= NA)+
-  ggplot2::coord_sf(xlim = env_extent$x, ylim = env_extent$y)+
+   ggplot2::coord_sf(xlim = env_extent$x, ylim = env_extent$y)+
+
   ggthemes::theme_tufte()
-  #ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = gf_name), data = gf_clust$all_samples, inherit.aes = FALSE)
+
+  if(!is.null(samples)){
+    if(class(samples)[1] == "list" & length(samples) == 1){
+      samples <- samples[[1]]
+     }
+    pl <- pl +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = ".", colour = "black"), data = samples, inherit.aes = FALSE)
+  }
+  if(!is.null(grids)){
+    if(class(grids)[1] == "list" & length(grids) == 1){
+      grids <- grids[[1]]
+     }
+    pl <- pl +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = "o", colour = "black"), data = grids, inherit.aes = FALSE)
+  }
+
+  return(pl)
+
 }
 
 ggsave_wrapper <- function(filename, plot,
@@ -1113,7 +1131,9 @@ pl <- drake::drake_plan(
                cluster_copepod_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
-               env_extent
+               env_extent,
+               NULL,
+               grids
              )
             ),
            dynamic = map(cluster_copepod_best_df)
