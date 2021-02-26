@@ -520,6 +520,11 @@ string_get_tail <- function(x, split = "_") {
   return(tail(spl, 1))
 
 }
+name_list <- function(li, na){
+  x <- li
+  names(x) <- na
+  return(x)
+}
 
 
 ##Microbes come in a 10GB long form CSV file, with a second CSV file holding the site data.
@@ -662,7 +667,7 @@ pl_copepod_clust_map_all_file <- tibble( file = c(
                                            here::here("outputs", "copepod_clust_map_combined.png"),
                                            here::here("outputs", "copepod_clust_map_cpr.png"),
                                            here::here("outputs", "copepod_clust_map_goc.png"),
-                                           here::here("outputs", "copepod_clust_map_mkinnon.png"),
+                                           here::here("outputs", "copepod_clust_map_mckinnon.png"),
                                            here::here("outputs", "copepod_clust_map_nrs.png")
                                            #here::here("outputs", "copepod_clust_map_nyan.png")
                                          )
@@ -672,6 +677,21 @@ jobs <- 5
 
 ## parameters
 
+                         surv_names = c("nrs",
+                                   "cpr",
+                                   "mckinnon",
+                                   "goc",
+                                   "nyan",
+                                   "anita")
+                         surv_matching = list(nrs = "NRS",
+                                         cpr = "CPR",
+                                         mckinnon =
+                                           as.character(
+                                             c(4, 5, 7, 9, 12, 15, 16, 24)
+                                           ), #McKinnon surveys
+                                         goc = "1", #Gulf of Capentaria
+                                         nyan = "21", #SE Tasmania
+                                         anita = "18") #Tasmania data
                epi_depth = 200
                freq_range = c(0.05, 1)
                min_occurrence = 6
@@ -710,7 +730,9 @@ jobs <- 5
                extrap = 1 / 4
 
                k_range = seq.int(2,20)
-               cluster_reps = 1
+               cluster_reps = seq.int(1,3)
+               cluster_reps_test = seq.int(1,10)
+
                clara_samples = 20
                clara_sampsize = 50
                clara_trace = 0
@@ -878,7 +900,6 @@ pl <- drake::drake_plan(
                ##drake_plan() forces you to put commas everywhere,
                ##this is not an R block.
 #
-               surv = target(split_surv(combined_copepod, matching),
                              ## supplying the initial splitting of the data
                              ##here How to use transform parameters the map()
                              ##function steps through "rows of a grid" the
@@ -900,63 +921,81 @@ pl <- drake::drake_plan(
                              ##the surv target map(). So most map() params
                              ##can be hard coded or targets, but .id must
                              ##be assigned another map() param
-                       transform = map(
-                         surv_names = c("nrs",
-                                   "cpr",
-                                   "mkinnon",
-                                   "goc",
-                                   "nyan",
-                                   "anita"),
-                         .id = surv_names,
-                         matching = list(nrs = "NRS",
-                                         cpr = "CPR",
-                                         mckinnon =
-                                           as.character(
-                                             c(4, 5, 7, 9, 12, 15, 16, 24)
-                                           ), #McKinnon surveys
-                                         goc = "1", #Gulf of Capentaria
-                                         nyan = "21", #SE Tasmania
-                                         anita = "18") #Tasmania data
-                         )
-                       ),
+                             ##UPDATE: static mapping is the original branching in drake
+                             ##but more recent versions added dynamic mapping.
+                             ##Dynamic mapping works more like purrr, operating over lists or rows
+                             ##
+                             ##NOTES:
+               ##dynamic elements must be variables in the environment OR existing targets
+               ##For variables, vec_slice is applied:
+               ## one row per subtarget for data.frame and friends, unless .by is specified, then one group per subtarget.
+               ## one element per subtarget for list and friends
+               ##the returned target will have the same type as the return value of the function,
+               ##combined by whatever action vec_c() thinks is best. No need for recombining data.frame and friends
+               ## rbind for data.frame and friends,
+               ## c() for lists and vectors
+               ## future dynamic calls over dynamic targets will get the subtargets
+               ## .trace is useful metadata for debugging, and shows the input value
+               ## of each subtarget without polluting the actual workflow. Use c() to select which inputs to store
+               ##
+               ##
+               ## `format =` is not part of dynamic, but is very useful anyway. You can force drake to use fast
+               ## storage backends like fst and qs. However, choosing fst for anything that isn't a data frame will coerce it
+               ## to a data frame. Take care.
+
+        surv = target(split_surv(combined_copepod, surv_matching[[surv_names]]),
+                      dynamic = map(
+                        .trace = c(surv_names),
+                        surv_names
+                      ),
+                      format = "fst_tbl"
+                      ),
 #
          #From now on, every call to surv should give me one survey at a time.
          surv_epi = target(
            remove_meso(surv, depth = epi_depth),
-           transform = map(
-             surv,
-             .id = surv_names
-           )
+           dynamic = map(
+             .trace = surv_names,
+             surv_names,
+             surv
+           ),
+           format = "fst_tbl"
          ),
 #
          ##Extract species names
          sp_names = target(
            clean_sp_names(surv_epi),
-           transform = map(
-             surv_epi,
-             .id = surv_names
-           )
+           dynamic = map(
+             .trace = surv_names,
+             surv_names,
+             surv_epi
+           ),
+           format = "qs"
          ),
          ##Convert to wide format
          surv_wide = target(
            surv_to_wide(surv_epi),
-           transform = map(
-             surv_epi,
-             .id = surv_names
-           )
+           dynamic = map(
+             .trace = surv_names,
+             surv_names,
+             surv_epi
+           ),
+           format = "fst_tbl"
          ),
 #
          ##Align env and samples
          surv_env = target(
-           align_env_samp(surv_wide,
+           align_env_samp(surv = surv_wide,
                           spatial_vars = spatial_vars,
                           env_res = regrid_resolution,
                           env_offset = env_offset,
                           env_round = env_round),
-           transform = map(
-             surv_wide,
-             .id = surv_names
-           )
+           dynamic = map(
+             .trace = surv_names,
+             surv_names,
+             surv_wide
+           ),
+           format = "fst_tbl"
          ),
          ##Filter by Frequency of occurrence and coefficient of variance
          surv_sp_keep = target(
@@ -966,11 +1005,13 @@ pl <- drake::drake_plan(
                           cov_min = cov_min,
                           min_occurrence = min_occurrence
            ),
-           transform = map(
-             surv_env,
+           dynamic = map(
+             .trace = surv_names,
+             surv_names,
              sp_names,
-             .id = surv_names
-           )
+             surv_env
+           ),
+           format = "qs"
          ),
          surv_env_filter = target(
            filter_surv_env(surv_env = surv_env,
@@ -979,15 +1020,17 @@ pl <- drake::drake_plan(
                            spatial_vars = spatial_vars,
                            env_vars = env_names
            ),
-           transform = map(
+           dynamic = map(
+             .trace = surv_names,
              surv_env,
              surv_sp_keep,
-             .id = surv_names
-           )
+             surv_names,
+           ),
+           format = "fst_tbl"
          ),
          ##Fit GF models
          surv_gf = target(
-           gradientForest::gradientForest(
+           stats::setNames(list(gradientForest::gradientForest(
                              data = as.data.frame(surv_env_filter),
                              predictor.vars = env_names,
                              response.vars = surv_sp_keep,
@@ -998,49 +1041,78 @@ pl <- drake::drake_plan(
                              corr.threshold = gf_corr_thres,
                              maxLevel = floor(log2(length(surv_sp_keep) * 0.368 / 2)),
                              trace = TRUE
-                           ),
-           transform = map(
+                             )),
+                           nm = c(surv_names)),
+           dynamic = map(
+             .trace = surv_names,
              surv_env_filter,
              surv_sp_keep,
-             .id = surv_names
-           )
+             surv_names,
+           ),
+           format = "qs"
          ),
-         ##combined GF for copepods
-         copepod_combined_gf = target(
-           gradientForest::combinedGradientForest(surv_gf,
-                                            nbin = gf_bins),
-           transform = combine(surv_gf)
-         ),
+        ##combined GF for copepods
+        copepod_combined_gf = target(
+          do.call(gradientForest::combinedGradientForest,
+                  c(surv_gf, nbin = gf_bins)
+                  ),
+          ##dynamic = combine(surv_gf),
+          format = "qs"
+        ),
 
 
-         ##Transform the environment. No need for target(), I am not mapping or combining
-         ##NOTE: don't try to hack the drake transforms, just run a parallel pipeline, use functions
-         ## to reuse effort.
-         ## gf_all = target(
-         ##   list(surv_gf, copepod_combined_gf = copepod_combined_gf),
-         ##   transform = combine(surv_gf,
-         ##                       .id = surv_names)
-         ## ),
+        ## ##Transform the environment. No need for target(), I am not mapping or combining
+        ## ##NOTE: don't try to hack the drake transforms, just run a parallel pipeline, use functions
+        ## ## to reuse effort.
+        ## Better reason to avoid combining: combined GF needs different processing steps
+        ## gf_all = target(
+        ##   vctrs::vec_c(surv_gf_named, list(copepod_combined_gf = copepod_combined_gf)),
+        ##   ),
 
-         env_trans_copepod_combined =
-           predict(object = copepod_combined_gf,
-                   newdata = env_round[, env_names],
-                   extrap = extrap),
-
-         env_trans_copepod = target(
-           predict(object = surv_gf,
-                   newdata = env_round[, as.character(unique(surv_gf$res$var))],
-                   extrap = extrap),
-           transform = map(surv_gf,
-                           .id =surv_names)
-         ),
-         ## env_trans_spatial_all = target(
-         ##   cbind(env_round[, spatial_vars], env_trans_all),
-         ##   transform = map(env_trans_all)
-         ## ),
+        ## gf_all_names = names(gf_all),
 
 
-         env_trans_spatial = cbind(env_round[, spatial_vars], env_trans_copepod_combined),
+
+        env_trans_copepod_combined = target(
+          predict(object = copepod_combined_gf,
+                  newdata = env_round[, env_names],
+                  extrap = extrap),
+          format = "fst_tbl"
+          ),
+        env_trans_copepod_combined_spatial = target(
+          cbind(env_round[, spatial_vars], env_trans_copepod_combined),
+
+          format = "fst_tbl"
+        ),
+
+        env_trans_copepod = target(
+          predict(object = surv_gf[[1]],
+                  newdata = env_round[, as.character(unique(surv_gf[[1]]$res$var))],
+                  extrap = extrap),
+          dynamic = map(surv_gf,
+                        surv_names,
+                        .trace = surv_names
+                        ),
+          format = "fst_tbl"
+        ),
+        env_trans_copepod_spatial = target(
+          list(cbind(env_round[, spatial_vars], env_trans_copepod)),
+          dynamic = map(env_trans_copepod),
+          format = "qs"
+        ),
+
+        env_trans_copepod_spatial_named = target(
+          name_list(env_trans_copepod_spatial, surv_names),
+          format = "qs"
+        ),
+
+
+        env_trans_copepod_all = target(
+          vctrs::vec_c(env_trans_copepod_spatial_named, list(copepod_combined_gf = env_trans_copepod_combined_spatial)),
+          format = "qs"
+        ),
+
+        env_trans_copepod_names = names(env_trans_copepod_all),
 
 
          ## Cluster, with k-means
@@ -1053,52 +1125,53 @@ pl <- drake::drake_plan(
          ## plot best k and associated clustering
 
          cluster_copepod = target(
-           cluster_capture(string_get_tail(string_strip_counter(.id_chr)),
-                                           env_trans_copepod,
-                                           k,
-                                           nrep,
-               samples = clara_samples,
-               sampsize = clara_sampsize,
-               trace = clara_trace,
-               rngR = clara_rngR,
-               pamLike = clara_pamLike,
-               correct.d = clara_correct.d),
-           transform = cross(
-             env_trans_copepod,
-             nrep = !!seq.int(1,cluster_reps),
-             k = !!k_range,
-             .id = env_trans_copepod,
-           )
+           cluster_capture(env_trans_copepod_names,
+                           env_trans_copepod_all[[env_trans_copepod_names]][, names(env_trans_copepod_all[[env_trans_copepod_names]]) %in% env_names],
+                           k_range,
+                           cluster_reps,
+                           samples = clara_samples,
+                           sampsize = clara_sampsize,
+                           trace = clara_trace,
+                           rngR = clara_rngR,
+                           pamLike = clara_pamLike,
+                           correct.d = clara_correct.d),
+           dynamic = cross(
+             env_trans_copepod_names,
+             .trace = c(env_trans_copepod_names, cluster_reps, k_range),
+             cluster_reps,
+             k_range,
+             ),
+           format = "qs"
          ),
-         cluster_copepod_combined = target(
-           cluster_capture("copepod_combined", env_trans_copepod_combined,
-                           k, nrep,
-               samples = clara_samples,
-               sampsize = clara_sampsize,
-               trace = clara_trace,
-               rngR = clara_rngR,
-               pamLike = clara_pamLike,
-               correct.d = clara_correct.d),
-           transform = cross(
-             nrep = !!seq.int(1,cluster_reps),
-             k = !!k_range
-           )
-         ),
+         ## cluster_copepod_combined = target(
+         ##   cluster_capture("copepod_combined", env_trans_copepod_combined,
+         ##                   k, nrep,
+         ##       samples = clara_samples,
+         ##       sampsize = clara_sampsize,
+         ##       trace = clara_trace,
+         ##       rngR = clara_rngR,
+         ##       pamLike = clara_pamLike,
+         ##       correct.d = clara_correct.d),
+         ##   transform = cross(
+         ##     nrep = !!seq.int(1,cluster_reps),
+         ##     k = !!k_range
+         ##   )
+         ## ),
 
-         cluster_copepod_df = target(
-           rbind(cluster_copepod),
-           transform = combine(cluster_copepod)
-         ),
+         ## cluster_copepod_df = target(
+         ##   rbind(cluster_copepod),
+         ##   transform = combine(cluster_copepod)
+         ## ),
 
-         cluster_copepod_all_df = target(
-           rbind(cluster_copepod_df, cluster_copepod_combined),
-           transform = combine(cluster_copepod_combined)
-         ),
+         ## cluster_copepod_all_df = target(
+         ##   rbind(cluster_copepod_df, cluster_copepod_combined),
+         ##   transform = combine(cluster_copepod_combined)
+         ## ),
          pl_clust_perfs = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf),
            plot = ggplot(
-             data.frame(cluster_copepod_all_df[, c("dataname", "k", "min_clust_ratio")],
-                        pass = as.factor(cluster_copepod_all_df$min_clust_ratio >= min_clust_thres)),
+             data.frame(cluster_copepod[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_copepod$min_clust_ratio >= min_clust_thres)),
              mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
              geom_point() +
              facet_wrap(vars(dataname)),
@@ -1106,14 +1179,14 @@ pl <- drake::drake_plan(
          pl_clust_perfs_sil = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf_sil),
            plot = ggplot(
-             data.frame(cluster_copepod_all_df[, c("dataname", "k", "sil_avg")],
-                        pass = as.factor(cluster_copepod_all_df$min_clust_ratio >= min_clust_thres)),
+             data.frame(cluster_copepod[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_copepod$min_clust_ratio >= min_clust_thres)),
              mapping = aes(x = k, y = sil_avg, colour = pass)) +
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
 
-         cluster_copepod_best_df = cluster_copepod_all_df %>%
+         cluster_copepod_best_df = cluster_copepod %>%
            dplyr::group_by(dataname) %>%
            dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
            dplyr::filter(k == max(k)) %>%
@@ -1122,10 +1195,22 @@ pl <- drake::drake_plan(
            dplyr::arrange(dataname),
 
          ## plot best cluster for each group
+        surv_env_filter_list = target(
+          list(surv_env_filter),
+          dynamic = map(surv_env_filter),
+          format = "qs"
+        ),
+        surv_env_filter_list_all = target(
+          vctrs::vec_c(name_list(surv_env_filter_list, surv_names), list(copepod_combined_gf = surv_env_filter)),
+          format = "qs"
+        ),
 
          pl_clusters = target(
            ggsave_wrapper(
-             here::here("outputs", paste0("copepod_clust_map_",  cluster_copepod_best_df$dataname, ".png")),
+             here::here("outputs",
+                        paste0("copepod_clust_map_",
+                               cluster_copepod_best_df$dataname,
+                               ".png")),
              plot_clust(
                env_round[, spatial_vars],
                cluster_copepod_best_df$clust[[1]]$clustering,
@@ -1133,7 +1218,7 @@ pl <- drake::drake_plan(
                marine_map,
                env_extent,
                NULL,
-               grids
+               grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars]
              )
             ),
            dynamic = map(cluster_copepod_best_df)
@@ -1144,8 +1229,8 @@ pl <- drake::drake_plan(
          ## I want to reuse exising runs as much as possible
 
          test_cluster_rand = target(
-           cluster_capture("copepod_combined", env_trans_copepod_combined,
-                           k, nrep,
+           cluster_capture("copepod_combined", env_trans_copepod_all$copepod_combined_gf,
+                           k_range, cluster_reps_test,
                samples = clara_samples,
                sampsize = clara_sampsize,
                trace = clara_trace,
@@ -1154,18 +1239,16 @@ pl <- drake::drake_plan(
                correct.d = clara_correct.d,
                keep.data = FALSE,
                medoids.x = FALSE),
-           transform = cross(
-             nrep = !!seq.int(1, 100),
-             k = !!k_range
-           )
-         ),
+           dynamic = cross(
+             .trace = c(cluster_reps_test, k_range),
+             cluster_reps_test,
+             k_range
+             ),
+           format = "qs"
+           ),
 
-         test_cluster_bind = target(
-           rbind(test_cluster_rand),
-           transform = combine(test_cluster_rand)
-         ),
 
-         test_cluster_stats = plyr::ddply(test_cluster_bind, c("dataname", "k"),
+         test_cluster_stats = plyr::ddply(test_cluster_rand, c("dataname", "k"),
                                     summarise,
                                     N = length(min_clust_ratio),
                                     mean = mean(min_clust_ratio),
@@ -1439,7 +1522,7 @@ pl <- drake::drake_plan(
            plot = ggplot(
  data.frame(x = seq.int(1, nrow(microbe_samples[ , .(.N), by = OTU])),  as.data.frame(microbe_samples[ , .(.N), by = OTU][order(-N), .(N)])),
              mapping = aes(x = x, y = N)) +
-             geom_point() 
+             geom_point()
            ),
          pl_microbe_freq_cov = ggsave_wrapper(
            filename = file_out(!!pl_microbe_freq_cov_file),
@@ -1450,20 +1533,20 @@ pl <- drake::drake_plan(
     cov = sd(OTU.Count) / mean(OTU.Count)),
     by = OTU][!is.na(cov), .(freq, cov)]),
              mapping = aes(x = freq, y = cov)) +
-             geom_point() 
+             geom_point()
            ),
          pl_microbe_filtered_freq = ggsave_wrapper(
            filename = file_out(!!pl_microbe_filtered_freq_file),
            plot = ggplot(
  data.frame(x = seq.int(1, nrow(microbe_filtered[ , .(.N), by = OTU])),  as.data.frame(microbe_filtered[ , .(.N), by = OTU][order(-N), .(N)])),
              mapping = aes(x = x, y = N)) +
-             geom_point() 
+             geom_point()
            ),
          target(gf_plot_wrapper(gf_model = copepod_combined_gf,
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
                                       out_file = file_out(!!pl_gf_range_file)),
-                
+
                                      hpc = FALSE),
          ##Size of matrix exceeds R limits, but is largely 0, about 0.7% are non-zero.
          ##Remove rare OTU's first.
