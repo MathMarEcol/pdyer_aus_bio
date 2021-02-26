@@ -113,6 +113,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         renv
         callr
 
+        qs
         fst
         feather
         jsonlite
