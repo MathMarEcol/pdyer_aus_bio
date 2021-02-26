@@ -422,7 +422,7 @@ plot_temp <- function(env_data,
 
 }
 
-plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, samples = NULL, grids = NULL){
+plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, samples = NULL, grids = NULL, clip_samples = TRUE){
 
   pl <- ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
                             ggplot2::aes_string(x = spatial_vars[1], y = spatial_vars[2], fill = "clust")) +
@@ -446,7 +446,7 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, 
       grids <- grids[[1]]
      }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = "o", colour = "black"), data = grids, inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids, shape = "o", colour = "black", inherit.aes = FALSE)
   }
 
   return(pl)
