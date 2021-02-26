@@ -1580,6 +1580,18 @@ pl <- drake::drake_plan(
            format = "fst_dt",
            ),
 
+ ##how to filter microbe sites?
+ ##attach lat and lon to every OTU, using sample ID?
+ ##then drop sample id, and
+ ##I only want OTUs that appera in my study area.
+ ##The approach for CPR was to make a site species matrix first, then
+ ## filter, but that does not work for OTUs, there are too many.
+ ## I could use sf to find sample IDs that are in the study area, then
+ ## only keep OTUs with a "present" sample ID.
+ ## How? filter over microbe_sites, then do a join over sample ID that only keeps rows with a match.
+ ## Minimum memory: filter over microbe sites, filter sample IDs in OTU table, make OTU wide, then add env data.
+ ##
+
 
 
          #plotting a bit
@@ -1589,20 +1601,20 @@ pl <- drake::drake_plan(
                                ),
                                      hpc = FALSE),
 #
-         ## ext_pl_biooracle = target(plot_temp(env_final,
-         ##                              spatial_vars,
-         ##                              marine_map,
-         ##                              env_extent,
-         ##                              file_out(!!ext_pl_temp_file)
-         ##                              ),
-         ##                             hpc = FALSE),
-         ext_pl_biooracle = target(plot_temp(env_trans_spatial,
+         ext_pl_biooracle = target(plot_temp(env_final,
                                       spatial_vars,
                                       marine_map,
                                       env_extent,
                                       file_out(!!ext_pl_temp_file)
                                       ),
                                      hpc = FALSE),
+         ## ext_pl_biooracle = target(plot_temp(env_trans_spatial,
+         ##                              spatial_vars,
+         ##                              marine_map,
+         ##                              env_extent,
+         ##                              file_out(!!ext_pl_temp_file)
+         ##                              ),
+         ##                             hpc = FALSE),
          track_state = target(state_rds(file_out(!!state_rds_file),
                                  file_out(!!state_yaml_file)),
                                      hpc = FALSE),
