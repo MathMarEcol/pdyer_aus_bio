@@ -1207,10 +1207,10 @@ pl <- drake::drake_plan(
 
          pl_clusters = target(
            ggsave_wrapper(
-             file_out(!!here::here("outputs",
+             here::here("outputs",
                         paste0("copepod_clust_map_",
                                cluster_copepod_best_df$dataname,
-                               ".png"))),
+                               ".png")),
              plot_clust(
                env_round[, spatial_vars],
                cluster_copepod_best_df$clust[[1]]$clustering,
@@ -1221,7 +1221,11 @@ pl <- drake::drake_plan(
                grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars]
              )
             ),
-           dynamic = map(cluster_copepod_best_df)
+           dynamic = map(cluster_copepod_best_df),
+           trigger = trigger(condition = !file.exists(here::here("outputs",
+                        paste0("copepod_clust_map_",
+                               cluster_copepod_best_df$dataname,
+                               ".png"))))
            ),
 
 
