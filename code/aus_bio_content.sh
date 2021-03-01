@@ -97,12 +97,12 @@ Rscript code/drake_plan.R
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 tar -czf $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.tar.gz  ./drake_cache
-7za a $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z  ./drake_cache
+7za a -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z  ./drake_cache
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 #Store the outputs
 
 tar -czf "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.tar.gz"  ./outputs
-7za a  -t7z "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.7z"  ./outputs
+7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.7z"  ./outputs
 rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
 
 # #copy outputs to an archive
