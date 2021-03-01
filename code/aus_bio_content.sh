@@ -30,6 +30,7 @@ mkdir -p $TMPDIR_SHARE/Q1216
 #which means I don't need $PBS_O_WORKDIR
 #Inputs
 
+#All of the datasets are in smallish blocks of files. no more than a few dozen files per dataset, most are less than 5
 mkdir -p $TMPDIR_SHARE/Q1215/aus_microbiome/marine_bacteria
 rsync -irc $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria/Bacteria.csv $TMPDIR_SHARE/Q1215/aus_microbiome/marine_bacteria/
 rsync -irc $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria/contextual.csv $TMPDIR_SHARE/Q1215/aus_microbiome/marine_bacteria/
@@ -53,7 +54,10 @@ git_hash=$(git rev-parse --short HEAD)
 date_run=$(date +%Y-%m-%d_%H-%M-%S)
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #The drake cache contains previous results, and is needed to avoid recaclulating stuff.
-rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+
+rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+7z x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/pbs_clustermq.tmpl $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #
 #Set up the output directory
@@ -91,14 +95,21 @@ cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio
 Rscript code/drake_plan.R
 
 #Store the drake cache
-rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
+cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+tar -czf $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.tar.gz  ./drake_cache
+7za a $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z  ./drake_cache
+rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 #Store the outputs
-rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/ $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
-#copy outputs to an archive
-mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
-for file in $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
-    cp -r "$file" "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history/${date_run}_${git_hash}_${file##*/}"
-done
+
+tar -czf "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.tar.gz"  ./outputs
+7za a  -t7z "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.7z"  ./outputs
+rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
+
+# #copy outputs to an archive
+# mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
+# for file in $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/* ; do
+#     cp -r "$file" "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history/${date_run}_${git_hash}_${file##*/}"
+# done
 
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMPDIR_SHARE/Q1215/bioORACLE $ROOT_STORE_DIR/Q1215/
