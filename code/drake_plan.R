@@ -1222,10 +1222,7 @@ pl <- drake::drake_plan(
              )
             ),
            dynamic = map(cluster_copepod_best_df),
-           trigger = trigger(condition = !file.exists(here::here("outputs",
-                        paste0("copepod_clust_map_",
-                               cluster_copepod_best_df$dataname,
-                               ".png"))))
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
 
