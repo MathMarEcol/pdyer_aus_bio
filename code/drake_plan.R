@@ -1207,10 +1207,10 @@ pl <- drake::drake_plan(
 
          pl_clusters = target(
            ggsave_wrapper(
-             here::here("outputs",
+             file_out(!!here::here("outputs",
                         paste0("copepod_clust_map_",
                                cluster_copepod_best_df$dataname,
-                               ".png")),
+                               ".png"))),
              plot_clust(
                env_round[, spatial_vars],
                cluster_copepod_best_df$clust[[1]]$clustering,
