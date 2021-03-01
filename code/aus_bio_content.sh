@@ -115,5 +115,5 @@ rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR
 rsync -irc $TMPDIR_SHARE/Q1215/bioORACLE $ROOT_STORE_DIR/Q1215/
 
 #clean up TMPDIR_SHARE
-rm -r $TMPDIR_SHARE
+rm -r $TMPDIR_SHARE/*
 #done
