@@ -96,7 +96,6 @@ Rscript code/drake_plan.R
 
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-rm $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.tar.gz
 tar -czf $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.tar.gz  ./drake_cache
 7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z  ./drake_cache
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
