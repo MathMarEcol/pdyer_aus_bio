@@ -57,7 +57,7 @@ date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
 rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-7z x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z
+7za x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/pbs_clustermq.tmpl $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #
 #Set up the output directory
