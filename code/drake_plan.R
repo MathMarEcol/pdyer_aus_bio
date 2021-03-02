@@ -995,15 +995,14 @@ fish_years <- 2007:2017
                ##in lat lon degrees, use 1/integer fraction
                ##for proper rastering later,
                ##currently 1/12 to allign with BioORACLE
-               regrid_resolution = 1 / 4#TODO: 1 / 12,
+               regrid_resolution = 1 / 2#TODO: 1 / 12,
                ##Extent chosen to match the largest extents of
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
                env_bounds = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24))
-
-               gf_trees = 200
+               gf_trees = 20
                gf_bins = 201
                gf_corr_thres = 0.5
                gf_compact = FALSE
