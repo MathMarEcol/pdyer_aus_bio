@@ -174,10 +174,10 @@ filter_surv_env <- function(surv_env,
   surv_env_filter <- surv_env %>%
     dplyr::select(!!env_id_col, !!spatial_vars, !!env_vars, !!surv_sp_names)
 }
-env_aus_eez <- function(bio_oracle_cache,
+env_restrict_to_region <- function(bio_oracle_cache,
                         env_vars,
                         env_modes,
-                        env_extent,
+                        env_poly,
                         max_depth,
                         regrid_res,
                         spatial_vars,
@@ -201,21 +201,26 @@ env_aus_eez <- function(bio_oracle_cache,
                                            datadir = bio_oracle_cache,
                                            rasterstack = FALSE)
 
-  aeez_target_grid <- raster::raster(x = raster::extent(env_extent),
+  target_grid <- raster::raster(x = env_poly,
                                      resolution = regrid_res,
                                      crs = "+proj=longlat +datum=WGS84")
 
   raster_crop <- raster::brick(lapply(env_raster,
                                       function(r) {
-                                        raster::crop(r, env_extent)
+                                        raster::crop(r, raster::extent(target_grid))
                                       }))
   raster_rescale <- raster::resample(raster_crop,
-                                     aeez_target_grid,
+                                     target_grid,
                                      method = "bilinear")
+  ##mask is much quicker than st_intersection
+  raster_masked <- raster::mask(raster_rescale, env_poly)
+  crs(raster_masked) <-"+proj=longlat +datum=WGS84"
+  env_points <- tibble::as_tibble(rasterToPoints(raster_masked))
 
-  env <- raster::rasterToPoints(raster_rescale)
-  env_complete <- as.data.frame(env[complete.cases(env), ])
-  return(env_complete)
+  names(env_points)[1:2] <- spatial_vars
+
+  env_region <- env_points[complete.cases(env_points), ]
+  return(env_region)
 }
 
 env_log_transform <- function(env_data, env_log) {
@@ -250,11 +255,6 @@ env_clip_extremes <- function(env_data, std_thres) {
     max_x <- x_mean + x_sd * std_thres
     env_data[[.x]] <- pmax(min_x, pmin(env_data[[.x]], max_x))
   })
-  return(env_data)
-}
-
-env_name_spatial <- function(env_data, spatial_vars) {
-  names(env_data)[1:2] <- spatial_vars
   return(env_data)
 }
 
@@ -722,8 +722,9 @@ jobs <- 5
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
-               env_extent = list(x = c(109 + 1 / 24, 163 + 23 / 24),
+               env_limits = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24))
+
                gf_trees = 200
                gf_bins = 201
                gf_corr_thres = 0.5
@@ -855,23 +856,29 @@ pl <- drake::drake_plan(
                marine_map = target(sf::st_read(file_in(!!mapfile_location),
                                                layer = mapLayer),
                                    hpc = FALSE), #Workers can't see the same TMPDIR
+               ## env_poly is a polygon that defines the study area.
+               ## env_bbox is the bounding box of env_extent
                ## ausEEZ = marine_map[marine_map$Country == "Australia", ],
-               env_complete = target(env_aus_eez(bio_oracle_cache = file_in(!!biooracle_folder),
+               ## env_poly = marine_map[marine_map$Country == "Australia", ],
+               env_poly = sf::st_as_sf(as(raster::extent(env_limits), "SpatialPolygons"),
+                                       crs = sf::st_crs(marine_map)
+                                       ),
+               env_extent = raster::extent(env_poly),
+
+               env_region = target(env_restrict_to_region(bio_oracle_cache = file_in(!!biooracle_folder),
                                           env_vars = env_vars,
                                           env_modes = env_modes,
-                                          env_extent = env_extent,
+                                          env_poly = env_poly,
                                           max_depth = max_depth,
                                           regrid_res = regrid_resolution,
                                           bio_oracle_str_template =
                                             "BO2_%s%s_ss"),
                                    hpc = FALSE), #Workers can't see the same TMPDIR
-               ## env_logged = env_log_transform(env_data = env_complete,
+               ## env_logged = env_log_transform(env_data = env_region,
                ##                                env_log = env_log),
-               env_clipped = env_clip_extremes(env_data = env_complete,
+               env_clipped = env_clip_extremes(env_data = env_region,
                                                std_thres = env_limits_sd),
-               env_final = env_name_spatial(env_data = env_clipped,
-                                            spatial_vars = spatial_vars),
-               env_round = env_round_label(env_data = env_final,
+               env_round = env_round_label(env_data = env_clipped,
                                            spatial_vars = spatial_vars,
                                            env_res = regrid_resolution,
                                            env_offset = env_offset,
@@ -1602,7 +1609,7 @@ pl <- drake::drake_plan(
                                ),
                                      hpc = FALSE),
 #
-         ext_pl_biooracle = target(plot_temp(env_final,
+         ext_pl_biooracle = target(plot_temp(env_clipped,
                                       spatial_vars,
                                       marine_map,
                                       env_extent,
