@@ -422,7 +422,9 @@ plot_temp <- function(env_data,
 
 }
 
-plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, samples = NULL, grids = NULL, clip_samples = TRUE){
+plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, samples = NULL, grids = NULL, clip_samples = TRUE){
+
+  env_bbox <-  sf::st_bbox(env_poly)
 
   pl <- ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
                             ggplot2::aes_string(x = spatial_vars[1], y = spatial_vars[2], fill = "clust")) +
@@ -430,7 +432,7 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, 
   ggplot2::scale_fill_manual(values = rainbow(max(clustering))) +
   ggplot2::labs(fill = "cluster") +
   ggplot2::geom_sf(data = marine_map, inherit.aes = FALSE, color = "black", fill= NA)+
-   ggplot2::coord_sf(xlim = env_extent$x, ylim = env_extent$y)+
+   ggplot2::coord_sf(xlim = c(env_bbox$xmin, env_bbox$xmax), ylim = c(env_bbox$ymin, env_bbox$ymax))+
 
   ggthemes::theme_tufte()
 
@@ -438,15 +440,22 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_extent, 
     if(class(samples)[1] == "list" & length(samples) == 1){
       samples <- samples[[1]]
      }
+    if(clip_samples){
+      keep <- samples[, spatial_vars[1]]  >= env_bbox$xmin &
+        samples[, spatial_vars[1]]  <= env_bbox$xmax &
+        samples[, spatial_vars[2]]  >= env_bbox$ymin &
+        samples[, spatial_vars[2]]  <= env_bbox$ymax
+      samples <- samples[keep,]
+    }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = ".", colour = "black"), data = samples, inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = ".", colour = "black"), data = samples[,spatial_vars], inherit.aes = FALSE)
   }
   if(!is.null(grids)){
     if(class(grids)[1] == "list" & length(grids) == 1){
       grids <- grids[[1]]
      }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids, shape = "o", colour = "black", inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "black", inherit.aes = FALSE)
   }
 
   return(pl)
@@ -1224,14 +1233,36 @@ pl <- drake::drake_plan(
                spatial_vars,
                marine_map,
                env_extent,
-               NULL,
-               grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars]
+               samples = NULL,
+               grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
              )
             ),
            dynamic = map(cluster_copepod_best_df),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
+         pl_clusters_samples = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("copepod_clust_map_",
+                               cluster_copepod_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_copepod_best_df[cluster_copepod_best_df$dataname = surv_names]$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_extent,
+               samples = surv_wide,
+               grids = surv_env_filter_list_all[[surv_names]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(surv_names,
+                         surv_wide),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
 
          ## We want to see how much variability exists in the clustering algorithm due to random restarts
          ## I want to reuse exising runs as much as possible
