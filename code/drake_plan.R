@@ -92,16 +92,16 @@ align_env_samp <- function(surv,
 }
 
 foc_cov_filter_microbe <- function(microbe_samples,
+                                   n_grids,
                                    max_otu,
                            freq_range,
                            cov_min,
                            min_occurrence) {
   assertthat::assert_that(all(class(microbe_samples) == c("data.table", "data.frame")))
-  n_sites <- length(unique(microbe_samples$Sample.ID))
 
   microbe_freq_cov <- microbe_samples[ , .(
     occ = .N,
-    freq = .N/n_sites,
+    freq = .N/n_grids,
     cov = sd(OTU.Count) / mean(OTU.Count)),
     by = OTU]
 
@@ -113,8 +113,14 @@ foc_cov_filter_microbe <- function(microbe_samples,
 
   keep_capped <- head(keep[order(-cov)], n = max_otu)   
 
-  
-  return(microbe_samples[OTU %in% keep_capped$OTU,])
+  otu_short <- data.table(OTU = keep_capped$OTU,
+                          OTU_short = paste0("R16s.", seq.int(1, nrow(keep_capped))),
+                          key = "OTU"
+                          )
+
+  ret <- merge(microbe_samples, otu_short, by = "OTU")
+
+  return(ret)
 
 }
 
@@ -555,7 +561,27 @@ name_list <- function(li, na){
 ##The ultimate goal is to get a site by OTU
 ## Running some tests now.
 
+samples_in_region <- function(
+                              sites,
+                              env_poly,
+                              spatial_vars,
+                              sites_crs = sf::st_crs(env_poly)
+                                   ){
 
+  x <- sf::st_as_sf(sites, coords = spatial_vars, remove = FALSE, crs = sites_crs)
+  y <- sf::st_intersects(x, env_poly, sparse = FALSE)
+  y <- apply(y, 1, any)
+
+  return(y)
+}
+microbe_load_hack <- function(...) {
+  dt_time <- microbenchmark::microbenchmark({
+    ## micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID", "OTU" ), data.table = TRUE, stringsAsFactors = FALSE)
+    micro_dt <- data.table::fread(...)
+  }, times= 1
+  )
+  return(micro_dt)
+}
 test_microbe_extract <- function(){
 stop("Not for actual use")
 
@@ -585,7 +611,8 @@ microbe_bacteria_context <- here::here(
 ## 3. Figure out disk.frame, which works on chunks of the data and stores the rest on disk. Author of disk.frame suggests SQL is slower
 
 dt_time <- microbenchmark::microbenchmark({
-    micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID", "OTU" ), data.table = TRUE, stringsAsFactors = FALSE)
+    ## micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID", "OTU" ), data.table = TRUE, stringsAsFactors = FALSE)
+    micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID"), data.table = TRUE, stringsAsFactors = FALSE)
   }, times= 1
 ) 
 #only 300 seconds
@@ -713,7 +740,13 @@ jobs <- 5
                                          goc = "1", #Gulf of Capentaria
                                          nyan = "21", #SE Tasmania
                                          anita = "18") #Tasmania data
-               epi_depth = 200
+depth_range = list(epi = c(0, 200),
+                   meso = c(201, 1000 ),
+                   bathy = c(1001, Inf))
+## depth_names <- c("epi",
+##                  "meso",
+##                  "bathy")
+depth_names <- c("epi")
                freq_range = c(0.05, 1)
                min_occurrence = 6
                cov_min = 1.0
@@ -902,11 +935,13 @@ pl <- drake::drake_plan(
                ##                                env_log = env_log),
                env_clipped = env_clip_extremes(env_data = env_region,
                                                std_thres = env_limits_sd),
-               env_round = env_round_label(env_data = env_clipped,
+               env_round = target(env_round_label(env_data = env_clipped,
                                            spatial_vars = spatial_vars,
                                            env_res = regrid_resolution,
                                            env_offset = env_offset,
                                            env_id_col = env_id_col),
+                                  format = "fst"
+                                  ),
                env_names = get_env_names(env_round = env_round,
                                          spatial_vars = spatial_vars,
                                          env_id_col = env_id_col),
@@ -984,7 +1019,7 @@ pl <- drake::drake_plan(
 #
          #From now on, every call to surv should give me one survey at a time.
          surv_epi = target(
-           remove_meso(surv, depth = epi_depth),
+           remove_meso(surv, depth = max(depth_range[["epi"]])),
            dynamic = map(
              .trace = surv_names,
              surv_names,
@@ -1105,9 +1140,9 @@ pl <- drake::drake_plan(
 
 
         env_trans_copepod_combined = target(
-          predict(object = copepod_combined_gf,
+          tibble::as_tibble(predict(object = copepod_combined_gf,
                   newdata = env_round[, env_names],
-                  extrap = extrap),
+                  extrap = extrap)),
           format = "fst_tbl"
           ),
         env_trans_copepod_combined_spatial = target(
@@ -1118,7 +1153,7 @@ pl <- drake::drake_plan(
 
         env_trans_copepod = target(
           predict(object = surv_gf[[1]],
-                  newdata = env_round[, as.character(unique(surv_gf[[1]]$res$var))],
+                  newdata = as.data.frame(env_round[, as.character(unique(surv_gf[[1]]$res$var))]),
                   extrap = extrap),
           dynamic = map(surv_gf,
                         surv_names,
@@ -1261,15 +1296,15 @@ pl <- drake::drake_plan(
            ggsave_wrapper(
              here::here("outputs",
                         paste0("copepod_clust_map_",
-                               cluster_copepod_best_df$dataname,
-                               ".png")),
+                               surv_names,
+                               "_samples.png")),
              plot_clust(
                env_round[, spatial_vars],
-               cluster_copepod_best_df[cluster_copepod_best_df$dataname = surv_names]$clust[[1]]$clustering,
+               cluster_copepod_best_df[cluster_copepod_best_df$dataname == surv_names, ]$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
-               samples = surv_wide,
                env_poly,
+               samples = dplyr::rename(surv_wide, lat = LATITUDE, lon = LONGITUDE),
                grids = surv_env_filter_list_all[[surv_names]][,spatial_vars],
                clip_samples = FALSE
              )
@@ -1551,65 +1586,6 @@ pl <- drake::drake_plan(
          ##
 
          ##Microbe data
-         microbe_samples = target(
-           data.table::fread(file_in(!!microbe_bacteria_csv),
-                             sep = ",",
-                             select =1:3,
-                             check.names = TRUE,
-                             key = c("Sample.ID", "OTU" ),
-                             data.table = TRUE,
-                             stringsAsFactors = FALSE),
-           format = "fst_dt",
-           ),
-         microbe_filtered = target(
-           foc_cov_filter_microbe(microbe_samples,
-                                   max_otu,
-                           freq_range,
-                           cov_min,
-                           min_occurrence),
-           format = "fst_dt",
-           ),
-         microbe_n_sites = length(unique(microbe_samples$Sample.ID)),
-
-         pl_microbe_freq = ggsave_wrapper(
-           filename = file_out(!!pl_microbe_freq_file),
-           plot = ggplot(
- data.frame(x = seq.int(1, nrow(microbe_samples[ , .(.N), by = OTU])),  as.data.frame(microbe_samples[ , .(.N), by = OTU][order(-N), .(N)])),
-             mapping = aes(x = x, y = N)) +
-             geom_point()
-           ),
-         pl_microbe_freq_cov = ggsave_wrapper(
-           filename = file_out(!!pl_microbe_freq_cov_file),
-           plot = ggplot(
-  as.data.frame(microbe_samples[ , .(
-    occ = .N,
-    freq = .N/microbe_n_sites,
-    cov = sd(OTU.Count) / mean(OTU.Count)),
-    by = OTU][!is.na(cov), .(freq, cov)]),
-             mapping = aes(x = freq, y = cov)) +
-             geom_point()
-           ),
-         pl_microbe_filtered_freq = ggsave_wrapper(
-           filename = file_out(!!pl_microbe_filtered_freq_file),
-           plot = ggplot(
- data.frame(x = seq.int(1, nrow(microbe_filtered[ , .(.N), by = OTU])),  as.data.frame(microbe_filtered[ , .(.N), by = OTU][order(-N), .(N)])),
-             mapping = aes(x = x, y = N)) +
-             geom_point()
-           ),
-         target(gf_plot_wrapper(gf_model = copepod_combined_gf,
-                                      plot_type = "Predictor.Ranges",
-                                      vars = 1:9,
-                                      out_file = file_out(!!pl_gf_range_file)),
-
-                                     hpc = FALSE),
-         ##Size of matrix exceeds R limits, but is largely 0, about 0.7% are non-zero.
-         ##Remove rare OTU's first.
-         microbe_samples_wide = target(
-           data.table::dcast(microbe_filtered,
-                             formula = Sample.ID ~ OTU,
-                             value.var = "OTU.Count"),
-           format = "fst_dt"),
-
          microbe_sites = target(
            data.table::fread(file_in(!!microbe_bacteria_context),
                              sep = ",",
@@ -1633,6 +1609,288 @@ pl <- drake::drake_plan(
                              stringsAsFactors = FALSE),
            format = "fst_dt",
            ),
+  microbe_sites_region = target(
+   samples_in_region(microbe_sites, env_poly, spatial_vars),
+   format = "qs"
+   ),
+         microbe_samples_all = target(
+           microbe_load_hack(file_in(!!microbe_bacteria_csv),
+                             sep = ",",
+                             select =1:3,
+                             check.names = TRUE,
+                             key = c("Sample.ID", "OTU"),
+                             data.table = TRUE,
+                             stringsAsFactors = FALSE),
+           format = "fst_dt",
+           ),
+
+
+ microbe_samples_region = target(
+   data.table::merge.data.table(microbe_samples_all, microbe_sites[microbe_sites_region, ]),
+   format = "fst_dt"
+ ),
+
+ ## By microbe_samples_region, we have all sample data in a single table.
+ ##filter by depth
+ microbe_samples_region_depth = target(
+   microbe_samples_region[!is.na(Depth) & Depth >= min(depth_range[[depth_names]]) & Depth <= max(depth_range[[depth_names]]) ,], #only 79 samples in region are NA
+                          dynamic = map(depth_names),
+   format = "fst_dt"
+ ),
+ ## Group into grid cells, drop depth, date, abundance (which is NA in >99% of rows)
+ ## For zooplankton, I created a site by species matrix, then aggregated that into a grid by species matrix, then
+ ## filterd by species statistics.
+ ## For the microbes, the site by species matrix is huge, too large.
+ ## I will work in smaller steps
+ ## first, grid all samples without aggregating, and get the grid cell count
+ microbe_samples_region_depth_rounded = target(
+   microbe_samples_region_depth[ ,
+                                .(OTU, OTU.Count,
+                                  lon = ((round(lon/regrid_resolution+env_offset) - env_offset) * regrid_resolution),
+                                  lat = ((round(lat/regrid_resolution+env_offset) - env_offset) * regrid_resolution)
+                                  )
+                                ],
+   dynamic = map(microbe_samples_region_depth),
+   format = "fst_dt"
+ ),
+
+ microbe_samples_region_depth_n = target( data.table::uniqueN(microbe_samples_region_depth_rounded, by = c("lon", "lat")),
+   dynamic = map( microbe_samples_region_depth_rounded),
+   format = "qs"
+ ),
+
+ ## second, aggregate, by OTU into each grid cell but keep in long format
+ microbe_samples_grid_depth = target(
+   microbe_samples_region_depth_rounded[, .(OTU.Count = mean(OTU.Count)), by = c("lon", "lat", "OTU")],
+   dynamic = map(microbe_samples_region_depth_rounded),
+   format = "qs"
+ ),
+
+         microbe_grid_filtered = target(
+           foc_cov_filter_microbe(microbe_samples_grid_depth,
+                                  n_grids = microbe_samples_region_depth_n,
+                                   max_otu,
+                           freq_range,
+                           cov_min,
+                           min_occurrence),
+           dynamic = map(microbe_samples_grid_depth,
+                         microbe_samples_region_depth_n),
+           format = "fst_dt"
+           ),
+
+ otu_lut = target(
+   unique(microbe_grid_filtered[, .(OTU, OTU_short)]),
+           dynamic = map(microbe_grid_filtered),
+   format = "fst_dt"
+   ),
+
+         ##Size of matrix exceeds R limits without filtering, but is largely 0, about 0.7% are non-zero.
+         ##Remove rare OTU's first.
+         microbe_grid_wide = target(
+           data.table::dcast(microbe_grid_filtered,
+                             formula = lon+lat ~ OTU_short,
+                             fill =  0,
+                             value.var = "OTU.Count"),
+           dynamic = map(microbe_grid_filtered,
+                         depth_names,
+                         .trace = depth_names),
+           format = "fst_dt"),
+
+
+         microbe_grid_env = target(
+           merge(as.data.table(env_round), microbe_grid_wide, by = spatial_vars),
+           dynamic = map(
+             .trace = depth_names,
+             depth_names,
+             microbe_grid_wide
+           ),
+           format = "fst_dt"
+         ),
+         microbe_gf = target(
+           stats::setNames(list(gradientForest::gradientForest(
+                             data = as.data.frame(microbe_grid_env),
+                             predictor.vars = env_names,
+                             response.vars = otu_lut$OTU_short,
+                             ntree = gf_trees,
+                             compact = T,
+                             nbin = gf_bins,
+                             transform = NULL,
+                             corr.threshold = gf_corr_thres,
+                             maxLevel = floor(log2(length(otu_lut$OTU_short) * 0.368 / 2)),
+                             trace = TRUE
+                             )),
+                           nm = c(depth_names)),
+           dynamic = map(
+             .trace = depth_names,
+             microbe_grid_env,
+             otu_lut,
+             depth_names
+           ),
+           format = "qs"
+         ),
+
+
+        env_trans_microbe = target(
+          stats::setNames(nm = c(depth_names),
+                          object =
+                            list(predict(object = microbe_gf[[depth_names]],
+                                    newdata = as.data.frame(env_round[, as.character(unique(microbe_gf[[depth_names]]$res$var))]),
+                                    extrap = extrap))
+                          ),
+          dynamic = map(
+            depth_names,
+            .trace = depth_names
+          ),
+          format = "qs"
+        ),
+        env_trans_microbe_spatial = target(
+          stats::setNames(nm = c(depth_names),
+                          object =
+                            cbind(env_round[, spatial_vars], env_trans_microbe[[depth_names]])
+                         ),
+          dynamic = map(
+            depth_names,
+            .trace = depth_names
+          ),
+          format = "qs"
+        ),
+
+
+         cluster_microbe = target(
+           cluster_capture(depth_names,
+                           env_trans_microbe[[depth_names]][, names(env_trans_microbe[[depth_names]]) %in% env_names],
+                           k_range,
+                           cluster_reps,
+                           samples = clara_samples,
+                           sampsize = clara_sampsize,
+                           trace = clara_trace,
+                           rngR = clara_rngR,
+                           pamLike = clara_pamLike,
+                           correct.d = clara_correct.d),
+           dynamic = cross(
+             depth_names,
+             .trace = c(depth_names, cluster_reps, k_range),
+             cluster_reps,
+             k_range,
+             ),
+           format = "qs"
+         ),
+
+         cluster_microbe_best_df = cluster_microbe %>%
+           dplyr::group_by(dataname) %>%
+           dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
+           dplyr::filter(k == max(k)) %>%
+           dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+           dplyr::ungroup() %>%
+           dplyr::arrange(dataname),
+
+    microbe_samples_region_depth_list = target(
+    stats::setNames(nm = depth_names,
+                    object =
+                        list(microbe_samples_region_depth)),
+    dynamic = map( microbe_samples_region_depth,
+                    depth_names),
+    format = "qs"
+    ),
+         pl_microbe_clusters = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("microbe_clust_map_",
+                               cluster_microbe_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_microbe_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
+               grids = microbe_grid_env[[cluster_microbe_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(cluster_microbe_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
+ ##plot some microbe stuff
+
+         plot_range_microbe = target(gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
+                                      plot_type = "Overall.Importance",
+                                      vars = 1:9,
+                                      out_file = here::here("outputs", paste0("microbe_gf_varimp_", depth_names, ".png"))),
+                                     dynamic = map(
+             .trace = depth_names,
+             depth_names,
+             ),
+             trigger = trigger(condition = TRUE),
+                                     hpc = FALSE),
+         plot_density_microbe = target(gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
+                                      plot_type = "Split.Density",
+                                      vars = 1:9,
+                                      out_file = here::here("outputs", paste0("microbe_gf_density_", depth_names, ".png"))),
+                                     dynamic = map(
+             .trace = depth_names,
+             depth_names,
+             microbe_gf
+                                     ),
+             trigger = trigger(condition = TRUE),
+                                     hpc = FALSE),
+         plot_cumimp_microbe = target(gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = here::here("outputs", paste0("microbe_gf_cumimp_", depth_names, ".png"))),
+                                     dynamic = map(
+             .trace = depth_names,
+             depth_names,
+                                     ),
+             trigger = trigger(condition = TRUE),
+                                     hpc = FALSE),
+         plot_perf_microbe = target(gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = here::here("outputs", paste0("microbe_gf_perf_", depth_names, ".png"))),
+                                     dynamic = map(
+             .trace = depth_names,
+             depth_names,
+                                     ),
+             trigger = trigger(condition = TRUE),
+                                     hpc = FALSE),
+
+         pl_microbe_freq = ggsave_wrapper(
+           filename = file_out(!!pl_microbe_freq_file),
+           plot = ggplot(
+ data.frame(x = seq.int(1, nrow(microbe_samples_region[ , .(.N), by = OTU])),  as.data.frame(microbe_samples_region[ , .(.N), by = OTU][order(-N), .(N)])),
+             mapping = aes(x = x, y = N)) +
+             geom_point()
+           ),
+         pl_microbe_freq_cov = target(ggsave_wrapper(
+           filename =   here::here("outputs", paste0("microbe_freq_cov_", depth_names, ".png")),
+           plot = ggplot(
+  as.data.frame(microbe_samples_region[ , .(
+    occ = .N,
+    freq = .N/microbe_samples_region_depth_n,
+    cov = sd(OTU.Count) / mean(OTU.Count)),
+    by = OTU][!is.na(cov), .(freq, cov)]),
+             mapping = aes(x = freq, y = cov)) +
+             geom_point()
+  ),
+  dynamic = map(microbe_samples_region_depth_n,
+                depth_names)
+  ),
+
+         pl_microbe_filtered_freq = target( ggsave_wrapper(
+           filename =   here::here("outputs", paste0("microbe_filtered_freq_range_", depth_names, ".png")),
+           plot = ggplot(
+ data.frame(x = seq.int(1, nrow(microbe_grid_filtered[ , .(.N), by = OTU])),  as.data.frame(microbe_grid_filtered[ , .(.N), by = OTU][order(-N), .(N)])),
+             mapping = aes(x = x, y = N)) +
+             geom_point()
+  ),
+ dynamic = map(microbe_grid_filtered,
+               depth_names)
+           ),
+
+
 
  ##how to filter microbe sites?
  ##attach lat and lon to every OTU, using sample ID?
