@@ -1812,7 +1812,7 @@ pl <- drake::drake_plan(
                marine_map,
                env_poly,
                samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
-               grids = microbe_grid_env_list[[cluster_microbe_best_df$dataname]][,spatial_vars],
+               grids = as.data.frame(microbe_grid_env_list[[cluster_microbe_best_df$dataname]])[, spatial_vars],
                clip_samples = FALSE
              )
             ),
