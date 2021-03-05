@@ -466,14 +466,14 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, sa
       samples <- samples[keep,]
     }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), shape = ".", colour = "darkgray", data = samples[,spatial_vars], inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), shape = ".", colour = "dimgray", data = samples[,spatial_vars], inherit.aes = FALSE)
   }
   if(!is.null(grids)){
     if(class(grids)[1] == "list" & length(grids) == 1){
       grids <- grids[[1]]
      }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "darkgray", inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "dimgray", inherit.aes = FALSE)
   }
 
   return(pl)
@@ -1791,6 +1791,14 @@ pl <- drake::drake_plan(
                     depth_names),
     format = "qs"
     ),
+    microbe_grid_env_list = target(
+    stats::setNames(nm = depth_names,
+                    object =
+                        list(microbe_grid_env)),
+    dynamic = map( microbe_grid_env,
+                    depth_names),
+    format = "qs"
+    ),
          pl_microbe_clusters = target(
            ggsave_wrapper(
              here::here("outputs",
@@ -1804,7 +1812,7 @@ pl <- drake::drake_plan(
                marine_map,
                env_poly,
                samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
-               grids = microbe_grid_env[[cluster_microbe_best_df$dataname]][,spatial_vars],
+               grids = microbe_grid_env_list[[cluster_microbe_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
              )
             ),
