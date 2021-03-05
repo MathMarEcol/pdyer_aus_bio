@@ -1813,6 +1813,27 @@ pl <- drake::drake_plan(
                env_poly,
                samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
                grids = as.data.frame(microbe_grid_env_list[[cluster_microbe_best_df$dataname]])[, spatial_vars],
+               clip_samples = TRUE
+             )
+            ),
+           dynamic = map(cluster_microbe_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
+         pl_microbe_clusters_samples = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("microbe_clust_map_samples_",
+                               cluster_microbe_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_microbe_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
+               grids = as.data.frame(microbe_grid_env_list[[cluster_microbe_best_df$dataname]])[, spatial_vars],
                clip_samples = FALSE
              )
             ),
