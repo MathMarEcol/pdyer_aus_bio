@@ -743,10 +743,9 @@ jobs <- 5
 depth_range = list(epi = c(0, 200),
                    meso = c(201, 1000 ),
                    bathy = c(1001, Inf))
-## depth_names <- c("epi",
-##                  "meso",
-##                  "bathy")
-depth_names <- c("epi")
+depth_names <- c("epi",
+                 "meso",
+                 "bathy")
                freq_range = c(0.05, 1)
                min_occurrence = 6
                cov_min = 1.0
