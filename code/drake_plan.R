@@ -368,19 +368,21 @@ pair_dist <- function(pairs, env_trans_wide, env_vars) {
 }
 
 plot_extents <- function(marine_map,
-                         env_extent,
+                         env_poly,
                          out_file,
                          units = "cm",
                          width = 16,
                          height = 9,
                          dpi = 300
                          ) {
+
+  env_bbox <-  sf::st_bbox(env_poly)
   ext_pl <- ggplot(marine_map, aes(x = x, y = y)) +
     geom_sf(data = marine_map,
             inherit.aes = FALSE,
             color = "black",
             fill = NA) +
-    coord_sf(xlim = env_extent$x, ylim = env_extent$y) +
+   ggplot2::coord_sf(xlim = c(env_bbox$xmin, env_bbox$xmax), ylim = c(env_bbox$ymin, env_bbox$ymax))+
     theme_tufte()
 
   ggsave(out_file,
@@ -395,7 +397,7 @@ plot_extents <- function(marine_map,
 plot_temp <- function(env_data,
                       spatial_vars,
                       marine_map,
-                      env_extent,
+                      env_poly,
                       out_file,
                       units = "cm",
                       width = 16,
@@ -403,13 +405,14 @@ plot_temp <- function(env_data,
                       dpi = 300
                       ) {
 
+  env_bbox <-  sf::st_bbox(env_poly)
   ext_pl_biooracle <- ggplot(env_data[, c(spatial_vars, "BO2_tempmean_ss")],
          aes(x = lon, y = lat, fill = BO2_tempmean_ss)) +
     geom_raster() +
     geom_sf(data = marine_map, inherit.aes = FALSE,
             color = "black", fill = NA) +
     labs(fill = "Mean ss Temp") +
-    coord_sf(xlim = env_extent$x, ylim = env_extent$y) +
+   ggplot2::coord_sf(xlim = c(env_bbox$xmin, env_bbox$xmax), ylim = c(env_bbox$ymin, env_bbox$ymax))+
     theme_tufte()
 
   ggsave(out_file,
@@ -424,7 +427,16 @@ plot_temp <- function(env_data,
 
 plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, samples = NULL, grids = NULL, clip_samples = TRUE){
 
-  env_bbox <-  sf::st_bbox(env_poly)
+  if (clip_samples | is.null(samples)){
+    env_bbox <-  sf::st_bbox(env_poly)
+  } else {
+    env_bbox <- sf::st_bbox(c(xmin = min(samples[, spatial_vars[1]]),
+                                 xmax = max(samples[, spatial_vars[1]]),
+                                 ymin = min(samples[, spatial_vars[2]]),
+                                 ymax = max(samples[, spatial_vars[2]])
+                                 )
+                            )
+  }
 
   pl <- ggplot2::ggplot(data= data.frame(sites, clust = as.factor(clustering)),
                             ggplot2::aes_string(x = spatial_vars[1], y = spatial_vars[2], fill = "clust")) +
@@ -448,14 +460,14 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, sa
       samples <- samples[keep,]
     }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat, shape = ".", colour = "black"), data = samples[,spatial_vars], inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), shape = ".", colour = "darkgray", data = samples[,spatial_vars], inherit.aes = FALSE)
   }
   if(!is.null(grids)){
     if(class(grids)[1] == "list" & length(grids) == 1){
       grids <- grids[[1]]
      }
     pl <- pl +
-  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "black", inherit.aes = FALSE)
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "darkgray", inherit.aes = FALSE)
   }
 
   return(pl)
@@ -731,7 +743,7 @@ jobs <- 5
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
-               env_limits = list(x = c(109 + 1 / 24, 163 + 23 / 24),
+               env_bounds = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24))
 
                gf_trees = 200
@@ -864,12 +876,13 @@ jobs <- 5
 pl <- drake::drake_plan(
                marine_map = target(sf::st_read(file_in(!!mapfile_location),
                                                layer = mapLayer),
+                                   format = "qs",
                                    hpc = FALSE), #Workers can't see the same TMPDIR
                ## env_poly is a polygon that defines the study area.
                ## env_bbox is the bounding box of env_extent
                ## ausEEZ = marine_map[marine_map$Country == "Australia", ],
                ## env_poly = marine_map[marine_map$Country == "Australia", ],
-               env_poly = sf::st_as_sf(as(raster::extent(env_limits), "SpatialPolygons"),
+               env_poly = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
                                        crs = sf::st_crs(marine_map)
                                        ),
                env_extent = raster::extent(env_poly),
@@ -880,8 +893,10 @@ pl <- drake::drake_plan(
                                           env_poly = env_poly,
                                           max_depth = max_depth,
                                           regrid_res = regrid_resolution,
-                                          bio_oracle_str_template =
-                                            "BO2_%s%s_ss"),
+                                          spatial_vars = spatial_vars,
+                                          bio_oracle_str_template = bio_oracle_str_template
+                                            ),
+                                   format = "fst_tbl",
                                    hpc = FALSE), #Workers can't see the same TMPDIR
                ## env_logged = env_log_transform(env_data = env_region,
                ##                                env_log = env_log),
@@ -1232,7 +1247,7 @@ pl <- drake::drake_plan(
                cluster_copepod_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
-               env_extent,
+               env_poly,
                samples = NULL,
                grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -1253,8 +1268,8 @@ pl <- drake::drake_plan(
                cluster_copepod_best_df[cluster_copepod_best_df$dataname = surv_names]$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
-               env_extent,
                samples = surv_wide,
+               env_poly,
                grids = surv_env_filter_list_all[[surv_names]][,spatial_vars],
                clip_samples = FALSE
              )
@@ -1631,11 +1646,12 @@ pl <- drake::drake_plan(
  ## Minimum memory: filter over microbe sites, filter sample IDs in OTU table, make OTU wide, then add env data.
  ##
 
-
-
+ ## I have the samples restricted by region, I have OTUs filtered by frequency.
+ ## I am missing samples merged into grid cells.
+ ## I can round off lats and lons in both tables separately, then the lat-lon becomes the new merge key.
          #plotting a bit
          ext_pl = target(plot_extents(marine_map,
-                               env_extent,
+                               env_poly,
                                file_out(!!ext_pl_map_file)
                                ),
                                      hpc = FALSE),
