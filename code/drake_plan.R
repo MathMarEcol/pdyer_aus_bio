@@ -944,6 +944,20 @@ pl <- drake::drake_plan(
                env_names = get_env_names(env_round = env_round,
                                          spatial_vars = spatial_vars,
                                          env_id_col = env_id_col),
+         #plotting a bit
+         ext_pl = target(plot_extents(marine_map,
+                               env_poly,
+                               file_out(!!ext_pl_map_file)
+                               ),
+                                     hpc = FALSE),
+#
+         ext_pl_biooracle = target(plot_temp(env_clipped,
+                                      spatial_vars,
+                                      marine_map,
+                                      env_extent,
+                                      file_out(!!ext_pl_temp_file)
+                                      ),
+                                     hpc = FALSE),
                ## here I have referred to a variable defined above,
                ##copepod_csv copepod_csv is just a string, which will
                ##be passed to read_csv. first, I wrap the string inside
@@ -1179,6 +1193,37 @@ pl <- drake::drake_plan(
 
         env_trans_copepod_names = names(env_trans_copepod_all),
 
+         ## ext_pl_biooracle = target(plot_temp(env_trans_spatial,
+         ##                              spatial_vars,
+         ##                              marine_map,
+         ##                              env_extent,
+         ##                              file_out(!!ext_pl_temp_file)
+         ##                              ),
+         ##                             hpc = FALSE),
+         track_state = target(state_rds(file_out(!!state_rds_file),
+                                 file_out(!!state_yaml_file)),
+                                     hpc = FALSE),
+
+         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_range_file)),
+                                     hpc = FALSE),
+         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Predictor.Density",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_density_file)),
+                                     hpc = FALSE),
+         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_cumimp_file)),
+                                     hpc = FALSE),
+         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_gf_perf_file)),
+                                     hpc = FALSE),
 
          ## Cluster, with k-means
          ## I will use the drake plan to parallelise, rather than relying on the clustering function.
@@ -1935,51 +1980,6 @@ pl <- drake::drake_plan(
  ## I have the samples restricted by region, I have OTUs filtered by frequency.
  ## I am missing samples merged into grid cells.
  ## I can round off lats and lons in both tables separately, then the lat-lon becomes the new merge key.
-         #plotting a bit
-         ext_pl = target(plot_extents(marine_map,
-                               env_poly,
-                               file_out(!!ext_pl_map_file)
-                               ),
-                                     hpc = FALSE),
-#
-         ext_pl_biooracle = target(plot_temp(env_clipped,
-                                      spatial_vars,
-                                      marine_map,
-                                      env_extent,
-                                      file_out(!!ext_pl_temp_file)
-                                      ),
-                                     hpc = FALSE),
-         ## ext_pl_biooracle = target(plot_temp(env_trans_spatial,
-         ##                              spatial_vars,
-         ##                              marine_map,
-         ##                              env_extent,
-         ##                              file_out(!!ext_pl_temp_file)
-         ##                              ),
-         ##                             hpc = FALSE),
-         track_state = target(state_rds(file_out(!!state_rds_file),
-                                 file_out(!!state_yaml_file)),
-                                     hpc = FALSE),
-
-         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
-                                      plot_type = "Predictor.Ranges",
-                                      vars = 1:9,
-                                      out_file = file_out(!!pl_gf_range_file)),
-                                     hpc = FALSE),
-         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
-                                      plot_type = "Predictor.Density",
-                                      vars = 1:9,
-                                      out_file = file_out(!!pl_gf_density_file)),
-                                     hpc = FALSE),
-         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
-                                      plot_type = "Cumulative.Importance",
-                                      vars = 1:9,
-                                      out_file = file_out(!!pl_gf_cumimp_file)),
-                                     hpc = FALSE),
-         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
-                                      plot_type = "Performance",
-                                      vars = 1:9,
-                                      out_file = file_out(!!pl_gf_perf_file)),
-                                     hpc = FALSE)
 
          )
 
