@@ -6,6 +6,7 @@ library(future)
 library(furrr)
 ##Analysis
 library(cluster)
+library(clustsig)
 library(readr)
 library(tidyverse)
 library(sf)
@@ -515,6 +516,22 @@ gf_plot_wrapper <- function(gf_model,
   dev.off()
 }
 
+simprof_plot_wrapper <- function(simprof_model,
+                            out_file,
+                            units = "cm",
+                            width = 16,
+                            height = 9,
+                            dpi = 300
+) {
+  png(filename = out_file,
+      units = units,
+      width = width,
+      height = height,
+      res = dpi)
+  simprof.plot(simprof_model)
+  dev.off()
+}
+
 state_rds <- function(rds_path, yaml_path) {
   total_state <- rutilities::track_all_states()
   saveRDS(file = rds_path, object = total_state)
@@ -533,6 +550,22 @@ cluster_capture <- function(dname, data, k, nrep, ...) {
   ret <- tibble_row(dataname = dname, k = k, nrep = nrep, min_clust = min_clust, min_clust_ratio = min_clust_ratio, sil_avg = clust$silinfo$avg.width, clust = list(clust))
   return(ret)
 }
+cluster_capture_simprof <- function(dname, data) {
+
+  ##Rotate to help make clusters more compact
+  data_pca <- prcomp(data)
+
+  clust_simprof <- stats::setNames(list(
+                            clustsig::simprof(data_pca$x,
+                                              method.cluster = "complete",
+                                              alpha = 0.05,
+                                              )
+                          ),
+                          nm = c(dname)
+                          )
+
+  }
+
 
 string_strip_counter <- function(x) {
   assertthat::is.string(x)
@@ -1408,6 +1441,32 @@ pl <- drake::drake_plan(
          ),
 
 
+        ## Alternative clustering approach
+
+        ## Heirarchical clustering with SIMPROF
+
+         cluster_copepod_simprof = target(
+           cluster_capture_simprof(env_trans_copepod_names,
+                           env_trans_copepod_all[[env_trans_copepod_names]][, names(env_trans_copepod_all[[env_trans_copepod_names]]) %in% env_names]
+                           ),
+           dynamic = cross(
+             env_trans_copepod_names,
+             .trace = c(env_trans_copepod_names),
+             ),
+           format = "qs"
+         ),
+
+        plot_simprof = target(
+          simprof_plot_wrapper(cluster_copepod_simprof[[env_trans_copepod_names],
+                                                       outfile =
+             here::here("outputs",
+                        paste0("copepod_clust_simprof_",
+                               env_trans_copepod_names,
+                               ".png"))
+             ),
+             dynamic = map(env_trans_copepod_names),
+             hpc = FALSE
+          )
          ##also use silhouette witdth with cluster
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
