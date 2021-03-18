@@ -80,6 +80,8 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         sp
         rgeos
         rlist
+        lutz
+        lubridate
 
 
         #Parallel processing
