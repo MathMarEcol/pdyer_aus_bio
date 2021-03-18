@@ -550,10 +550,17 @@ cluster_capture <- function(dname, data, k, nrep, ...) {
   ret <- tibble_row(dataname = dname, k = k, nrep = nrep, min_clust = min_clust, min_clust_ratio = min_clust_ratio, sil_avg = clust$silinfo$avg.width, clust = list(clust))
   return(ret)
 }
-cluster_capture_simprof <- function(dname, data) {
+cluster_capture_simprof <- function(dname, data, env_names, subset_rounding) {
 
   ##Rotate to help make clusters more compact
-  data_pca <- prcomp(data)
+
+  if(!is.null(subset_rounding)){
+    env_smaller <- data$lon %% subset_rounding == 0 & data$lat %% subset_rounding == 0
+    data_pca <- prcomp(data[env_smaller, env_names])
+  } else {
+    data_pca <- prcomp(data[, env_names])
+  }
+
 
   clust_simprof <- stats::setNames(list(
                             clustsig::simprof(data_pca$x,
@@ -1445,28 +1452,49 @@ pl <- drake::drake_plan(
 
         ## Heirarchical clustering with SIMPROF
 
+
          cluster_copepod_simprof = target(
-           cluster_capture_simprof(env_trans_copepod_names,
-                           env_trans_copepod_all[[env_trans_copepod_names]][, names(env_trans_copepod_all[[env_trans_copepod_names]]) %in% env_names]
-                           ),
-           dynamic = cross(
-             env_trans_copepod_names,
-             .trace = c(env_trans_copepod_names),
-             ),
+           vctrs::vec_c(cluster_capture_simprof("copepod_combined_gf",
+                                   env_trans_copepod_all$copepod_combined_gf,
+                                   env_names,
+                                   subset_rounding = 4
+                                   ),
+
+                        cluster_capture_simprof("copepod_combined_gf",
+                                                ##Sorry, this is terrible, but I am only showing it doesn't
+                                                env_trans_copepod_all$copepod_combined_gf[
+                                                  155 <= env_trans_copepod_all$copepod_combined_gf$lon &
+                                                  160 >= env_trans_copepod_all$copepod_combined_gf$lon &
+                                                  -30 <= env_trans_copepod_all$copepod_combined_gf$lat &
+                                                  -25 >= env_trans_copepod_all$copepod_combined_gf$lat ,
+                                                 ],
+                                   env_names,
+                                   subset_rounding = NULL
+                                   ),
+                        ),
            format = "qs"
          ),
 
-        plot_simprof = target(
-          simprof_plot_wrapper(cluster_copepod_simprof[[env_trans_copepod_names],
-                                                       outfile =
+        plot_simprof_aus = target(
+          simprof_plot_wrapper(cluster_copepod_simprof[[1]],
+                                                       out_file =
              here::here("outputs",
                         paste0("copepod_clust_simprof_",
-                               env_trans_copepod_names,
+                               "aus",
                                ".png"))
              ),
-             dynamic = map(env_trans_copepod_names),
              hpc = FALSE
-          )
+          ),
+        plot_simprof_gbr = target(
+          simprof_plot_wrapper(cluster_copepod_simprof[[2]],
+                               out_file =
+                                 here::here("outputs",
+                                            paste0("copepod_clust_simprof_",
+                                                   "gbr",
+                                                   ".png"))
+             ),
+             hpc = FALSE
+          ),
          ##also use silhouette witdth with cluster
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
