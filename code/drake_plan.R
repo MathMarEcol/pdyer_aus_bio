@@ -15,6 +15,9 @@ library(gradientForest)
 library(gfbootstrap)
 library(castcluster)
 library(data.table)
+library(lutz)
+library(glue)
+library(lubridate)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -25,10 +28,13 @@ library(here)
 ##Drake
 library(drake)
 
+
+
+
 #' Custom Functions
-split_surv <- function(combined_copepod,
+split_surv <- function(surv_all,
                        matching) {
-  return(dplyr::filter(combined_copepod, PROJECT_ID %in% matching))
+  return(dplyr::filter(surv_all, PROJECT_ID %in% matching))
 }
 
 remove_meso <- function(surv,
@@ -704,10 +710,16 @@ biooracle_folder <- here::here(
                             "..", "..", "..",
                             "Q1215", "bioORACLE"
                           )
-copepod_data <- here::here(
+plankton_data_root <- here::here(
                         "..", "..", "..",
-                        "Q1215", "AusCPR", "combined_copeped_jul19.csv"
+                        "Q1215", "AusCPR"
                       )
+
+source(glue::glue("{plankton_data_root}/PhytoDataPhilFeb21.R"))
+
+
+source(glue::glue("{plankton_data_root}/zooDataPhilMar21.R"))
+
 
 microbe_bacteria_csv <- here::here(
                         "..", "..", "..",
@@ -725,10 +737,15 @@ ext_pl_map_file <- here::here("outputs", "extents.png")
 state_rds_file <- here::here("outputs", "state.rds")
 state_yaml_file <- here::here("outputs", "state.yaml")
 
-pl_gf_range_file <- here::here("outputs", "gf_range.png")
-pl_gf_density_file <- here::here("outputs", "gf_density.png")
-pl_gf_cumimp_file <- here::here("outputs", "gf_cumimp.png")
-pl_gf_perf_file <- here::here("outputs", "gf_perf.png")
+pl_zooplank_gf_range_file <- here::here("outputs", "zooplank_gf_range.png")
+pl_zooplank_gf_density_file <- here::here("outputs", "zooplank_gf_density.png")
+pl_zooplank_gf_cumimp_file <- here::here("outputs", "zooplank_gf_cumimp.png")
+pl_zooplank_gf_perf_file <- here::here("outputs", "zooplank_gf_perf.png")
+
+pl_phytoplank_gf_range_file <- here::here("outputs", "phytoplank_gf_range.png")
+pl_phytoplank_gf_density_file <- here::here("outputs", "phytoplank_gf_density.png")
+pl_phytoplank_gf_cumimp_file <- here::here("outputs", "phytoplank_gf_cumimp.png")
+pl_phytoplank_gf_perf_file <- here::here("outputs", "phytoplank_gf_perf.png")
 
 pl_kmed_perf <- here::here("outputs", "kmed_perf.png")
 pl_kmed_perf_sil <- here::here("outputs", "kmed_perf_sil.png")
@@ -742,22 +759,22 @@ pl_gfboot_perf_file <- here::here("outputs", "gfboot_perf.png")
 
 pl_gfboot_cumimp_file <- here::here("outputs", "gfboot_cumimp.png")
 
-pl_copepod_aff_h_file <- here::here("outputs", "copepod_aff_h.png")
-pl_copepod_clust_map_file <- here::here("outputs", "copepod_clust_map.png")
-pl_copepod_p_mat_diag_file <- here::here("outputs", "copepod_p_mat_diag.png")
+pl_zooplank_aff_h_file <- here::here("outputs", "zooplank_aff_h.png")
+pl_zooplank_clust_map_file <- here::here("outputs", "zooplank_clust_map.png")
+pl_zooplank_p_mat_diag_file <- here::here("outputs", "zooplank_p_mat_diag.png")
 
-pl_copepod_aff_h_full_file <- here::here("outputs", "copepod_aff_h_full.png")
-pl_copepod_clust_map_full_file <- here::here("outputs", "copepod_clust_map_full.png")
-pl_copepod_p_mat_full_file <- here::here("outputs", "copepod_p_mat_full.png")
+pl_zooplank_aff_h_full_file <- here::here("outputs", "zooplank_aff_h_full.png")
+pl_zooplank_clust_map_full_file <- here::here("outputs", "zooplank_clust_map_full.png")
+pl_zooplank_p_mat_full_file <- here::here("outputs", "zooplank_p_mat_full.png")
 
-pl_copepod_clust_map_all_file <- tibble( file = c(
-                                           here::here("outputs", "copepod_clust_map_anita.png"),
-                                           here::here("outputs", "copepod_clust_map_combined.png"),
-                                           here::here("outputs", "copepod_clust_map_cpr.png"),
-                                           here::here("outputs", "copepod_clust_map_goc.png"),
-                                           here::here("outputs", "copepod_clust_map_mckinnon.png"),
-                                           here::here("outputs", "copepod_clust_map_nrs.png")
-                                           #here::here("outputs", "copepod_clust_map_nyan.png")
+pl_zooplank_clust_map_all_file <- tibble( file = c(
+                                           here::here("outputs", "zooplank_clust_map_anita.png"),
+                                           here::here("outputs", "zooplank_clust_map_combined.png"),
+                                           here::here("outputs", "zooplank_clust_map_cpr.png"),
+                                           here::here("outputs", "zooplank_clust_map_goc.png"),
+                                           here::here("outputs", "zooplank_clust_map_mckinnon.png"),
+                                           here::here("outputs", "zooplank_clust_map_nrs.png")
+                                           #here::here("outputs", "zooplank_clust_map_nyan.png")
                                          )
                                         )
 
@@ -765,21 +782,19 @@ jobs <- 5
 
 ## parameters
 
-                         surv_names = c("nrs",
+                         zooplank_names = c("nrs",
                                    "cpr",
                                    "mckinnon",
                                    "goc",
                                    "nyan",
                                    "anita")
-                         surv_matching = list(nrs = "NRS",
-                                         cpr = "CPR",
+                         zooplank_matching = list(nrs = 599,
+                                         cpr = 597,
                                          mckinnon =
-                                           as.character(
-                                             c(4, 5, 7, 9, 12, 15, 16, 24)
-                                           ), #McKinnon surveys
-                                         goc = "1", #Gulf of Capentaria
-                                         nyan = "21", #SE Tasmania
-                                         anita = "18") #Tasmania data
+                                           c(4, 5, 7, 9, 12, 15, 16, 24), #McKinnon surveys
+                                         goc = 1, #Gulf of Capentaria
+                                         nyan = 21, #SE Tasmania
+                                         anita = 18) #Tasmania data
 depth_range = list(epi = c(0, 200),
                    meso = c(201, 1000 ),
                    bathy = c(1001, Inf))
@@ -999,20 +1014,14 @@ pl <- drake::drake_plan(
                                       ),
                                      hpc = FALSE),
                ## here I have referred to a variable defined above,
-               ##copepod_csv copepod_csv is just a string, which will
+               ##zooplank_csv zooplank_csv is just a string, which will
                ##be passed to read_csv. first, I wrap the string inside
                ##file_in, so that drake knows it is a filename, that
                ##I read from the file, and that the file should be tracked.
                ##files cannot be stored in variables, must be a string.
-               combined_copepod = target(
-                 readr::read_csv(
-                          file_in(!!copepod_data),
-                          na = c("(null)", "."),
-                          col_types =
-                            readr::cols(PROJECT_ID = col_character(),
-                                        SAMPLE_DEPTH = col_number()),
-                          ),
-                 hpc = FALSE), #Workers can't see the same TMPDIR
+         zooplank_all = target(
+           load_zoo_data(plankton_data_root)
+           hpc = FALSE), #Workers can't see the same TMPDIR
                ##I had a lambda (unnamed) function here, but moved it to the
                ##custom funtion section
 #
@@ -1035,7 +1044,7 @@ pl <- drake::drake_plan(
                              ##matching is provided by the tranform = map(...)
                              ##just below.
                              ##within map(), .id is provided by another
-                             ##parameter from map(). In the surv_epi target
+                             ##parameter from map(). In the zooplank_epi target
                              ##map(), .id is using the names object from
                              ##the surv target map(). So most map() params
                              ##can be hard coded or targets, but .id must
@@ -1062,120 +1071,111 @@ pl <- drake::drake_plan(
                ## storage backends like fst and qs. However, choosing fst for anything that isn't a data frame will coerce it
                ## to a data frame. Take care.
 
-        surv = target(split_surv(combined_copepod, surv_matching[[surv_names]]),
+        zooplank_surv = target(split_surv(zooplank_all, zooplank_matching[[zooplank_names]]),
                       dynamic = map(
-                        .trace = c(surv_names),
-                        surv_names
+                        .trace = c(zooplank_names),
+                        zooplank_names
                       ),
                       format = "fst_tbl"
                       ),
 #
          #From now on, every call to surv should give me one survey at a time.
-         surv_epi = target(
-           remove_meso(surv, depth = max(depth_range[["epi"]])),
-           dynamic = map(
-             .trace = surv_names,
-             surv_names,
-             surv
-           ),
-           format = "fst_tbl"
-         ),
 #
          ##Extract species names
-         sp_names = target(
-           clean_sp_names(surv_epi),
+         zooplank_sp_names = target(
+           clean_sp_names(zooplank_surv),
            dynamic = map(
-             .trace = surv_names,
-             surv_names,
-             surv_epi
+             .trace = zooplank_names,
+             zooplank_names,
+             zooplank_surv
            ),
            format = "qs"
          ),
          ##Convert to wide format
-         surv_wide = target(
-           surv_to_wide(surv_epi),
+         zooplank_wide = target(
+           surv_to_wide(zooplank_surv),
            dynamic = map(
-             .trace = surv_names,
-             surv_names,
-             surv_epi
+             .trace = zooplank_names,
+             zooplank_names,
+             zooplank_surv
            ),
            format = "fst_tbl"
          ),
 #
          ##Align env and samples
-         surv_env = target(
-           align_env_samp(surv = surv_wide,
+         zooplank_env = target(
+           align_env_samp(surv = zooplank_wide,
                           spatial_vars = spatial_vars,
                           env_res = regrid_resolution,
                           env_offset = env_offset,
                           env_round = env_round),
            dynamic = map(
-             .trace = surv_names,
-             surv_names,
-             surv_wide
+             .trace = zooplank_names,
+             zooplank_names,
+             zooplank_wide
            ),
            format = "fst_tbl"
          ),
          ##Filter by Frequency of occurrence and coefficient of variance
-         surv_sp_keep = target(
-           foc_cov_filter(surv_env = surv_env,
-                          sp_names = sp_names,
+         zooplank_sp_keep = target(
+           foc_cov_filter(surv_env = zooplank_env,
+                          sp_names = zooplank_sp_names,
                           freq_range = freq_range,
                           cov_min = cov_min,
                           min_occurrence = min_occurrence
            ),
            dynamic = map(
-             .trace = surv_names,
-             surv_names,
-             sp_names,
-             surv_env
+             .trace = zooplank_names,
+             zooplank_names,
+             zooplank_sp_names,
+             zooplank_env
            ),
            format = "qs"
          ),
-         surv_env_filter = target(
-           filter_surv_env(surv_env = surv_env,
-                           surv_sp_names = surv_sp_keep,
+         zooplank_env_filter = target(
+           filter_surv_env(surv_env = zooplank_env,
+                           surv_sp_names = zooplank_sp_keep,
                            env_id_col = env_id_col,
                            spatial_vars = spatial_vars,
                            env_vars = env_names
            ),
            dynamic = map(
-             .trace = surv_names,
-             surv_env,
-             surv_sp_keep,
-             surv_names,
+             .trace = zooplank_names,
+             zooplank_env,
+             zooplank_sp_keep,
+             zooplank_names,
            ),
            format = "fst_tbl"
          ),
          ##Fit GF models
-         surv_gf = target(
+         zooplank_gf = target(
            stats::setNames(list(gradientForest::gradientForest(
-                             data = as.data.frame(surv_env_filter),
+                             data = as.data.frame(zooplank_env_filter),
                              predictor.vars = env_names,
-                             response.vars = surv_sp_keep,
+                             response.vars = zooplank_sp_keep,
                              ntree = gf_trees,
                              compact = T,
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
-                             maxLevel = floor(log2(length(surv_sp_keep) * 0.368 / 2)),
+                             maxLevel = floor(log2(length(zooplank_sp_keep) * 0.368 / 2)),
                              trace = TRUE
                              )),
-                           nm = c(surv_names)),
+                           nm = c(zooplank_names)),
            dynamic = map(
-             .trace = surv_names,
-             surv_env_filter,
-             surv_sp_keep,
-             surv_names,
+             .trace = zooplank_names,
+             zooplank_env_filter,
+             zooplank_sp_keep,
+             zooplank_names,
            ),
            format = "qs"
          ),
-        ##combined GF for copepods
-        copepod_combined_gf = target(
+        ##combined GF for zooplanks
+        zooplank_combined_gf = target(
           do.call(gradientForest::combinedGradientForest,
-                  c(surv_gf, nbin = gf_bins)
+                  c(zooplank_gf, nbin = gf_bins)
                   ),
-          ##dynamic = combine(surv_gf),
+          ##dynamic = combine(zooplank_gf),
           format = "qs"
         ),
 
@@ -1185,53 +1185,53 @@ pl <- drake::drake_plan(
         ## ## to reuse effort.
         ## Better reason to avoid combining: combined GF needs different processing steps
         ## gf_all = target(
-        ##   vctrs::vec_c(surv_gf_named, list(copepod_combined_gf = copepod_combined_gf)),
+        ##   vctrs::vec_c(zooplank_gf_named, list(zooplank_combined_gf = zooplank_combined_gf)),
         ##   ),
 
         ## gf_all_names = names(gf_all),
 
 
 
-        env_trans_copepod_combined = target(
-          tibble::as_tibble(predict(object = copepod_combined_gf,
+        env_trans_zooplank_combined = target(
+          tibble::as_tibble(predict(object = zooplank_combined_gf,
                   newdata = env_round[, env_names],
                   extrap = extrap)),
           format = "fst_tbl"
           ),
-        env_trans_copepod_combined_spatial = target(
-          cbind(env_round[, spatial_vars], env_trans_copepod_combined),
+        env_trans_zooplank_combined_spatial = target(
+          cbind(env_round[, spatial_vars], env_trans_zooplank_combined),
 
           format = "fst_tbl"
         ),
 
-        env_trans_copepod = target(
-          predict(object = surv_gf[[1]],
-                  newdata = as.data.frame(env_round[, as.character(unique(surv_gf[[1]]$res$var))]),
+        env_trans_zooplank = target(
+          predict(object = zooplank_gf[[1]],
+                  newdata = as.data.frame(env_round[, as.character(unique(zooplank_gf[[1]]$res$var))]),
                   extrap = extrap),
-          dynamic = map(surv_gf,
-                        surv_names,
-                        .trace = surv_names
+          dynamic = map(zooplank_gf,
+                        zooplank_names,
+                        .trace = zooplank_names
                         ),
           format = "fst_tbl"
         ),
-        env_trans_copepod_spatial = target(
-          list(cbind(env_round[, spatial_vars], env_trans_copepod)),
-          dynamic = map(env_trans_copepod),
+        env_trans_zooplank_spatial = target(
+          list(cbind(env_round[, spatial_vars], env_trans_zooplank)),
+          dynamic = map(env_trans_zooplank),
           format = "qs"
         ),
 
-        env_trans_copepod_spatial_named = target(
-          name_list(env_trans_copepod_spatial, surv_names),
+        env_trans_zooplank_spatial_named = target(
+          name_list(env_trans_zooplank_spatial, zooplank_names),
           format = "qs"
         ),
 
 
-        env_trans_copepod_all = target(
-          vctrs::vec_c(env_trans_copepod_spatial_named, list(copepod_combined_gf = env_trans_copepod_combined_spatial)),
+        env_trans_zooplank_all = target(
+          vctrs::vec_c(env_trans_zooplank_spatial_named, list(zooplank_combined_gf = env_trans_zooplank_combined_spatial)),
           format = "qs"
         ),
 
-        env_trans_copepod_names = names(env_trans_copepod_all),
+        env_trans_zooplank_names = names(env_trans_zooplank_all),
 
          ## ext_pl_biooracle = target(plot_temp(env_trans_spatial,
          ##                              spatial_vars,
@@ -1244,25 +1244,25 @@ pl <- drake::drake_plan(
                                  file_out(!!state_yaml_file)),
                                      hpc = FALSE),
 
-         plot_range = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_range = target(gf_plot_wrapper(gf_model = zooplank_combined_gf,
                                       plot_type = "Predictor.Ranges",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_gf_range_file)),
+                                      out_file = file_out(!!pl_zooplank_gf_range_file)),
                                      hpc = FALSE),
-         plot_density = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_density = target(gf_plot_wrapper(gf_model = zooplank_combined_gf,
                                       plot_type = "Predictor.Density",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_gf_density_file)),
+                                      out_file = file_out(!!pl_zooplank_gf_density_file)),
                                      hpc = FALSE),
-         plot_cumimp = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_cumimp = target(gf_plot_wrapper(gf_model = zooplank_combined_gf,
                                       plot_type = "Cumulative.Importance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_gf_cumimp_file)),
+                                      out_file = file_out(!!pl_zooplank_gf_cumimp_file)),
                                      hpc = FALSE),
-         plot_perf = target(gf_plot_wrapper(gf_model = copepod_combined_gf,
+         plot_perf = target(gf_plot_wrapper(gf_model = zooplank_combined_gf,
                                       plot_type = "Performance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_gf_perf_file)),
+                                      out_file = file_out(!!pl_zooplank_gf_perf_file)),
                                      hpc = FALSE),
 
          ## Cluster, with k-means
@@ -1274,9 +1274,9 @@ pl <- drake::drake_plan(
          ## for each env_trans_all, return best k and associated clustering
          ## plot best k and associated clustering
 
-         cluster_copepod = target(
-           cluster_capture(env_trans_copepod_names,
-                           env_trans_copepod_all[[env_trans_copepod_names]][, names(env_trans_copepod_all[[env_trans_copepod_names]]) %in% env_names],
+         cluster_zooplank = target(
+           cluster_capture(env_trans_zooplank_names,
+                           env_trans_zooplank_all[[env_trans_zooplank_names]][, names(env_trans_zooplank_all[[env_trans_zooplank_names]]) %in% env_names],
                            k_range,
                            cluster_reps,
                            samples = clara_samples,
@@ -1286,8 +1286,8 @@ pl <- drake::drake_plan(
                            pamLike = clara_pamLike,
                            correct.d = clara_correct.d),
            dynamic = cross(
-             env_trans_copepod_names,
-             .trace = c(env_trans_copepod_names, cluster_reps, k_range),
+             env_trans_zooplank_names,
+             .trace = c(env_trans_zooplank_names, cluster_reps, k_range),
              cluster_reps,
              k_range,
              ),
@@ -1320,8 +1320,8 @@ pl <- drake::drake_plan(
          pl_clust_perfs = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf),
            plot = ggplot(
-             data.frame(cluster_copepod[, c("dataname", "k", "min_clust_ratio")],
-                        pass = as.factor(cluster_copepod$min_clust_ratio >= min_clust_thres)),
+             data.frame(cluster_zooplank[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_zooplank$min_clust_ratio >= min_clust_thres)),
              mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
              geom_point() +
              facet_wrap(vars(dataname)),
@@ -1329,14 +1329,14 @@ pl <- drake::drake_plan(
          pl_clust_perfs_sil = ggsave_wrapper(
            filename = file_out(!!pl_kmed_perf_sil),
            plot = ggplot(
-             data.frame(cluster_copepod[, c("dataname", "k", "sil_avg")],
-                        pass = as.factor(cluster_copepod$min_clust_ratio >= min_clust_thres)),
+             data.frame(cluster_zooplank[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_zooplank$min_clust_ratio >= min_clust_thres)),
              mapping = aes(x = k, y = sil_avg, colour = pass)) +
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
 
-         cluster_copepod_best_df = cluster_copepod %>%
+         cluster_zooplank_best_df = cluster_zooplank %>%
            dplyr::group_by(dataname) %>%
            dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
            dplyr::filter(k == max(k)) %>%
@@ -1345,56 +1345,56 @@ pl <- drake::drake_plan(
            dplyr::arrange(dataname),
 
          ## plot best cluster for each group
-        surv_env_filter_list = target(
-          list(surv_env_filter),
-          dynamic = map(surv_env_filter),
+        zooplank_env_filter_list = target(
+          list(zooplank_env_filter),
+          dynamic = map(zooplank_env_filter),
           format = "qs"
         ),
-        surv_env_filter_list_all = target(
-          vctrs::vec_c(name_list(surv_env_filter_list, surv_names), list(copepod_combined_gf = surv_env_filter)),
+        zooplank_env_filter_list_all = target(
+          vctrs::vec_c(name_list(zooplank_env_filter_list, zooplank_names), list(zooplank_combined_gf = zooplank_env_filter)),
           format = "qs"
         ),
 
          pl_clusters = target(
            ggsave_wrapper(
              here::here("outputs",
-                        paste0("copepod_clust_map_",
-                               cluster_copepod_best_df$dataname,
+                        paste0("zooplank_clust_map_",
+                               cluster_zooplank_best_df$dataname,
                                ".png")),
              plot_clust(
                env_round[, spatial_vars],
-               cluster_copepod_best_df$clust[[1]]$clustering,
+               cluster_zooplank_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
                samples = NULL,
-               grids = surv_env_filter_list_all[[cluster_copepod_best_df$dataname]][,spatial_vars],
+               grids = zooplank_env_filter_list_all[[cluster_zooplank_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
              )
             ),
-           dynamic = map(cluster_copepod_best_df),
+           dynamic = map(cluster_zooplank_best_df),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
          pl_clusters_samples = target(
            ggsave_wrapper(
              here::here("outputs",
-                        paste0("copepod_clust_map_",
-                               surv_names,
+                        paste0("zooplank_clust_map_",
+                               zooplank_names,
                                "_samples.png")),
              plot_clust(
                env_round[, spatial_vars],
-               cluster_copepod_best_df[cluster_copepod_best_df$dataname == surv_names, ]$clust[[1]]$clustering,
+               cluster_zooplank_best_df[cluster_zooplank_best_df$dataname == zooplank_names, ]$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
-               samples = dplyr::rename(surv_wide, lat = LATITUDE, lon = LONGITUDE),
-               grids = surv_env_filter_list_all[[surv_names]][,spatial_vars],
+               samples = dplyr::rename(zooplank_wide, lat = LATITUDE, lon = LONGITUDE),
+               grids = zooplank_env_filter_list_all[[zooplank_names]][,spatial_vars],
                clip_samples = FALSE
              )
             ),
-           dynamic = map(surv_names,
-                         surv_wide),
+           dynamic = map(zooplank_names,
+                         zooplank_wide),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
@@ -1402,7 +1402,7 @@ pl <- drake::drake_plan(
          ## I want to reuse exising runs as much as possible
 
          test_cluster_rand = target(
-           cluster_capture("copepod_combined", env_trans_copepod_all$copepod_combined_gf,
+           cluster_capture("zooplank_combined", env_trans_zooplank_all$zooplank_combined_gf,
                            k_range, cluster_reps_test,
                samples = clara_samples,
                sampsize = clara_sampsize,
@@ -1453,20 +1453,20 @@ pl <- drake::drake_plan(
         ## Heirarchical clustering with SIMPROF
 
 
-         cluster_copepod_simprof = target(
-           vctrs::vec_c(cluster_capture_simprof("copepod_combined_gf",
-                                   env_trans_copepod_all$copepod_combined_gf,
+         cluster_zooplank_simprof = target(
+           vctrs::vec_c(cluster_capture_simprof("zooplank_combined_gf",
+                                   env_trans_zooplank_all$zooplank_combined_gf,
                                    env_names,
                                    subset_rounding = 4
                                    ),
 
-                        cluster_capture_simprof("copepod_combined_gf",
+                        cluster_capture_simprof("zooplank_combined_gf",
                                                 ##Sorry, this is terrible, but I am only showing it doesn't
-                                                env_trans_copepod_all$copepod_combined_gf[
-                                                  155 <= env_trans_copepod_all$copepod_combined_gf$lon &
-                                                  160 >= env_trans_copepod_all$copepod_combined_gf$lon &
-                                                  -30 <= env_trans_copepod_all$copepod_combined_gf$lat &
-                                                  -25 >= env_trans_copepod_all$copepod_combined_gf$lat ,
+                                                env_trans_zooplank_all$zooplank_combined_gf[
+                                                  155 <= env_trans_zooplank_all$zooplank_combined_gf$lon &
+                                                  160 >= env_trans_zooplank_all$zooplank_combined_gf$lon &
+                                                  -30 <= env_trans_zooplank_all$zooplank_combined_gf$lat &
+                                                  -25 >= env_trans_zooplank_all$zooplank_combined_gf$lat ,
                                                  ],
                                    env_names,
                                    subset_rounding = NULL
@@ -1476,20 +1476,20 @@ pl <- drake::drake_plan(
          ),
 
         plot_simprof_aus = target(
-          simprof_plot_wrapper(cluster_copepod_simprof[[1]],
+          simprof_plot_wrapper(cluster_zooplank_simprof[[1]],
                                                        out_file =
              here::here("outputs",
-                        paste0("copepod_clust_simprof_",
+                        paste0("zooplank_clust_simprof_",
                                "aus",
                                ".png"))
              ),
              hpc = FALSE
           ),
         plot_simprof_gbr = target(
-          simprof_plot_wrapper(cluster_copepod_simprof[[2]],
+          simprof_plot_wrapper(cluster_zooplank_simprof[[2]],
                                out_file =
                                  here::here("outputs",
-                                            paste0("copepod_clust_simprof_",
+                                            paste0("zooplank_clust_simprof_",
                                                    "gbr",
                                                    ".png"))
              ),
@@ -1503,9 +1503,9 @@ pl <- drake::drake_plan(
          ## ## CASTeR variant of clustering
 
          ## ##Fit GF models
-         ## surv_gf = target(
+         ## zooplank_gf = target(
          ##   gfbootstrap::bootstrapGradientForest(
-         ##                     as.data.frame(surv_env_filter),
+         ##                     as.data.frame(zooplank_env_filter),
          ##                     predictor.vars = env_names,
          ##                     response.vars = surv_sp_keep,
          ##                     nbootstrap = gf_trees,
@@ -2067,6 +2067,151 @@ pl <- drake::drake_plan(
  ## I have the samples restricted by region, I have OTUs filtered by frequency.
  ## I am missing samples merged into grid cells.
  ## I can round off lats and lons in both tables separately, then the lat-lon becomes the new merge key.
+
+ ## CPR phytoplankton data
+
+         phytoplank_all = target(
+           load_phyto_data(plankton_data_root)
+           hpc = FALSE), #Workers can't see the same TMPDIR
+        phytoplank_surv = target(split_surv(phytoplank_all, phytoplank_matching[[phytoplank_names]]),
+                      dynamic = map(
+                        .trace = c(phytoplank_names),
+                        phytoplank_names
+                      ),
+                      format = "fst_tbl"
+                      ),
+#
+#
+         ##Extract species names
+         phytoplank_sp_names = target(
+           clean_sp_names(phytoplank_surv),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_names,
+             phytoplank_surv
+           ),
+           format = "qs"
+         ),
+         ##Convert to wide format
+         phytoplank_wide = target(
+           surv_to_wide(phytoplank_surv),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_names,
+             phytoplank_surv
+           ),
+           format = "fst_tbl"
+         ),
+#
+         ##Align env and samples
+         phytoplank_env = target(
+           align_env_samp(surv = phytoplank_wide,
+                          spatial_vars = spatial_vars,
+                          env_res = regrid_resolution,
+                          env_offset = env_offset,
+                          env_round = env_round),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_names,
+             phytoplank_wide
+           ),
+           format = "fst_tbl"
+         ),
+         ##Filter by Frequency of occurrence and coefficient of variance
+         phytoplank_sp_keep = target(
+           foc_cov_filter(surv_env = phytoplank_env,
+                          sp_names = phytoplank_sp_names,
+                          freq_range = freq_range,
+                          cov_min = cov_min,
+                          min_occurrence = min_occurrence
+           ),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_names,
+             sp_names,
+             phytoplank_env
+           ),
+           format = "qs"
+         ),
+         phytoplank_env_filter = target(
+           filter_surv_env(surv_env = phytoplank_env,
+                           surv_sp_names = phytoplank_sp_keep,
+                           env_id_col = env_id_col,
+                           spatial_vars = spatial_vars,
+                           env_vars = env_names
+           ),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_env,
+             phytoplank_sp_keep,
+             phytoplank_names,
+           ),
+           format = "fst_tbl"
+         ),
+         ##Fit GF models
+         phytoplank_gf = target(
+           stats::setNames(list(gradientForest::gradientForest(
+                             data = as.data.frame(phytoplank_env_filter),
+                             predictor.vars = env_names,
+                             response.vars = phytoplank_sp_keep,
+                             ntree = gf_trees,
+                             compact = T,
+                             nbin = gf_bins,
+                             transform = NULL,
+                             corr.threshold = gf_corr_thres,
+                             maxLevel = floor(log2(length(phytoplank_sp_keep) * 0.368 / 2)),
+                             trace = TRUE
+                             )),
+                           nm = c(phytoplank_names)),
+           dynamic = map(
+             .trace = phytoplank_names,
+             phytoplank_env_filter,
+             phytoplank_sp_keep,
+             phytoplank_names,
+           ),
+           format = "qs"
+         ),
+        ##combined GF for phytoplanks
+        phytoplank_combined_gf = target(
+          do.call(gradientForest::combinedGradientForest,
+                  c(phytoplank_gf, nbin = gf_bins)
+                  ),
+          ##dynamic = combine(phytoplank_gf),
+          format = "qs"
+        ),
+
+
+         plot_phytoplank_range = target(gf_plot_wrapper(gf_model = phytoplank_combined_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_phytoplank_gf_range_file)),
+                                     hpc = FALSE),
+         plot_phytoplank_density = target(gf_plot_wrapper(gf_model = phytoplank_combined_gf,
+                                      plot_type = "Predictor.Density",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_phytoplank_gf_density_file)),
+                                     hpc = FALSE),
+         plot_phytoplank_cumimp = target(gf_plot_wrapper(gf_model = phytoplank_combined_gf,
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_phytoplank_gf_cumimp_file)),
+                                     hpc = FALSE),
+         plot_phytoplank_perf = target(gf_plot_wrapper(gf_model = phytoplank_combined_gf,
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_phytoplank_gf_perf_file)),
+                                     hpc = FALSE),
+
+ ## Reg Watson's global fish catch data
+ ## Species catches are at /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Annual_TotalCatchSpecies
+ ## In a CSV, lat, lon, speciesID, totalCatch (plus a few others, like ocean area),
+ ## species ID is propably in /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/TaxonomicData.rds
+ ## To map species names to depths, Isaac provided:
+ ## https://github.com/IsaakBM/VoCC_Prioritizr_global/blob/master/yscripts/R_scripts/VoCCPrioritizr_00d_CostLayerDepthSpecies.R
+ ## Which also needs
+ ##  /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Cost_Layers/Global/Cost_RasterStack_bySpecies.rds
+ ##  or maybe
+ ##  /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Cost_Layers/Global/Cost_SpeciesList.rds
 
          )
 
