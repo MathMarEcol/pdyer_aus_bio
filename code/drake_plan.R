@@ -954,14 +954,14 @@ jobs <- 5
                                    "cpr",
                                    "mckinnon",
                                    "goc",
-                                   "nyan",
+                                   ## "nyan",
                                    "anita")
                          zooplank_matching = list(nrs = 599,
                                          cpr = 597,
                                          mckinnon =
                                            c(4, 5, 7, 9, 12, 15, 16, 24), #McKinnon surveys
                                          goc = 1, #Gulf of Capentaria
-                                         nyan = 21, #SE Tasmania
+                                         ## nyan = 21, #SE Tasmania
                                          anita = 18) #Tasmania data
 depth_range = list(epi = c(0, 200),
                    meso = c(201, 1000 ),
