@@ -1024,7 +1024,7 @@ pl <- drake::drake_plan(
                ##I read from the file, and that the file should be tracked.
                ##files cannot be stored in variables, must be a string.
          zooplank_all = target(
-           load_zoo_data(plankton_data_root)
+           load_zoo_data(plankton_data_root),
            hpc = FALSE,#Workers can't see the same TMPDIR
            format = "fst_tbl"
          ),
@@ -2080,7 +2080,7 @@ pl <- drake::drake_plan(
  ## CPR phytoplankton data
 
          phytoplank_all = target(
-           load_phyto_data(plankton_data_root)
+           load_phyto_data(plankton_data_root),
            hpc = FALSE), #Workers can't see the same TMPDIR
          phytoplank_all_rename = target(
            dplyr::rename(phytoplank_all, "{{spatial_vars[1]}}" := Latitude, "{{spatial_vars[1]}}" := Longitude),
