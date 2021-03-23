@@ -37,7 +37,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria/contextual.csv $
 mkdir -p $TMPDIR_SHARE/Q1215/bioORACLE
 rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMPDIR_SHARE/Q1215/
 mkdir -p $TMPDIR_SHARE/Q1215/AusCPR
-rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/combined_copeped_jul19.csv $TMPDIR_SHARE/Q1215/AusCPR
+rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/ $TMPDIR_SHARE/Q1215/AusCPR
 mkdir -p $TMPDIR_SHARE/Q1215/ShapeFiles/World_EEZ_v8
 rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR_SHARE/Q1215/ShapeFiles/
 
