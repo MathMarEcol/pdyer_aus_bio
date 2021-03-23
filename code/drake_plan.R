@@ -33,8 +33,10 @@ library(drake)
 
 #' Custom Functions
 split_surv <- function(surv_all,
-                       matching) {
-  return(dplyr::filter(surv_all, PROJECT_ID %in% matching))
+                       matching,
+                       spatial_vars) {
+  surv_all %>%
+    dplyr::filter(surv_all, ProjectNumber %in% matching)
 }
 
 remove_meso <- function(surv,
@@ -44,27 +46,28 @@ remove_meso <- function(surv,
 
 clean_sp_names <- function(surv) {
   surv %>%
-    dplyr::filter(Z_TYPE != "No taxa") %>%
-    dplyr::mutate(SPECIES = stringr::str_replace(SPECIES, " ", "_")) %>%
-    dplyr::select(SPECIES) %>%
-    dplyr::distinct(SPECIES) %>%
-    dplyr::pull(SPECIES)
+    dplyr::filter(!is.na(TaxonGroup)) %>%
+    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, "\\(.*\\)", "")) %>%
+    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, " ", "_")) %>%
+    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, "__", "_")) %>%
+    dplyr::select(TaxonName) %>%
+    dplyr::distinct(TaxonName) %>%
+    dplyr::pull(TaxonName)
 }
 
 surv_to_wide <- function(surv) {
   surv %>%
     dplyr::group_by_at(1:7) %>%
-    dplyr::summarise(ABUNDANCE_M3 = sum(ABUNDANCE_M3)) %>%
+    dplyr::summarise(ZAbund_m3 = sum(ZAbund_m3)) %>%
     dplyr::ungroup() %>%
     ##First, replace spaces in species names with underscore
-    dplyr::mutate(SPECIES = stringr::str_replace(SPECIES, " ", "_")) %>%
-    tidyr::spread(key = SPECIES, value = ABUNDANCE_M3, fill = 0) %>%
+    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, " ", "_")) %>%
+    tidyr::spread(key = TaxonName, value = ZAbund_m3, fill = 0) %>%
     ##May need a column rename here
     dplyr::mutate(No_taxa = NULL,
-                  SAMPLE_DEPTH = NULL,
-                  Z_TYPE = NULL,
-                  PROJECT_ID = NULL,
-                  SAMPLE_DATE = NULL)
+                  TaxonGroup = NULL,
+                  ProjectNumber = NULL,
+                  SampleDate = NULL)
 }
 
 env_round_label <- function(env_data,
@@ -90,7 +93,6 @@ align_env_samp <- function(surv,
                            env_round) {
   ##only keep sites in both env_round and surv_round
   surv %>%
-    dplyr::rename(lat = LATITUDE, lon = LONGITUDE) %>%
     rphildyerphd::align_sp(spatial_cols = spatial_vars,
                            res = env_res, offset = env_offset,
                            fun = mean) %>%
@@ -1021,7 +1023,13 @@ pl <- drake::drake_plan(
                ##files cannot be stored in variables, must be a string.
          zooplank_all = target(
            load_zoo_data(plankton_data_root)
-           hpc = FALSE), #Workers can't see the same TMPDIR
+           hpc = FALSE,#Workers can't see the same TMPDIR
+           format = "fst_tbl"
+         ),
+         zooplank_all_rename = target(
+           dplyr::rename(zooplank_all, "{{spatial_vars[1]}}" := Latitude, "{{spatial_vars[1]}}" := Longitude),
+           format = "fst_tbl"
+         ),
                ##I had a lambda (unnamed) function here, but moved it to the
                ##custom funtion section
 #
@@ -1070,8 +1078,7 @@ pl <- drake::drake_plan(
                ## `format =` is not part of dynamic, but is very useful anyway. You can force drake to use fast
                ## storage backends like fst and qs. However, choosing fst for anything that isn't a data frame will coerce it
                ## to a data frame. Take care.
-
-        zooplank_surv = target(split_surv(zooplank_all, zooplank_matching[[zooplank_names]]),
+        zooplank_surv = target(split_surv(zooplank_all_rename, zooplank_matching[[zooplank_names]]),
                       dynamic = map(
                         .trace = c(zooplank_names),
                         zooplank_names
@@ -2073,7 +2080,11 @@ pl <- drake::drake_plan(
          phytoplank_all = target(
            load_phyto_data(plankton_data_root)
            hpc = FALSE), #Workers can't see the same TMPDIR
-        phytoplank_surv = target(split_surv(phytoplank_all, phytoplank_matching[[phytoplank_names]]),
+         phytoplank_all_rename = target(
+           dplyr::rename(phytoplank_all, "{{spatial_vars[1]}}" := Latitude, "{{spatial_vars[1]}}" := Longitude),
+           format = "fst_tbl"
+         ),
+        phytoplank_surv = target(split_surv(phytoplank_all_rename, phytoplank_matching[[phytoplank_names]]),
                       dynamic = map(
                         .trace = c(phytoplank_names),
                         phytoplank_names
