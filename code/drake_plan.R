@@ -749,8 +749,10 @@ pl_phytoplank_gf_density_file <- here::here("outputs", "phytoplank_gf_density.pn
 pl_phytoplank_gf_cumimp_file <- here::here("outputs", "phytoplank_gf_cumimp.png")
 pl_phytoplank_gf_perf_file <- here::here("outputs", "phytoplank_gf_perf.png")
 
-pl_kmed_perf <- here::here("outputs", "kmed_perf.png")
-pl_kmed_perf_sil <- here::here("outputs", "kmed_perf_sil.png")
+pl_zooplank_kmed_perf <- here::here("outputs", "zooplank_kmed_perf.png")
+pl_zooplank_kmed_perf_sil <- here::here("outputs", "zooplank_kmed_perf_sil.png")
+pl_phytoplank_kmed_perf <- here::here("outputs", "phytoplank_kmed_perf.png")
+pl_phytoplank_kmed_perf_sil <- here::here("outputs", "phytoplank_kmed_perf_sil.png")
 
 pl_test_cluster_rand_file <- here::here("outputs", "test_cluster_rand.png")
 
@@ -1324,8 +1326,8 @@ pl <- drake::drake_plan(
          ##   rbind(cluster_copepod_df, cluster_copepod_combined),
          ##   transform = combine(cluster_copepod_combined)
          ## ),
-         pl_clust_perfs = ggsave_wrapper(
-           filename = file_out(!!pl_kmed_perf),
+         pl_zooplank_clust_perfs = ggsave_wrapper(
+           filename = file_out(!!pl_zooplank_kmed_perf),
            plot = ggplot(
              data.frame(cluster_zooplank[, c("dataname", "k", "min_clust_ratio")],
                         pass = as.factor(cluster_zooplank$min_clust_ratio >= min_clust_thres)),
@@ -1333,8 +1335,8 @@ pl <- drake::drake_plan(
              geom_point() +
              facet_wrap(vars(dataname)),
          ),
-         pl_clust_perfs_sil = ggsave_wrapper(
-           filename = file_out(!!pl_kmed_perf_sil),
+         pl_zooplank_clust_perfs_sil = ggsave_wrapper(
+           filename = file_out(!!pl_zooplank_kmed_perf_sil),
            plot = ggplot(
              data.frame(cluster_zooplank[, c("dataname", "k", "sil_avg")],
                         pass = as.factor(cluster_zooplank$min_clust_ratio >= min_clust_thres)),
@@ -1362,7 +1364,7 @@ pl <- drake::drake_plan(
           format = "qs"
         ),
 
-         pl_clusters = target(
+         pl_zooplank_clusters = target(
            ggsave_wrapper(
              here::here("outputs",
                         paste0("zooplank_clust_map_",
@@ -1383,7 +1385,7 @@ pl <- drake::drake_plan(
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
-         pl_clusters_samples = target(
+         pl_zooplank_clusters_samples = target(
            ggsave_wrapper(
              here::here("outputs",
                         paste0("zooplank_clust_map_",
@@ -2212,6 +2214,146 @@ pl <- drake::drake_plan(
                                       vars = 1:9,
                                       out_file = file_out(!!pl_phytoplank_gf_perf_file)),
                                      hpc = FALSE),
+
+        env_trans_phytoplank_combined = target(
+          tibble::as_tibble(predict(object = phytoplank_combined_gf,
+                  newdata = env_round[, env_names],
+                  extrap = extrap)),
+          format = "fst_tbl"
+          ),
+        env_trans_phytoplank_combined_spatial = target(
+          cbind(env_round[, spatial_vars], env_trans_phytoplank_combined),
+
+          format = "fst_tbl"
+        ),
+
+        env_trans_phytoplank = target(
+          predict(object = phytoplank_gf[[1]],
+                  newdata = as.data.frame(env_round[, as.character(unique(phytoplank_gf[[1]]$res$var))]),
+                  extrap = extrap),
+          dynamic = map(phytoplank_gf,
+                        phytoplank_names,
+                        .trace = phytoplank_names
+                        ),
+          format = "fst_tbl"
+        ),
+        env_trans_phytoplank_spatial = target(
+          stats::setNames(
+                   list(cbind(env_round[, spatial_vars], env_trans_phytoplank)),
+                   nm = phytoplank_names),
+          dynamic = map(env_trans_phytoplank,
+                        phytoplank_names),
+          format = "qs"
+        ),
+
+        env_trans_phytoplank_all = target(
+          vctrs::vec_c(env_trans_phytoplank_spatial, list(phytoplank_combined_gf = env_trans_phytoplank_combined_spatial)),
+          format = "qs"
+        ),
+
+        env_trans_phytoplank_names = names(env_trans_phytoplank_all),
+
+         cluster_phytoplank = target(
+           cluster_capture(env_trans_phytoplank_names,
+                           env_trans_phytoplank_all[[env_trans_phytoplank_names]][, names(env_trans_phytoplank_all[[env_trans_phytoplank_names]]) %in% env_names],
+                           k_range,
+                           cluster_reps,
+                           samples = clara_samples,
+                           sampsize = clara_sampsize,
+                           trace = clara_trace,
+                           rngR = clara_rngR,
+                           pamLike = clara_pamLike,
+                           correct.d = clara_correct.d),
+           dynamic = cross(
+             env_trans_phytoplank_names,
+             .trace = c(env_trans_phytoplank_names, cluster_reps, k_range),
+             cluster_reps,
+             k_range,
+             ),
+           format = "qs"
+         ),
+
+         pl_phytoplank_clust_perfs = ggsave_wrapper(
+           filename = file_out(!!pl_phytoplank_kmed_perf),
+           plot = ggplot(
+             data.frame(cluster_phytoplank[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_phytoplank$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+         pl_phytoplank_clust_perfs_sil = ggsave_wrapper(
+           filename = file_out(!!pl_phytoplank_kmed_perf_sil),
+           plot = ggplot(
+             data.frame(cluster_phytoplank[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_phytoplank$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = sil_avg, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+
+         cluster_phytoplank_best_df = cluster_phytoplank %>%
+           dplyr::group_by(dataname) %>%
+           dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
+           dplyr::filter(k == max(k)) %>%
+           dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+           dplyr::ungroup() %>%
+           dplyr::arrange(dataname),
+
+         ## plot best cluster for each group
+        phytoplank_env_filter_list = target(
+          list(phytoplank_env_filter),
+          dynamic = map(phytoplank_env_filter),
+          format = "qs"
+        ),
+        phytoplank_env_filter_list_all = target(
+          vctrs::vec_c(name_list(phytoplank_env_filter_list, phytoplank_names), list(phytoplank_combined_gf = phytoplank_env_filter)),
+          format = "qs"
+        ),
+
+         pl_phytoplank_clusters = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("phytoplank_clust_map_",
+                               cluster_phytoplank_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_phytoplank_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = NULL,
+               grids = phytoplank_env_filter_list_all[[cluster_phytoplank_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(cluster_phytoplank_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
+         pl_phytoplank_clusters_samples = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("phytoplank_clust_map_",
+                               phytoplank_names,
+                               "_samples.png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_phytoplank_best_df[cluster_phytoplank_best_df$dataname == phytoplank_names, ]$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = dplyr::rename(phytoplank_wide, lat = LATITUDE, lon = LONGITUDE),
+               grids = phytoplank_env_filter_list_all[[phytoplank_names]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(phytoplank_names,
+                         phytoplank_wide),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
 
  ## Reg Watson's global fish catch data
  ## Species catches are at /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Annual_TotalCatchSpecies
