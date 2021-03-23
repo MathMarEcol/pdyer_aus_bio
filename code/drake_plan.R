@@ -818,7 +818,7 @@ jobs <- 5
                                    )
                          phytoplank_matching = list(nrs = 599,
                                          cpr = 597,
-                                         brett = 794
+                                         brett = 794,
                                         other_1050 = 1050,
                                         other_1051 = 1051,
                                         other_1054 = 1054,
