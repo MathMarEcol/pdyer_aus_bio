@@ -55,9 +55,12 @@ date_run=$(date +%Y-%m-%d_%H-%M-%S)
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/drake_plan.R $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #The drake cache contains previous results, and is needed to avoid recaclulating stuff.
 
-rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-7za x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z
+if [[ -f  "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z" ]]
+then
+   rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+   cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+   7za x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.7z
+fi
 #rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/code/pbs_clustermq.tmpl $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
 #
 #Set up the output directory
