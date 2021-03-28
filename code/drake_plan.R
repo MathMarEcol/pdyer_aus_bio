@@ -35,8 +35,8 @@ library(drake)
 split_surv <- function(surv_all,
                        matching,
                        spatial_vars) {
-  surv_all %>%
-    dplyr::filter(surv_all, ProjectNumber %in% matching)
+    dplyr::filter(surv_all, ProjectNumber %in% matching) %>%
+           dplyr::mutate(TaxonName = clean_sp_names(TaxonName))
 }
 
 remove_meso <- function(surv,
@@ -44,30 +44,35 @@ remove_meso <- function(surv,
   dplyr::filter(surv, SAMPLE_DEPTH < depth | is.na(SAMPLE_DEPTH))
 }
 
-clean_sp_names <- function(surv) {
-  surv %>%
-    dplyr::filter(!is.na(TaxonGroup)) %>%
-    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, "\\(.*\\)", "")) %>%
-    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, " ", "_")) %>%
-    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, "__", "_")) %>%
-    dplyr::select(TaxonName) %>%
-    dplyr::distinct(TaxonName) %>%
-    dplyr::pull(TaxonName)
+clean_sp_names <- function(x) {
+length_pre <- length(unique(x))
+x %>%
+    stringr::str_replace_all("\\(.*\\)", "") %>%
+    stringr::str_replace_all(" ", "_") %>%
+    stringr::str_replace_all("__", "_") -> y
+length_post <- length(unique(y))
+assertthat::assert_that(length_pre == length_post)
+return(y)
 }
 
-surv_to_wide <- function(surv) {
+get_uncertain_sp_names <- function(surv, uncertain_val, abund_col) {
   surv %>%
-    dplyr::group_by_at(1:7) %>%
-    dplyr::summarise(ZAbund_m3 = sum(ZAbund_m3)) %>%
+    filter(across({{abund_col}}) == uncertain_val) %>%
+    dplyr::select(TaxonName) %>%
+    dplyr::distinct() %>%
+    dplyr::pull(TaxonName)
+ }
+surv_to_wide <- function(surv, abund_col) {
+  surv %>%
+    dplyr::group_by(across(-{{abund_col}})) %>%
+    dplyr::summarise(across({{abund_col}}, sum)) %>%
     dplyr::ungroup() %>%
-    ##First, replace spaces in species names with underscore
-    dplyr::mutate(TaxonName = stringr::str_replace(TaxonName, " ", "_")) %>%
-    tidyr::spread(key = TaxonName, value = ZAbund_m3, fill = 0) %>%
+    tidyr::spread(key = TaxonName, value = {{abund_col}}, fill = 0) %>%
     ##May need a column rename here
     dplyr::mutate(No_taxa = NULL,
                   TaxonGroup = NULL,
-                  ProjectNumber = NULL,
-                  SampleDate = NULL)
+                  ProjectNumber = NULL
+                  )
 }
 
 env_round_label <- function(env_data,
@@ -1089,7 +1094,7 @@ pl <- drake::drake_plan(
            format = "fst_tbl"
          ),
          zooplank_all_rename = target(
-           dplyr::rename(zooplank_all, "{{spatial_vars[1]}}" := Latitude, "{{spatial_vars[1]}}" := Longitude),
+           dplyr::rename(zooplank_all, "{spatial_vars[1]}" := Longitude, "{spatial_vars[2]}" := Latitude, TaxonName = Species, Abund_m3 = ZAbund_m3),
            format = "fst_tbl"
          ),
                ##I had a lambda (unnamed) function here, but moved it to the
@@ -1140,7 +1145,7 @@ pl <- drake::drake_plan(
                ## `format =` is not part of dynamic, but is very useful anyway. You can force drake to use fast
                ## storage backends like fst and qs. However, choosing fst for anything that isn't a data frame will coerce it
                ## to a data frame. Take care.
-        zooplank_surv = target(split_surv(zooplank_all_rename, zooplank_matching[[zooplank_names]]),
+        zooplank_surv = target(split_surv(zooplank_all_rename, zooplank_matching[[zooplank_names]], spatial_vars),
                       dynamic = map(
                         .trace = c(zooplank_names),
                         zooplank_names
@@ -1148,21 +1153,34 @@ pl <- drake::drake_plan(
                       format = "fst_tbl"
                       ),
 #
-         #From now on, every call to surv should give me one survey at a time.
-#
+        zooplank_surv_uncertain_sp_names = target(
+          get_uncertain_sp_names(zooplank_surv, -999, "Abund_m3"),
+          dynamic = map(zooplank_surv)
+          ),
+
          ##Extract species names
          zooplank_sp_names = target(
-           clean_sp_names(zooplank_surv),
+           zooplank_surv %>%
+           dplyr::select(TaxonName) %>%
+           dplyr::distinct() %>%
+           dplyr::filter(TaxonName != "No_taxa") %>%
+           dplyr::pull(TaxonName) %>%
+          base::setdiff(zooplank_surv_uncertain_sp_names),
            dynamic = map(
              .trace = zooplank_names,
              zooplank_names,
+             zooplank_surv_uncertain_sp_names,
              zooplank_surv
            ),
            format = "qs"
          ),
+
+
+         #From now on, every call to surv should give me one survey at a time.
+
          ##Convert to wide format
          zooplank_wide = target(
-           surv_to_wide(zooplank_surv),
+           surv_to_wide(zooplank_surv, "Abund_m3"),
            dynamic = map(
              .trace = zooplank_names,
              zooplank_names,
@@ -2143,10 +2161,11 @@ pl <- drake::drake_plan(
            load_phyto_data(plankton_data_root),
            hpc = FALSE), #Workers can't see the same TMPDIR
          phytoplank_all_rename = target(
-           dplyr::rename(phytoplank_all, "{{spatial_vars[1]}}" := Latitude, "{{spatial_vars[1]}}" := Longitude),
+           dplyr::rename(phytoplank_all, "{spatial_vars[1]}" := Longitude, "{spatial_vars[2]}" := Latitude) %>%
+          dplyr::mutate(Abund_m3 = Cells_L*1000, Cells_L = NULL),
            format = "fst_tbl"
          ),
-        phytoplank_surv = target(split_surv(phytoplank_all_rename, phytoplank_matching[[phytoplank_names]]),
+        phytoplank_surv = target(split_surv(phytoplank_all_rename, phytoplank_matching[[phytoplank_names]], spatial_vars),
                       dynamic = map(
                         .trace = c(phytoplank_names),
                         phytoplank_names
@@ -2157,17 +2176,28 @@ pl <- drake::drake_plan(
 #
          ##Extract species names
          phytoplank_sp_names = target(
-           clean_sp_names(phytoplank_surv),
+           phytoplank_surv %>%
+           dplyr::select(TaxonName) %>%
+           dplyr::distinct() %>%
+           dplyr::filter(TaxonName != "No_taxa") %>%
+           dplyr::pull(TaxonName) %>%
+          base::setdiff(phytoplank_surv_uncertain_sp_names),
            dynamic = map(
              .trace = phytoplank_names,
              phytoplank_names,
+             phytoplank_surv_uncertain_sp_names,
              phytoplank_surv
            ),
            format = "qs"
          ),
+        phytoplank_surv_uncertain_sp_names = target(
+          get_uncertain_sp_names(phytoplank_surv, -999, "Abund_m3"),
+          dynamic = map(phytoplank_surv)
+          ),
+#
          ##Convert to wide format
          phytoplank_wide = target(
-           surv_to_wide(phytoplank_surv),
+           surv_to_wide(phytoplank_surv, "Abund_m3"),
            dynamic = map(
              .trace = phytoplank_names,
              phytoplank_names,
@@ -2201,7 +2231,7 @@ pl <- drake::drake_plan(
            dynamic = map(
              .trace = phytoplank_names,
              phytoplank_names,
-             sp_names,
+             phytoplank_sp_names,
              phytoplank_env
            ),
            format = "qs"
@@ -2490,7 +2520,7 @@ print(getOption("clustermq.template", "PBS"))
                               memory = 16000,
                               cores = 4,
                               walltime = "20:00:00"),
-              verbose = 4,
+              verbose = 1,
               cache = cache_ob,
               caching = "worker",
               garbage_collection = TRUE,
