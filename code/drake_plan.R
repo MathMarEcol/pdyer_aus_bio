@@ -1476,7 +1476,7 @@ pl <- drake::drake_plan(
                spatial_vars,
                marine_map,
                env_poly,
-               samples = dplyr::rename(zooplank_wide, lat = LATITUDE, lon = LONGITUDE),
+               samples = zooplank_wide,
                grids = zooplank_env_filter_list_all[[zooplank_names]][,spatial_vars],
                clip_samples = FALSE
              )
@@ -2435,7 +2435,7 @@ pl <- drake::drake_plan(
                spatial_vars,
                marine_map,
                env_poly,
-               samples = dplyr::rename(phytoplank_wide, lat = LATITUDE, lon = LONGITUDE),
+               samples = phytoplank_wide,
                grids = phytoplank_env_filter_list_all[[phytoplank_names]][,spatial_vars],
                clip_samples = FALSE
              )
