@@ -1692,34 +1692,41 @@ pl <- drake::drake_plan(
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
 
-         ## CASTeR variant of clustering
-
          ##Fit GF models
          zooplank_boot_gf = target(
+
+           if(zooplank_names %in% c("cpr", "mckinnon")){
            gfbootstrap::bootstrapGradientForest(
                              as.data.frame(zooplank_env_filter),
                              predictor.vars = env_names,
                              response.vars = zooplank_sp_keep,
                              nbootstrap = gf_trees,
-                             compact = T,
+                             compact = gf_compact,
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
                              maxLevel = floor(log2(length(zooplank_sp_keep) * 0.368 / 2)),
                              trace = TRUE
-                           ),
+                        )} else {
+                             NULL
+                           },
            dynamic = map(
              zooplank_env_filter,
              zooplank_sp_keep,
+             zooplank_names,
              .id = zooplank_names
            ),
            format = "qs"
          ),
 
+        zooplank_boot_gf_filtered = target(
+          purrr::compact(zooplank_boot_gf),
+          format = "qs"
+          ),
          ##combined GF for copepods
          zooplank_boot_combined_gf = target(
           do.call(gfbootstrap::combinedBootstrapGF,
-                  c(zooplank_boot_gf, nbin = gf_bins, n_samp = gf_trees)
+                  c(zooplank_boot_gf_filtered, nbin = gf_bins, n_samp = gf_trees)
                   ),
            format = "qs"
          ),
@@ -1728,23 +1735,28 @@ pl <- drake::drake_plan(
           predict(object = zooplank_boot_combined_gf,
                                           newdata = env_round[, env_names],
                                           type = c("mean", "variance", "points"),
-                                          extrap = extrap,
-                  extrap_pow = extrap),
-          format = "fst"
+                                          extrap = extrap),
+          format = "qs"
         ),
 
         env_trans_wide_zooplank_boot_gf = target(
-          env_trans_zooplank_boot_gf %>%
-          dplyr::filter(type == "mean", type == "variance") %>%
-          tidyr::pivot_wider(names_from = env_names, values_from = val),
-          format = "fst"
+        {
+          x <- merge(env_trans_zooplank_boot_gf$mean, env_trans_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
+          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean"),
+                      y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance")
+                      )
+        },
+          format = "qs"
         ),
 
          ##Hotellings p-value similiarity matrix, using diagonal covariance
-         p_mat_diag_cov = rmethods:::hotellings_bulk(
-                              means = env_trans_wide_zooplank_boot_gf$mean[, env_names],
-                              res_sq = env_trans_wide_zooplank_boot_gf$variance[, env_names]
-                            ),
+        p_mat_diag_cov = target(
+          rmethods:::hotellings_bulk(
+                              means = env_trans_wide_zooplank_boot_gf$y_mean[, env_names],
+                              res_sq = env_trans_wide_zooplank_boot_gf$y_variance[, env_names]
+                     ),
+          format = "qs"
+        ),
 
          ##Microbe data
          microbe_sites = target(
