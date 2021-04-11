@@ -1734,6 +1734,7 @@ pl <- drake::drake_plan(
         env_trans_zooplank_boot_gf = target(
           predict(object = zooplank_boot_combined_gf,
                                           newdata = env_round[, env_names],
+                                          ## newdata = env_round[env_round$lon %% 2 == 0 & env_round$lat %% 2 == 0, env_names],
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap),
           format = "qs"
