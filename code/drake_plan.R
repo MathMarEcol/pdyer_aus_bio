@@ -906,6 +906,7 @@ depth_names <- c("epi",
                gf_trees = 200
                gf_bins = 201
                gf_corr_thres = 0.5
+               gf_compact = FALSE
                extrap = 1 / 4
 
                k_range = seq.int(2,20)
@@ -1242,7 +1243,7 @@ pl <- drake::drake_plan(
                              predictor.vars = env_names,
                              response.vars = zooplank_sp_keep,
                              ntree = gf_trees,
-                             compact = T,
+                             compact = gf_compact,
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
@@ -1931,7 +1932,7 @@ pl <- drake::drake_plan(
                              predictor.vars = env_names,
                              response.vars = otu_lut$OTU_short,
                              ntree = gf_trees,
-                             compact = T,
+                             compact = gf_compact,
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
@@ -2259,7 +2260,7 @@ pl <- drake::drake_plan(
                              predictor.vars = env_names,
                              response.vars = phytoplank_sp_keep,
                              ntree = gf_trees,
-                             compact = T,
+                             compact = gf_compact,
                              nbin = gf_bins,
                              transform = NULL,
                              corr.threshold = gf_corr_thres,
