@@ -40,6 +40,9 @@ mkdir -p $TMPDIR_SHARE/Q1215/AusCPR
 rsync -irc $ROOT_STORE_DIR/Q1215/AusCPR/ $TMPDIR_SHARE/Q1215/AusCPR
 mkdir -p $TMPDIR_SHARE/Q1215/ShapeFiles/World_EEZ_v8
 rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMPDIR_SHARE/Q1215/ShapeFiles/
+mkdir -p $TMPDIR_SHARE/Q1215/Watson_Fisheries_Catch_Data/Version5/Output
+rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Annual_TotalCatchSpecies $TMPDIR_SHARE/Q1215/Watson_Fisheries_Catch_Data/Version5/Output
+rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/TaxonomicData.rds $TMPDIR_SHARE/Q1215/Watson_Fisheries_Catch_Data/Version5/Output
 
 #Essential Code
 
