@@ -1751,13 +1751,13 @@ pl <- drake::drake_plan(
         ),
 
          ##Hotellings p-value similiarity matrix, using diagonal covariance
-        p_mat_diag_cov = target(
-          rmethods:::hotellings_bulk(
-                              means = env_trans_wide_zooplank_boot_gf$y_mean[, env_names],
-                              res_sq = env_trans_wide_zooplank_boot_gf$y_variance[, env_names]
-                     ),
-          format = "qs"
-        ),
+        ## p_mat_diag_cov = target(
+        ##   rmethods:::hotellings_bulk(
+        ##                       means = env_trans_wide_zooplank_boot_gf$y_mean[, env_names],
+        ##                       res_sq = env_trans_wide_zooplank_boot_gf$y_variance[, env_names]
+        ##              ),
+        ##   format = "qs"
+        ## ),
 
          ##Microbe data
          microbe_sites = target(
