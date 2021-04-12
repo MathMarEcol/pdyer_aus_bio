@@ -1021,6 +1021,8 @@ fish_years <- 2007:2017
                clara_pamLike = TRUE
                clara_correct.d = TRUE
 
+               env_subset_val <- 1
+
                min_clust_thres = 0.01
 
                ##The following variables work better in log scale.
@@ -1743,8 +1745,10 @@ pl <- drake::drake_plan(
         env_trans_wide_zooplank_boot_gf = target(
         {
           x <- merge(env_trans_zooplank_boot_gf$mean, env_trans_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
-          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean"),
-                      y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance")
+          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean") %>%
+                     dplyr::arrange(x_row),
+                     y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance") %>%
+                     dplyr::arrange(x_row)
                       )
         },
           format = "qs"
@@ -1761,7 +1765,7 @@ pl <- drake::drake_plan(
 
         env_trans_sub_zooplank_boot_gf = target(
           predict(object = zooplank_boot_combined_gf,
-                                          newdata = env_round[env_round$lon %% 2 == 0 & env_round$lat %% 2 == 0, env_names],
+                                          newdata = env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, env_names],
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap),
           format = "qs"
@@ -1770,8 +1774,10 @@ pl <- drake::drake_plan(
         env_trans_sub_wide_zooplank_boot_gf = target(
         {
           x <- merge(env_trans_sub_zooplank_boot_gf$mean, env_trans_sub_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
-          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean"),
-                      y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance")
+          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean") %>%
+                     dplyr::arrange(x_row),
+                     y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance") %>%
+                     dplyr::arrange(x_row)
                       )
         },
           format = "qs"
@@ -1784,6 +1790,37 @@ pl <- drake::drake_plan(
                               res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names]
                      ),
           format = "qs"
+        ),
+
+        zooplank_cast_sub = target(
+          castcluster::cast_optimal(p_mat_diag_cov_sub),
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub.png"),
+             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars], aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_clust_ind$cl))) + geom_raster()
+            ),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub.png"),
+             gg_sim_mat(p_mat_diag_cov_sub, cast_ob = zooplank_cast_sub$cast_ob[[which.max(zooplank_cast_sub$gamma)]], highlight = TRUE)
+            ),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
 
          ##Microbe data
