@@ -1759,6 +1759,33 @@ pl <- drake::drake_plan(
           format = "qs"
         ),
 
+        env_trans_sub_zooplank_boot_gf = target(
+          predict(object = zooplank_boot_combined_gf,
+                                          newdata = env_round[env_round$lon %% 2 == 0 & env_round$lat %% 2 == 0, env_names],
+                                          type = c("mean", "variance", "points"),
+                                          extrap = extrap),
+          format = "qs"
+        ),
+
+        env_trans_sub_wide_zooplank_boot_gf = target(
+        {
+          x <- merge(env_trans_sub_zooplank_boot_gf$mean, env_trans_sub_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
+          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean"),
+                      y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance")
+                      )
+        },
+          format = "qs"
+        ),
+
+         ##Hotellings p-value similiarity matrix, using diagonal covariance
+        p_mat_diag_cov_sub = target(
+          rmethods:::hotellings_bulk(
+                              means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names],
+                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names]
+                     ),
+          format = "qs"
+        ),
+
          ##Microbe data
          microbe_sites = target(
            data.table::fread(file_in(!!microbe_bacteria_context),
