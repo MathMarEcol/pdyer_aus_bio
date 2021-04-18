@@ -20,6 +20,7 @@ library(lutz)
 library(glue)
 library(lubridate)
 library(rfishbase)
+library(Hotelling)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -1021,7 +1022,7 @@ fish_years <- 2007:2017
                clara_pamLike = TRUE
                clara_correct.d = TRUE
 
-               env_subset_val <- 1
+               env_subset_val <- 0.5
 
                min_clust_thres = 0.01
 
@@ -1693,14 +1694,35 @@ pl <- drake::drake_plan(
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
-
+        env_names_sub = c(
+## "BO2_salinitymin_ss",
+## "BO2_salinitymean_ss",
+## "BO2_salinityrange_ss",
+## "BO2_salinitymax_ss",
+"BO2_nitratemin_ss",
+"BO2_nitratemean_ss",
+"BO2_nitraterange_ss",
+"BO2_nitratemax_ss",
+## "BO2_silicatemin_ss",
+## "BO2_silicatemean_ss",
+## "BO2_silicaterange_ss",
+## "BO2_silicatemax_ss",
+## "BO2_chlomin_ss",
+## "BO2_chlomean_ss",
+## "BO2_chlorange_ss",
+## "BO2_chlomax_ss",
+"BO2_tempmin_ss",
+"BO2_tempmean_ss",
+"BO2_temprange_ss",
+"BO2_tempmax_ss"
+),
          ##Fit GF models
          zooplank_boot_gf = target(
 
            if(zooplank_names %in% c("cpr", "mckinnon")){
            gfbootstrap::bootstrapGradientForest(
                              as.data.frame(zooplank_env_filter),
-                             predictor.vars = env_names,
+                             predictor.vars = env_names_sub,
                              response.vars = zooplank_sp_keep,
                              nbootstrap = gf_trees,
                              compact = gf_compact,
@@ -1735,7 +1757,7 @@ pl <- drake::drake_plan(
 
         env_trans_zooplank_boot_gf = target(
           predict(object = zooplank_boot_combined_gf,
-                                          newdata = env_round[, env_names],
+                                          newdata = env_round[, env_names_sub],
                                           ## newdata = env_round[env_round$lon %% 2 == 0 & env_round$lat %% 2 == 0, env_names],
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap),
@@ -1765,7 +1787,7 @@ pl <- drake::drake_plan(
 
         env_trans_sub_zooplank_boot_gf = target(
           predict(object = zooplank_boot_combined_gf,
-                                          newdata = env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, env_names],
+                                          newdata = env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, env_names_sub],
                                           type = c("mean", "variance", "points"),
                                           extrap = extrap),
           format = "qs"
@@ -1783,11 +1805,82 @@ pl <- drake::drake_plan(
           format = "qs"
         ),
 
+
+
+env_trans_sub_wide_points_zooplank_boot_gf = target(
+                     tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$points, id_cols = c("x_row", "gf"), names_from = "pred", values_from = "y") %>%
+                     dplyr::arrange(x_row) %>%
+                     as.data.table() %>%
+ data.table::setkey("x_row"),
+  format = "qs"
+  ),
+
+p_mat_full_cov_sub = target(
+{
+  x_row <- seq_along(unique(env_trans_sub_wide_points_zooplank_boot_gf$x_row))
+  pairs <- expand.grid(i = x_row, j = x_row)
+  data_mat_list <- lapply(x_row, function(i, env_points, env_names_sub){
+                                as.matrix(env_points[x_row == i, ..env_names_sub])
+    }, env_points = env_trans_sub_wide_points_zooplank_boot_gf, env_names_sub = env_names_sub)
+  result <- purrr::map2_dbl(pairs$i, pairs$j,
+              ~ {
+                print(.x)
+                print(.y)
+                if(.x < .y) {
+                    return( Hotelling::hotelling.test(
+                                data_mat_list[[.x]],
+                                data_mat_list[[.y]],
+                                )$pval)
+                } else {
+                  return(NA)
+                }
+              }, data_mat_list)
+  out <- matrix(result, max(x_row), max(x_row))
+  out[lower.tri(out)] <- t(out)[lower.tri(out)]
+  diag(out) <- 1
+  return(out)
+  },
+          format = "qs"
+        ),
+
+        zooplank_cast_sub_full = target(
+          castcluster::cast_optimal(p_mat_full_cov_sub),
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_full_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub_full$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub_full$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub_full$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub_full.png"),
+             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars], aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_full_clust_ind$cl))) +
+             geom_raster() +
+             scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_full_clust_ind$cl))))
+
+            ),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub_full.png"),
+             gg_sim_mat(p_mat_full_cov_sub, cast_ob = zooplank_cast_sub_full$cast_ob[[which.max(zooplank_cast_sub_full$gamma)]], highlight = TRUE, aff_thres = zooplank_cast_sub_full$aff_thres[[which.max(zooplank_cast_sub_full$gamma)]])
+            ),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
          ##Hotellings p-value similiarity matrix, using diagonal covariance
         p_mat_diag_cov_sub = target(
           rmethods:::hotellings_bulk(
-                              means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names],
-                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names]
+                              means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names_sub],
+                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names_sub]
                      ),
           format = "qs"
         ),
@@ -1810,7 +1903,10 @@ pl <- drake::drake_plan(
         pl_zooplank_cast_sub = target(
            ggsave_wrapper(
              here::here("outputs", "zooplank_cast_sub.png"),
-             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars], aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_clust_ind$cl))) + geom_raster()
+             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                    aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_clust_ind$cl))) +
+             geom_raster() +
+             scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_clust_ind$cl))))
             ),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
