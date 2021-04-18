@@ -18,6 +18,7 @@ library(data.table)
 library(lutz)
 library(glue)
 library(lubridate)
+library(rfishbase)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -100,12 +101,42 @@ align_env_samp <- function(surv,
   ##only keep sites in both env_round and surv_round
   surv %>%
     rphildyerphd::align_sp(spatial_cols = spatial_vars,
-                           res = env_res, offset = env_offset,
+                           res = env_res, grid_offset = env_offset,
                            fun = mean) %>%
     merge(env_round, by = spatial_vars) -> surv_env
   return(surv_env)
 }
 
+    fun, ...)
+{
+    x <- as.data.frame(x)
+    assertthat::assert_that(assertthat::has_name(x, spatial_cols))
+    assertthat::assert_that(is.numeric(res))
+    assertthat::assert_that(assertthat::are_equal(length(res),
+        1))
+    assertthat::assert_that(is.numeric(grid_offset))
+    assertthat::assert_that(assertthat::are_equal(length(grid_offset),
+        1))
+    x[, spatial_cols] <- round(x[, spatial_cols]/res + grid_offset)
+    if (is.null(fun)) {
+        x_agg <- x
+    }
+    else {
+        x_agg <- aggregate(x, by = list(x[, spatial_cols[1]],
+            x[, spatial_cols[2]]), fun, ..., simplify = TRUE)
+        x_agg <- x_agg[, names(x)]
+    }
+    sort_order <- lapply(spatial_cols, df = x_agg, function(x,
+        df) {
+        df[[x]]
+    })
+    do.call(order, sort_order)
+    x_agg <- x_agg[do.call(order, sort_order), ]
+    row.names(x_agg) <- 1:nrow(x_agg)
+    x_agg[, spatial_cols] <- (x_agg[, spatial_cols] - grid_offset) *
+        res
+    return(x_agg)
+}
 foc_cov_filter_microbe <- function(microbe_samples,
                                    n_grids,
                                    max_otu,
@@ -729,12 +760,27 @@ source(glue::glue("{plankton_data_root}/PhytoDataPhilFeb21.R"))
 source(glue::glue("{plankton_data_root}/zooDataPhilMar21.R"))
 
 
+
 microbe_bacteria_csv <- here::here(
                         "..", "..", "..",
                         "Q1215", "aus_microbiome", "marine_bacteria", "Bacteria.csv")
 microbe_bacteria_context <- here::here(
                         "..", "..", "..",
                         "Q1215", "aus_microbiome", "marine_bacteria", "contextual.csv")
+
+fish_taxon_file  <- here::here(
+                            "..", "..", "..",
+                            "Q1215", "Watson_Fisheries_Catch_Data", "Version5", "Output", "TaxonomicData.rds"
+                          )
+
+fish_data_folder <- here::here(
+                            "..", "..", "..",
+                            "Q1215", "Watson_Fisheries_Catch_Data", "Version5", "Output", "Annual_TotalCatchSpecies"
+                          )
+##Using a closure here, fish_data_folder becomes a constant within the function
+fish_file_fn <- function(yr){paste0(fish_data_folder, "/Watson_", yr, "_TotalCatch_bySpecies.csv")}
+
+
 pl_microbe_freq_file <-  here::here("outputs", "microbe_freq_range.png")
 pl_microbe_freq_cov_file <-  here::here("outputs", "microbe_freq_cov.png")
 pl_microbe_filtered_freq_file <-  here::here("outputs", "microbe_filtered_freq_range.png")
@@ -787,6 +833,13 @@ pl_zooplank_clust_map_all_file <- tibble( file = c(
                                            #here::here("outputs", "zooplank_clust_map_nyan.png")
                                          )
                                         )
+pl_fish_gf_range_file <- here::here("outputs", "fish_gf_range.png")
+pl_fish_gf_density_file <- here::here("outputs", "fish_gf_density.png")
+pl_fish_gf_cumimp_file <- here::here("outputs", "fish_gf_cumimp.png")
+pl_fish_gf_perf_file <- here::here("outputs", "fish_gf_perf.png")
+
+pl_fish_kmed_perf <- here::here("outputs", "fish_kmed_perf.png")
+pl_fish_kmed_perf_sil <- here::here("outputs", "fish_kmed_perf_sil.png")
 
 jobs <- 5
 
@@ -875,6 +928,8 @@ depth_names <- c("epi",
                min_occurrence = 6
                cov_min = 1.0
                max_otu = 2000
+
+fish_years <- 2007:2017
 
                mapLayer =  "World_EEZ_v8_2014_HR"
                pred = list()
@@ -2457,6 +2512,271 @@ pl <- drake::drake_plan(
  ##  /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Cost_Layers/Global/Cost_RasterStack_bySpecies.rds
  ##  or maybe
  ##  /QRISdata/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Cost_Layers/Global/Cost_SpeciesList.rds
+
+ fish_taxon = target(
+   {x <- data.table::as.data.table(readRDS(file_in(!!fish_taxon_file )))
+   data.table::setkey(x, "TaxonKey")
+   },
+   format = "qs"
+   ),
+
+ ## TaxLevel 6 is resolved to species and subspecies. Some (8) have Rank == NA,and it isn't clear why.
+ ## I will keep subspecies, but may need to merge them later
+
+## fish_taxon %>% filter(TaxonKey %in% missing_taxa)
+
+ fish_catch_all = target(
+   purrr::map_dfr(fish_years,
+                  ~ {cbind(data.table::fread(fish_file_fn(.x), select = c("TaxonKey", "LatCentre", "LonCentre", "TotalCatch"),
+                                                     col.names = c("TaxonKey", "lat","lon", "TotalCatch"), key = "TaxonKey"), Year = .x)}
+                  ),
+   format = "qs"
+ ),
+
+ fish_taxon_clean = target(
+   {
+ fish_taxon %>%
+ ##Species/Subspecies level, but exclude some enstries (~8) with NA in Rank.
+   dplyr::filter(TaxLevel == 6 & !is.na(Rank)) %>%
+##not all taxa are found in the range fish_years, which is not a problem, but absent species don't need further processing
+  dplyr::filter(!(TaxonKey %in% setdiff(unique(fish_taxon$TaxonKey), unique(fish_catch_all$TaxonKey)))) -> fish_taxon_sp
+
+fish_sp_depth <- rfishbase::species(fish_taxon_sp$TaxonName, fields = c("Species", "DepthRangeShallow", "DepthRangeDeep"), server = "fishbase")
+missing_fishbase <- fish_taxon_sp %>% filter(is.na(fish_sp_depth$Species))
+
+
+ fish_sp_depth_sealife <- rfishbase::species(missing_fishbase$TaxonName, fields = c("Species", "DepthRangeShallow", "DepthRangeDeep"), server = "sealifebase")
+ missing_all_base <- missing_fishbase %>% filter(is.na(fish_sp_depth_sealife$Species))
+
+ fish_taxon_depth <- merge(fish_taxon_sp, rbind(fish_sp_depth, fish_sp_depth_sealife), by.x = "TaxonName", by.y = "Species") %>%
+   dplyr::select(TaxonKey, TaxonName, DepthRangeShallow, DepthRangeDeep)
+
+  fish_taxon_depth_full <-  fish_taxon_depth %>%
+    ##dplyr::filter(complete.cases(fish_taxon_depth[, c("DepthRangeShallow", "DepthRangeDeep")])) %>%
+    ##
+    dplyr::mutate(is.epi = DepthRangeShallow >= min(depth_range$epi) & DepthRangeShallow < max(depth_range$epi) |
+                    DepthRangeDeep >= min(depth_range$epi) & DepthRangeDeep < max(depth_range$epi),
+                  is.meso = DepthRangeShallow >= min(depth_range$meso) & DepthRangeShallow < max(depth_range$meso) |
+                    DepthRangeDeep >= min(depth_range$meso) & DepthRangeDeep < max(depth_range$meso)
+                  )
+
+  fish_taxon_depth_full[is.na(fish_taxon_depth_full$is.epi), "is.epi"] <- FALSE
+  fish_taxon_depth_full[is.na(fish_taxon_depth_full$is.meso), "is.meso"] <- FALSE
+
+ ##Keep only the epipelagic taxa
+ fish_taxon_epi <- fish_taxon_depth_full[is.epi == TRUE]
+
+ ##Now use the epipelagic taxa to get site by species matrix
+ fish_catch_mean <- fish_catch_all[, .(TotalCatch = mean(TotalCatch)), by = .(TaxonKey, lat, lon)]
+
+ data.table::setkey(fish_catch_mean, "TaxonKey")
+ data.table::setkey(fish_taxon_epi, "TaxonKey")
+ fish_samples <- fish_catch_mean[fish_taxon_epi, .(TaxonKey, TaxonName, lat, lon, TotalCatch)]
+ fish_samples[, TaxonName := clean_sp_names(TaxonName)]
+
+   },
+format = "qs"
+),
+
+ ##filter to environment
+fish_samples_region = target(
+  fish_samples[samples_in_region(fish_samples, env_poly, spatial_vars), ],
+  format = "qs"
+  ),
+
+fish_samples_wide = target(
+  surv_to_wide(fish_samples_region[ , .(lat, lon, TaxonName, TotalCatch)], "TotalCatch"),
+  format = "qs"
+  ),
+
+
+##Fish data falls in an inconvenient spot for aligning, exactly every 0.25 and 0.75, which throws out rounding.
+## Add then remove a small offset.
+fish_samples_env = target(
+  fish_samples_wide %>%
+  rphildyerphd::align_sp(spatial_cols = spatial_vars,
+                         res = regrid_resolution, grid_offset = env_offset+1e-5,
+                         fun = mean) %>%
+  dplyr::mutate(lat = lat + 1e-5, lon = lon + 1e-5) %>%
+  merge(env_round, by = spatial_vars),
+  format = "qs"
+  ),
+
+
+         fish_sp_keep = target(
+           foc_cov_filter(surv_env = fish_samples_env,
+                          sp_names = names(fish_samples_env)[!names(fish_samples_env) %in% c(env_id_col,spatial_vars)],
+                          freq_range = freq_range,
+                          cov_min = cov_min,
+                          min_occurrence = min_occurrence
+           ),
+           format = "qs"
+         ),
+         fish_env_filter = target(
+           filter_surv_env(surv_env = fish_samples_env,
+                           surv_sp_names = fish_sp_keep,
+                           env_id_col = env_id_col,
+                           spatial_vars = spatial_vars,
+                           env_vars = env_names
+           ),
+           format = "qs"
+         ),
+         ##Fit GF models
+         fish_gf = target(
+           gradientForest::gradientForest(
+                             data = as.data.frame(fish_env_filter),
+                             predictor.vars = env_names,
+                             response.vars = fish_sp_keep,
+                             ntree = gf_trees,
+                             compact = gf_compact,
+                             nbin = gf_bins,
+                             transform = NULL,
+                             corr.threshold = gf_corr_thres,
+                             maxLevel = floor(log2(length(fish_sp_keep) * 0.368 / 2)),
+                             trace = TRUE
+                           )
+         ),
+           format = "qs"
+         ),
+
+         plot_fish_range = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_fish_gf_range_file)),
+                                     hpc = FALSE),
+         plot_fish_density = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Predictor.Density",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_fish_gf_density_file)),
+                                     hpc = FALSE),
+         plot_fish_cumimp = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_fish_gf_cumimp_file)),
+                                     hpc = FALSE),
+         plot_fish_perf = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_fish_gf_perf_file)),
+                                     hpc = FALSE),
+
+        env_trans_fish = target(
+          tibble::as_tibble(predict(object = fish_gf,
+                  newdata = env_round[, env_names],
+                  extrap = extrap)),
+          format = "fst_tbl"
+          ),
+        env_trans_fish_spatial = target(
+          cbind(env_round[, spatial_vars], env_trans_fish),
+          format = "fst_tbl"
+        ),
+         cluster_fish = target(
+           cluster_capture("fish",
+                           env_trans_fish[, names(env_trans_fish) %in% env_names],
+                           k_range,
+                           cluster_reps,
+                           samples = clara_samples,
+                           sampsize = clara_sampsize,
+                           trace = clara_trace,
+                           rngR = clara_rngR,
+                           pamLike = clara_pamLike,
+                           correct.d = clara_correct.d),
+           dynamic = cross(
+             .trace = c(cluster_reps, k_range),
+             cluster_reps,
+             k_range,
+             ),
+           format = "qs"
+         ),
+
+         pl_fish_clust_perfs = ggsave_wrapper(
+           filename = file_out(!!pl_fish_kmed_perf),
+           plot = ggplot(
+             data.frame(cluster_fish[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_fish$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+         pl_fish_clust_perfs_sil = ggsave_wrapper(
+           filename = file_out(!!pl_fish_kmed_perf_sil),
+           plot = ggplot(
+             data.frame(cluster_fish[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_fish$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = sil_avg, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+
+         cluster_fish_best_df = cluster_fish %>%
+           dplyr::group_by(dataname) %>%
+           dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
+           dplyr::filter(k == max(k)) %>%
+           dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+           dplyr::ungroup() %>%
+           dplyr::arrange(dataname),
+
+         ## plot best cluster for each group
+        fish_env_filter_list = target(
+          list(fish_env_filter),
+          dynamic = map(fish_env_filter),
+          format = "qs"
+        ),
+        fish_env_filter_list_all = target(
+          vctrs::vec_c(name_list(fish_env_filter_list, fish_names), list(fish_gf = fish_env_filter)),
+          format = "qs"
+        ),
+
+         pl_fish_clusters = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("fish_clust_map_",
+                               cluster_fish_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_fish_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = NULL,
+               grids = fish_env_filter_list_all[[cluster_fish_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(cluster_fish_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
+         pl_fish_clusters_samples = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("fish_clust_map_",
+                               fish_names,
+                               "_samples.png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_fish_best_df[cluster_fish_best_df$dataname == fish_names, ]$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = fish_wide,
+               grids = fish_env_filter_list_all[[fish_names]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(fish_names,
+                         fish_wide),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+## Get species metadata
+
+ #Are subspecies included with species
+## fish_taxon_sp %>% filter(Rank == "Subspecies") %>% print(width = Inf)
+#Must not be, since some subspecies have no related species level entry
+
+
+
 
          )
 
