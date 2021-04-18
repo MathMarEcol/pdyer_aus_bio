@@ -107,36 +107,6 @@ align_env_samp <- function(surv,
   return(surv_env)
 }
 
-    fun, ...)
-{
-    x <- as.data.frame(x)
-    assertthat::assert_that(assertthat::has_name(x, spatial_cols))
-    assertthat::assert_that(is.numeric(res))
-    assertthat::assert_that(assertthat::are_equal(length(res),
-        1))
-    assertthat::assert_that(is.numeric(grid_offset))
-    assertthat::assert_that(assertthat::are_equal(length(grid_offset),
-        1))
-    x[, spatial_cols] <- round(x[, spatial_cols]/res + grid_offset)
-    if (is.null(fun)) {
-        x_agg <- x
-    }
-    else {
-        x_agg <- aggregate(x, by = list(x[, spatial_cols[1]],
-            x[, spatial_cols[2]]), fun, ..., simplify = TRUE)
-        x_agg <- x_agg[, names(x)]
-    }
-    sort_order <- lapply(spatial_cols, df = x_agg, function(x,
-        df) {
-        df[[x]]
-    })
-    do.call(order, sort_order)
-    x_agg <- x_agg[do.call(order, sort_order), ]
-    row.names(x_agg) <- 1:nrow(x_agg)
-    x_agg[, spatial_cols] <- (x_agg[, spatial_cols] - grid_offset) *
-        res
-    return(x_agg)
-}
 foc_cov_filter_microbe <- function(microbe_samples,
                                    n_grids,
                                    max_otu,
