@@ -2503,7 +2503,7 @@ pl <- drake::drake_plan(
    format = "qs"
  ),
 
- fish_taxon_clean = target(
+ fish_samples = target(
    {
  fish_taxon %>%
  ##Species/Subspecies level, but exclude some enstries (~8) with NA in Rank.
@@ -2604,8 +2604,7 @@ fish_samples_env = target(
                              corr.threshold = gf_corr_thres,
                              maxLevel = floor(log2(length(fish_sp_keep) * 0.368 / 2)),
                              trace = TRUE
-                           )
-         ),
+                           ),
            format = "qs"
          ),
 
@@ -2693,7 +2692,7 @@ fish_samples_env = target(
           format = "qs"
         ),
         fish_env_filter_list_all = target(
-          vctrs::vec_c(name_list(fish_env_filter_list, fish_names), list(fish_gf = fish_env_filter)),
+          list(fish_gf = fish_env_filter),
           format = "qs"
         ),
 
@@ -2722,21 +2721,19 @@ fish_samples_env = target(
            ggsave_wrapper(
              here::here("outputs",
                         paste0("fish_clust_map_",
-                               fish_names,
-                               "_samples.png")),
+                               "samples.png")),
              plot_clust(
                env_round[, spatial_vars],
-               cluster_fish_best_df[cluster_fish_best_df$dataname == fish_names, ]$clust[[1]]$clustering,
+               cluster_fish_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
-               samples = fish_wide,
-               grids = fish_env_filter_list_all[[fish_names]][,spatial_vars],
+               samples = fish_samples_wide,
+               grids = fish_env_filter_list_all[[cluster_fish_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
              )
             ),
-           dynamic = map(fish_names,
-                         fish_wide),
+           dynamic = map(cluster_fish_best_df),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 ## Get species metadata
