@@ -2608,25 +2608,29 @@ fish_samples_env = target(
            format = "qs"
          ),
 
-         plot_fish_range = target(gf_plot_wrapper(gf_model = fish_gf,
-                                      plot_type = "Predictor.Ranges",
+         plot_range_fish = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Overall.Importance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_fish_gf_range_file)),
+                                      out_file = here::here("outputs", paste0("fish_gf_varimp",  ".png"))),
+             trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
-         plot_fish_density = target(gf_plot_wrapper(gf_model = fish_gf,
-                                      plot_type = "Predictor.Density",
+         plot_density_fish = target(gf_plot_wrapper(gf_model = fish_gf,
+                                      plot_type = "Split.Density",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_fish_gf_density_file)),
+                                      out_file = here::here("outputs", paste0("fish_gf_density",  ".png"))),
+             trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
-         plot_fish_cumimp = target(gf_plot_wrapper(gf_model = fish_gf,
+         plot_cumimp_fish = target(gf_plot_wrapper(gf_model = fish_gf,
                                       plot_type = "Cumulative.Importance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_fish_gf_cumimp_file)),
+                                      out_file = here::here("outputs", paste0("fish_gf_cumimp",  ".png"))),
+             trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
-         plot_fish_perf = target(gf_plot_wrapper(gf_model = fish_gf,
+         plot_perf_fish = target(gf_plot_wrapper(gf_model = fish_gf,
                                       plot_type = "Performance",
                                       vars = 1:9,
-                                      out_file = file_out(!!pl_fish_gf_perf_file)),
+                                      out_file = here::here("outputs", paste0("fish_gf_perf",  ".png"))),
+             trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
 
         env_trans_fish = target(
@@ -2685,12 +2689,6 @@ fish_samples_env = target(
            dplyr::ungroup() %>%
            dplyr::arrange(dataname),
 
-         ## plot best cluster for each group
-        fish_env_filter_list = target(
-          list(fish_env_filter),
-          dynamic = map(fish_env_filter),
-          format = "qs"
-        ),
         fish_env_filter_list_all = target(
           list(fish_gf = fish_env_filter),
           format = "qs"
