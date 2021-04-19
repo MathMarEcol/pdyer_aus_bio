@@ -2567,7 +2567,7 @@ fish_samples_env = target(
   rphildyerphd::align_sp(spatial_cols = spatial_vars,
                          res = regrid_resolution, grid_offset = env_offset+1e-5,
                          fun = mean) %>%
-  dplyr::mutate(lat = lat + 1e-5, lon = lon + 1e-5) %>%
+  dplyr::mutate(lat = lat + 5e-6, lon = lon + 5e-6) %>%
   merge(env_round, by = spatial_vars),
   format = "qs"
   ),
