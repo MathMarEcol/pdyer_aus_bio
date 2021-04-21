@@ -2531,7 +2531,7 @@ fish_samples_env = target(
 ## Combine all trophic levels together
 
 alltroph_combined_gf = target(
-  gradientForest::combinedGradientForest(alltroph = alltroph_combined_gf,
+  gradientForest::combinedGradientForest(fish = fish_gf,
                                          phyto = phytoplank_combined_gf,
                                          zoo = zooplank_combined_gf,
                                          microbe = microbe_gf[["epi"]]),
