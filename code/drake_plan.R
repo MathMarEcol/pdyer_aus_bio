@@ -771,10 +771,18 @@ pl_phytoplank_gf_density_file <- here::here("outputs", "phytoplank_gf_density.pn
 pl_phytoplank_gf_cumimp_file <- here::here("outputs", "phytoplank_gf_cumimp.png")
 pl_phytoplank_gf_perf_file <- here::here("outputs", "phytoplank_gf_perf.png")
 
+pl_alltroph_gf_range_file <- here::here("outputs", "alltroph_gf_range.png")
+pl_alltroph_gf_density_file <- here::here("outputs", "alltroph_gf_density.png")
+pl_alltroph_gf_cumimp_file <- here::here("outputs", "alltroph_gf_cumimp.png")
+pl_alltroph_gf_perf_file <- here::here("outputs", "alltroph_gf_perf.png")
+
 pl_zooplank_kmed_perf <- here::here("outputs", "zooplank_kmed_perf.png")
 pl_zooplank_kmed_perf_sil <- here::here("outputs", "zooplank_kmed_perf_sil.png")
 pl_phytoplank_kmed_perf <- here::here("outputs", "phytoplank_kmed_perf.png")
 pl_phytoplank_kmed_perf_sil <- here::here("outputs", "phytoplank_kmed_perf_sil.png")
+
+pl_alltroph_kmed_perf <- here::here("outputs", "alltroph_kmed_perf.png")
+pl_alltroph_kmed_perf_sil <- here::here("outputs", "alltroph_kmed_perf_sil.png")
 
 pl_test_cluster_rand_file <- here::here("outputs", "test_cluster_rand.png")
 
@@ -2519,16 +2527,143 @@ fish_samples_env = target(
            dynamic = map(cluster_fish_best_df),
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
-## Get species metadata
 
- #Are subspecies included with species
-## fish_taxon_sp %>% filter(Rank == "Subspecies") %>% print(width = Inf)
-#Must not be, since some subspecies have no related species level entry
+## Combine all trophic levels together
+
+alltroph_combined_gf = target(
+  gradientForest::combinedGradientForest(alltroph = alltroph_combined_gf,
+                                         phyto = phytoplank_combined_gf,
+                                         zoo = zooplank_combined_gf,
+                                         microbe = microbe_gf[["epi"]]),
+  format = "qs"
+),
+
+         plot_alltroph_range = target(gf_plot_wrapper(gf_model = alltroph_combined_gf,
+                                      plot_type = "Predictor.Ranges",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_alltroph_gf_range_file)),
+                                     hpc = FALSE),
+         plot_alltroph_density = target(gf_plot_wrapper(gf_model = alltroph_combined_gf,
+                                      plot_type = "Predictor.Density",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_alltroph_gf_density_file)),
+                                     hpc = FALSE),
+         plot_alltroph_cumimp = target(gf_plot_wrapper(gf_model = alltroph_combined_gf,
+                                      plot_type = "Cumulative.Importance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_alltroph_gf_cumimp_file)),
+                                     hpc = FALSE),
+         plot_alltroph_perf = target(gf_plot_wrapper(gf_model = alltroph_combined_gf,
+                                      plot_type = "Performance",
+                                      vars = 1:9,
+                                      out_file = file_out(!!pl_alltroph_gf_perf_file)),
+                                     hpc = FALSE),
+
+        env_trans_alltroph = target(
+          tibble::as_tibble(predict(object = alltroph_combined_gf,
+                  newdata = env_round[, env_names],
+                  extrap = extrap)),
+          format = "fst_tbl"
+          ),
+        env_trans_alltroph_spatial = target(
+          cbind(env_round[, spatial_vars], env_trans_alltroph),
+          format = "fst_tbl"
+        ),
+         cluster_alltroph = target(
+           cluster_capture("alltroph",
+                           env_trans_alltroph[, names(env_trans_alltroph) %in% env_names],
+                           k_range,
+                           cluster_reps,
+                           samples = clara_samples,
+                           sampsize = clara_sampsize,
+                           trace = clara_trace,
+                           rngR = clara_rngR,
+                           pamLike = clara_pamLike,
+                           correct.d = clara_correct.d),
+           dynamic = cross(
+             .trace = c(cluster_reps, k_range),
+             cluster_reps,
+             k_range,
+             ),
+           format = "qs"
+         ),
+
+         pl_alltroph_clust_perfs = ggsave_wrapper(
+           filename = file_out(!!pl_alltroph_kmed_perf),
+           plot = ggplot(
+             data.frame(cluster_alltroph[, c("dataname", "k", "min_clust_ratio")],
+                        pass = as.factor(cluster_alltroph$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = min_clust_ratio, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+         pl_alltroph_clust_perfs_sil = ggsave_wrapper(
+           filename = file_out(!!pl_alltroph_kmed_perf_sil),
+           plot = ggplot(
+             data.frame(cluster_alltroph[, c("dataname", "k", "sil_avg")],
+                        pass = as.factor(cluster_alltroph$min_clust_ratio >= min_clust_thres)),
+             mapping = aes(x = k, y = sil_avg, colour = pass)) +
+             geom_point() +
+             facet_wrap(vars(dataname)),
+         ),
+
+         cluster_alltroph_best_df = cluster_alltroph %>%
+           dplyr::group_by(dataname) %>%
+           dplyr::filter(min_clust_ratio >= min_clust_thres) %>%
+           dplyr::filter(k == max(k)) %>%
+           dplyr::filter(min_clust_ratio == max(min_clust_ratio)) %>%
+           dplyr::ungroup() %>%
+           dplyr::arrange(dataname),
+
+        alltroph_env_filter_list_all = target(
+          list(alltroph_combined_gf = alltroph_env_filter),
+          format = "qs"
+        ),
+
+         pl_alltroph_clusters = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("alltroph_clust_map_",
+                               cluster_alltroph_best_df$dataname,
+                               ".png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_alltroph_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = NULL,
+               grids = alltroph_env_filter_list_all[[cluster_alltroph_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(cluster_alltroph_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
+
+         pl_alltroph_clusters_samples = target(
+           ggsave_wrapper(
+             here::here("outputs",
+                        paste0("alltroph_clust_map_",
+                               "samples.png")),
+             plot_clust(
+               env_round[, spatial_vars],
+               cluster_alltroph_best_df$clust[[1]]$clustering,
+               spatial_vars,
+               marine_map,
+               env_poly,
+               samples = alltroph_samples_wide,
+               grids = alltroph_env_filter_list_all[[cluster_alltroph_best_df$dataname]][,spatial_vars],
+               clip_samples = FALSE
+             )
+            ),
+           dynamic = map(cluster_alltroph_best_df),
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+           ),
 
 
 
-
-         )
+)
 
 ##Set seed
 r_seed <- 20200219
