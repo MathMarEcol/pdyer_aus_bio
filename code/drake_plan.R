@@ -1812,6 +1812,7 @@ env_trans_sub_wide_points_zooplank_boot_gf = target(
                      dplyr::arrange(x_row) %>%
                      as.data.table() %>%
  data.table::setkey("x_row"),
+ memory_strategy = "autoclean",
   format = "qs"
   ),
 
@@ -1840,11 +1841,13 @@ p_mat_full_cov_sub = target(
   diag(out) <- 1
   return(out)
   },
+ memory_strategy = "autoclean",
           format = "qs"
         ),
 
         zooplank_cast_sub_full = target(
           castcluster::cast_optimal(p_mat_full_cov_sub),
+ memory_strategy = "autoclean",
           format = "qs"
         ),
 
@@ -1866,6 +1869,7 @@ p_mat_full_cov_sub = target(
              scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_full_clust_ind$cl))))
 
             ),
+ memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
 
@@ -1874,6 +1878,7 @@ p_mat_full_cov_sub = target(
              here::here("outputs", "zooplank_cast_sim_mat_sub_full.png"),
              gg_sim_mat(p_mat_full_cov_sub, cast_ob = zooplank_cast_sub_full$cast_ob[[which.max(zooplank_cast_sub_full$gamma)]], highlight = TRUE, aff_thres = zooplank_cast_sub_full$aff_thres[[which.max(zooplank_cast_sub_full$gamma)]])
             ),
+ memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
          ##Hotellings p-value similiarity matrix, using diagonal covariance
@@ -1882,11 +1887,13 @@ p_mat_full_cov_sub = target(
                               means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names_sub],
                               res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names_sub]
                      ),
+ memory_strategy = "autoclean",
           format = "qs"
         ),
 
         zooplank_cast_sub = target(
           castcluster::cast_optimal(p_mat_diag_cov_sub),
+ memory_strategy = "autoclean",
           format = "qs"
         ),
 
@@ -1897,6 +1904,7 @@ p_mat_full_cov_sub = target(
             clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub$cast_ob[[max_ind]][[x]], cl = x)}))
             clust_ind2 <- clust_ind[order(clust_ind$x_row),]
           },
+ memory_strategy = "autoclean",
           format = "qs"
           ),
 
@@ -1908,6 +1916,7 @@ p_mat_full_cov_sub = target(
              geom_raster() +
              scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_clust_ind$cl))))
             ),
+ memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
 
@@ -1916,6 +1925,7 @@ p_mat_full_cov_sub = target(
              here::here("outputs", "zooplank_cast_sim_mat_sub.png"),
              gg_sim_mat(p_mat_diag_cov_sub, cast_ob = zooplank_cast_sub$cast_ob[[which.max(zooplank_cast_sub$gamma)]], highlight = TRUE)
             ),
+ memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
         ),
 
@@ -3045,6 +3055,7 @@ print(getOption("clustermq.template", "PBS"))
               cache = cache_ob,
               caching = "worker",
               garbage_collection = TRUE,
+              memory_strategy = "speed"
               #prework = quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
               )
 
