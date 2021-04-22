@@ -1821,20 +1821,20 @@ p_mat_full_cov_sub = target(
 {
   x_row <- seq_along(env_trans_sub_wide_zooplank_boot_gf$y_mean$x_row)
   pairs <- expand.grid(i = x_row, j = x_row)
-  result <- purrr::map2_dbl(pairs$i, pairs$j,
+  result <- furrr::future_map2_dbl(pairs$i, pairs$j,
               ~ {
                 if(.x < .y) {
                     return( fpc::bhattacharyya.dist(
-                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[i,],
-                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[j,],
-                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[i]],
-                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[j]]
+                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[.x,],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[.y,],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.x]],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.y]]
                                  )
                            )
                 } else {
                   return(NA)
                 }
-              }, data_mat_list)
+              }, env_trans_sub_wide_zooplank_boot_gf)
   out <- matrix(result, max(x_row), max(x_row))
   out[lower.tri(out)] <- t(out)[lower.tri(out)]
   diag(out) <- 1
