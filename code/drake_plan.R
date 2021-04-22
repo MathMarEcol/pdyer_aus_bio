@@ -1766,11 +1766,11 @@ pl <- drake::drake_plan(
 
         env_trans_wide_zooplank_boot_gf = target(
         {
-          x <- merge(env_trans_zooplank_boot_gf$mean, env_trans_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
-          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean") %>%
+          out <- list(y_mean = tidyr::pivot_wider(env_trans_zooplank_boot_gf$mean, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
                      dplyr::arrange(x_row),
-                     y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance") %>%
-                     dplyr::arrange(x_row)
+                     y_diagonal = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$diagonal, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                       dplyr::arrange(x_row),
+                     y_variance = env_trans_zooplank_boot_gf$variance
                       )
         },
           format = "qs"
@@ -1788,18 +1788,19 @@ pl <- drake::drake_plan(
         env_trans_sub_zooplank_boot_gf = target(
           predict(object = zooplank_boot_combined_gf,
                                           newdata = env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, env_names_sub],
-                                          type = c("mean", "variance", "points"),
+                                          type = c("mean", "variance", "diagonal", "points"),
                                           extrap = extrap),
           format = "qs"
         ),
 
         env_trans_sub_wide_zooplank_boot_gf = target(
         {
-          x <- merge(env_trans_sub_zooplank_boot_gf$mean, env_trans_sub_zooplank_boot_gf$variance, by =  c("pred","x_row","x"), suffixes = c("_mean", "_variance"))
-          out <- list(y_mean = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_mean") %>%
+          out <- list(y_mean = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$mean, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
                      dplyr::arrange(x_row),
-                     y_variance = tidyr::pivot_wider(x, id_cols = "x_row", names_from = "pred", values_from = "y_variance") %>%
-                     dplyr::arrange(x_row)
+                     y_diagonal = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$diagonal, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                       dplyr::arrange(x_row),
+                     y_variance = env_trans_sub_zooplank_boot_gf$variance
+
                       )
         },
           format = "qs"
@@ -1818,20 +1819,18 @@ env_trans_sub_wide_points_zooplank_boot_gf = target(
 
 p_mat_full_cov_sub = target(
 {
-  x_row <- seq_along(unique(env_trans_sub_wide_points_zooplank_boot_gf$x_row))
+  x_row <- seq_along(env_trans_sub_wide_zooplank_boot_gf$y_mean$x_row)
   pairs <- expand.grid(i = x_row, j = x_row)
-  data_mat_list <- lapply(x_row, function(i, env_points, env_names_sub){
-                                as.matrix(env_points[x_row == i, ..env_names_sub])
-    }, env_points = env_trans_sub_wide_points_zooplank_boot_gf, env_names_sub = env_names_sub)
   result <- purrr::map2_dbl(pairs$i, pairs$j,
               ~ {
-                print(.x)
-                print(.y)
                 if(.x < .y) {
-                    return( Hotelling::hotelling.test(
-                                data_mat_list[[.x]],
-                                data_mat_list[[.y]],
-                                )$pval)
+                    return( fpc::bhattacharyya.dist(
+                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[i,],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_mean[j,],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[i]],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[j]]
+                                 )
+                           )
                 } else {
                   return(NA)
                 }
@@ -1885,7 +1884,7 @@ p_mat_full_cov_sub = target(
         p_mat_diag_cov_sub = target(
           rmethods:::hotellings_bulk(
                               means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names_sub],
-                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_variance[, env_names_sub]
+                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_diagonal[, env_names_sub]
                      ),
  memory_strategy = "autoclean",
           format = "qs"
