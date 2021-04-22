@@ -496,6 +496,69 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, sa
 
 }
 
+plot_clust_poly <- function(sites, clustering, spatial_vars, marine_map, env_poly, regrid_res, samples = NULL, grids = NULL, clip_samples = TRUE){
+
+  if (clip_samples | is.null(samples)){
+    env_bbox <-  sf::st_bbox(env_poly)
+  } else {
+    env_bbox <- sf::st_bbox(c(xmin = min(samples[, spatial_vars[1]]),
+                                 xmax = max(samples[, spatial_vars[1]]),
+                                 ymin = min(samples[, spatial_vars[2]]),
+                                 ymax = max(samples[, spatial_vars[2]])
+                                 )
+                            )
+  }
+
+  target_grid <- raster::raster(x = env_poly,
+                                     resolution = regrid_res,
+                                     crs = "+proj=longlat +datum=WGS84")
+
+  clust_raster <- raster::rasterize(
+            x = sites[, spatial_vars],
+            y = target_grid,
+            field = clustering
+            )
+  names(clust_raster) <- c("clustering")
+  clust_multipoly <- st_as_sf(raster::rasterToPolygons(clust_raster, dissolve = TRUE),
+                         crs = "+proj=longlat +datum=WGS84")
+  clust_poly <- st_cast(clust_multipoly, "POLYGON")
+
+  st_crs(clust_poly) <- "+proj=longlat +datum=WGS84"
+  pl <- ggplot(clust_poly, mapping = aes(fill = as.factor(clustering))) +
+    geom_sf() +
+  ggplot2::scale_fill_manual(values = rainbow(max(clustering))) +
+  ggplot2::labs(fill = "cluster") +
+  ggplot2::geom_sf(data = marine_map, inherit.aes = FALSE, color = "black", fill= NA) +
+    geom_sf_label(aes(label= clustering), fill = "white") +
+   ggplot2::coord_sf(xlim = c(env_bbox$xmin, env_bbox$xmax), ylim = c(env_bbox$ymin, env_bbox$ymax)) +
+  ggthemes::theme_tufte()
+
+  if(!is.null(samples)){
+    if(class(samples)[1] == "list" & length(samples) == 1){
+      samples <- samples[[1]]
+     }
+    if(clip_samples){
+      keep <- samples[, spatial_vars[1]]  >= env_bbox$xmin &
+        samples[, spatial_vars[1]]  <= env_bbox$xmax &
+        samples[, spatial_vars[2]]  >= env_bbox$ymin &
+        samples[, spatial_vars[2]]  <= env_bbox$ymax
+      samples <- samples[keep,]
+    }
+    pl <- pl +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), shape = ".", colour = "dimgray", data = samples[,spatial_vars], inherit.aes = FALSE)
+  }
+  if(!is.null(grids)){
+    if(class(grids)[1] == "list" & length(grids) == 1){
+      grids <- grids[[1]]
+     }
+    pl <- pl +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), data = grids[,spatial_vars], shape = "o", colour = "dimgray", inherit.aes = FALSE)
+  }
+
+  return(pl)
+
+}
+
 ggsave_wrapper <- function(filename, plot,
                            units = "cm",
                            width = 16,
@@ -1483,12 +1546,13 @@ pl <- drake::drake_plan(
                         paste0("zooplank_clust_map_",
                                cluster_zooplank_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_zooplank_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = NULL,
                grids = zooplank_env_filter_list_all[[cluster_zooplank_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -1504,12 +1568,13 @@ pl <- drake::drake_plan(
                         paste0("zooplank_clust_map_",
                                zooplank_names,
                                "_samples.png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_zooplank_best_df[cluster_zooplank_best_df$dataname == zooplank_names, ]$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = zooplank_wide,
                grids = zooplank_env_filter_list_all[[zooplank_names]][,spatial_vars],
                clip_samples = FALSE
@@ -1844,12 +1909,13 @@ pl <- drake::drake_plan(
                         paste0("microbe_clust_map_",
                                cluster_microbe_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_microbe_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
                grids = as.data.frame(microbe_grid_env_list[[cluster_microbe_best_df$dataname]])[, spatial_vars],
                clip_samples = TRUE
@@ -1865,12 +1931,13 @@ pl <- drake::drake_plan(
                         paste0("microbe_clust_map_samples_",
                                cluster_microbe_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_microbe_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = as.data.frame(unique(microbe_samples_region_depth_list[[cluster_microbe_best_df$dataname]][, c("lat", "lon")])),
                grids = as.data.frame(microbe_grid_env_list[[cluster_microbe_best_df$dataname]])[, spatial_vars],
                clip_samples = FALSE
@@ -2227,12 +2294,13 @@ pl <- drake::drake_plan(
                         paste0("phytoplank_clust_map_",
                                cluster_phytoplank_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_phytoplank_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = NULL,
                grids = phytoplank_env_filter_list_all[[cluster_phytoplank_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -2248,12 +2316,13 @@ pl <- drake::drake_plan(
                         paste0("phytoplank_clust_map_",
                                phytoplank_names,
                                "_samples.png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_phytoplank_best_df[cluster_phytoplank_best_df$dataname == phytoplank_names, ]$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = phytoplank_wide,
                grids = phytoplank_env_filter_list_all[[phytoplank_names]][,spatial_vars],
                clip_samples = FALSE
@@ -2493,12 +2562,13 @@ fish_samples_env = target(
                         paste0("fish_clust_map_",
                                cluster_fish_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_fish_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = NULL,
                grids = fish_env_filter_list_all[[cluster_fish_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -2513,12 +2583,13 @@ fish_samples_env = target(
              here::here("outputs",
                         paste0("fish_clust_map_",
                                "samples.png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_fish_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = fish_samples_wide,
                grids = fish_env_filter_list_all[[cluster_fish_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -2635,12 +2706,13 @@ alltroph_combined_gf = target(
                         paste0("alltroph_clust_map_",
                                cluster_alltroph_best_df$dataname,
                                ".png")),
-             plot_clust(
+             plot_clust_poly(
                env_round[, spatial_vars],
                cluster_alltroph_best_df$clust[[1]]$clustering,
                spatial_vars,
                marine_map,
                env_poly,
+               regrid_resolution,
                samples = NULL,
                ## grids = alltroph_env_filter_list_all[[cluster_alltroph_best_df$dataname]][,spatial_vars],
                clip_samples = FALSE
@@ -2655,12 +2727,13 @@ alltroph_combined_gf = target(
          ##     here::here("outputs",
          ##                paste0("alltroph_clust_map_",
          ##                       "samples.png")),
-         ##     plot_clust(
+         ##     plot_clust_poly(
          ##       env_round[, spatial_vars],
          ##       cluster_alltroph_best_df$clust[[1]]$clustering,
          ##       spatial_vars,
          ##       marine_map,
          ##       env_poly,
+         ##       regrid_resolution,
          ##       samples = alltroph_samples_wide,
          ##       ## grids = alltroph_env_filter_list_all[[cluster_alltroph_best_df$dataname]][,spatial_vars],
          ##       clip_samples = FALSE
