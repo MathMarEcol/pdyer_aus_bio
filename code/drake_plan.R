@@ -1824,14 +1824,14 @@ p_mat_full_cov_sub = target(
   result <- furrr::future_map2_dbl(pairs$i, pairs$j,
               ~ {
                 if(.x < .y) {
-                  return(
-                    fpc::bhattacharyya.dist(
+                    b_dist <- fpc::bhattacharyya.dist(
                                    as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.x, env_names_sub]),
                                    as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.y, env_names_sub]),
                                    env_trans_sub_wide_zooplank_boot_gf$y_variance[[.x]],
                                    env_trans_sub_wide_zooplank_boot_gf$y_variance[[.y]]
                                  )
-                           )
+                    b_coeff_sim <- exp(-b_dist)
+                  return(b_coeff_sim)
                 } else {
                   return(NA)
                 }
@@ -1864,10 +1864,12 @@ p_mat_full_cov_sub = target(
         pl_zooplank_cast_sub_full = target(
            ggsave_wrapper(
              here::here("outputs", "zooplank_cast_sub_full.png"),
-             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars], aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_full_clust_ind$cl))) +
-             geom_raster() +
-             scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_full_clust_ind$cl))))
-
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_full_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
             ),
  memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
@@ -1911,10 +1913,12 @@ p_mat_full_cov_sub = target(
         pl_zooplank_cast_sub = target(
            ggsave_wrapper(
              here::here("outputs", "zooplank_cast_sub.png"),
-             ggplot(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
-                    aes(x=lon, y = lat, fill = as.factor(zooplank_cast_sub_clust_ind$cl))) +
-             geom_raster() +
-             scale_fill_manual(values = rainbow(length(unique(zooplank_cast_sub_clust_ind$cl))))
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
             ),
  memory_strategy = "autoclean",
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
