@@ -496,7 +496,7 @@ plot_clust <- function(sites, clustering, spatial_vars, marine_map, env_poly, sa
 
 }
 
-plot_clust_poly <- function(sites, clustering, spatial_vars, marine_map, env_poly, regrid_res, samples = NULL, grids = NULL, clip_samples = TRUE){
+plot_clust_poly <- function(sites, clustering, spatial_vars, marine_map, env_poly, regrid_res, labels = TRUE, samples = NULL, grids = NULL, clip_samples = TRUE){
 
   if (clip_samples | is.null(samples)){
     env_bbox <-  sf::st_bbox(env_poly)
@@ -516,23 +516,25 @@ plot_clust_poly <- function(sites, clustering, spatial_vars, marine_map, env_pol
   clust_raster <- raster::rasterize(
             x = sites[, spatial_vars],
             y = target_grid,
-            field = clustering
+            field = as.numeric(clustering)
             )
   names(clust_raster) <- c("clustering")
-  clust_multipoly <- st_as_sf(raster::rasterToPolygons(clust_raster, dissolve = TRUE),
+  clust_multipoly <- sf::st_as_sf(raster::rasterToPolygons(clust_raster, dissolve = TRUE),
                          crs = "+proj=longlat +datum=WGS84")
-  clust_poly <- st_cast(clust_multipoly, "POLYGON")
 
-  st_crs(clust_poly) <- "+proj=longlat +datum=WGS84"
-  pl <- ggplot(clust_poly, mapping = aes(fill = as.factor(clustering))) +
-    geom_sf() +
+  sf::st_crs(clust_multipoly) <- "+proj=longlat +datum=WGS84"
+  pl <- ggplot2::ggplot(clust_multipoly, mapping = ggplot2::aes(fill = as.factor(clustering))) +
+    ggplot2::geom_sf() +
   ggplot2::scale_fill_manual(values = rainbow(max(clustering))) +
   ggplot2::labs(fill = "cluster") +
   ggplot2::geom_sf(data = marine_map, inherit.aes = FALSE, color = "black", fill= NA) +
-    geom_sf_label(aes(label= clustering), fill = "white") +
    ggplot2::coord_sf(xlim = c(env_bbox$xmin, env_bbox$xmax), ylim = c(env_bbox$ymin, env_bbox$ymax)) +
   ggthemes::theme_tufte()
 
+  if(labels) {
+    pl <- pl +
+      ggplot2::geom_sf_label(ggplot2::aes(label= clustering), fill = "white")
+  }
   if(!is.null(samples)){
     if(class(samples)[1] == "list" & length(samples) == 1){
       samples <- samples[[1]]
