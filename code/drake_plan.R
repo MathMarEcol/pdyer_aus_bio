@@ -1009,7 +1009,7 @@ fish_years <- 2007:2017
                gf_bins = 201
                gf_corr_thres = 0.5
                gf_compact = FALSE
-               extrap = 1 / 100
+               extrap = 1
 
                k_range = seq.int(2,20)
                cluster_reps = seq.int(1,3)
