@@ -1009,7 +1009,7 @@ fish_years <- 2007:2017
                gf_bins = 201
                gf_corr_thres = 0.5
                gf_compact = FALSE
-               extrap = 1
+               extrap = 1 / 100
 
                k_range = seq.int(2,20)
                cluster_reps = seq.int(1,3)
@@ -1143,10 +1143,10 @@ pl <- drake::drake_plan(
                ## env_poly is a polygon that defines the study area.
                ## env_bbox is the bounding box of env_extent
                ## ausEEZ = marine_map[marine_map$Country == "Australia", ],
-               ## env_poly = marine_map[marine_map$Country == "Australia", ],
-               env_poly = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
-                                       crs = sf::st_crs(marine_map)
-                                       ),
+               env_poly = marine_map[marine_map$Country == "Australia", ],
+               ## env_poly = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
+               ##                         crs = sf::st_crs(marine_map)
+               ##                         ),
                env_extent = raster::extent(env_poly),
 
                env_region = target(env_restrict_to_region(bio_oracle_cache = file_in(!!biooracle_folder),
