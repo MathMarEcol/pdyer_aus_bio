@@ -892,7 +892,7 @@ jobs <- 5
 ## parameters
 
 phytoplank_names = c(
-  "nrs",
+  #"nrs",
                                    "cpr",
                                    "brett",
                                     ## "other_1050",
@@ -922,7 +922,7 @@ phytoplank_names = c(
                                     ## "other_517",
                                     ## "other_519"
                                    )
-                         phytoplank_matching = list(nrs = 599,
+                         phytoplank_matching = list(#nrs = 599,
                                          cpr = 597,
                                          brett = 794,
                                         ## other_1050 = 1050,
@@ -952,13 +952,13 @@ phytoplank_names = c(
                                         ## other_517 = 517,
                                         ## other_519 = 519
                                          )
-                         zooplank_names = c("nrs",
+                         zooplank_names = c(#"nrs",
                                    "cpr",
                                    "mckinnon",
                                    "goc",
                                    ## "nyan",
                                    "anita")
-                         zooplank_matching = list(nrs = 599,
+                         zooplank_matching = list(#nrs = 599,
                                          cpr = 597,
                                          mckinnon =
                                            c(4, 5, 7, 9, 12, 15, 16, 24), #McKinnon surveys
