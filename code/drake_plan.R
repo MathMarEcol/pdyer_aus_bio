@@ -3,6 +3,7 @@
 library(purrr)
 ##Parallel
 library(future)
+library(future.callr)
 library(furrr)
 ##Analysis
 library(cluster)
@@ -2804,6 +2805,7 @@ if (!interactive()) {
   print(parallelism)
 print(getOption("clustermq.template", "PBS"))
 
+#future::plan(future.callr::callr)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
