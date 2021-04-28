@@ -9,6 +9,6 @@ set -euo pipefail
 ROOT_STORE_DIR="/90days/uqpdyer/rdm_mirror" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 TMPDIR_SHARE="/30days/uqpdyer/pbs.$PBS_JOBID"
 COPY_MODULES=1 #copy HPC modules
-GIT_BRANCH="develop"
+GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "GIT_BRANCH=tagname" during qsub
 
 source $PBS_O_WORKDIR/aus_bio_content.sh
