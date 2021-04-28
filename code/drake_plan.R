@@ -3046,7 +3046,7 @@ if (!interactive()) {
   print(parallelism)
 print(getOption("clustermq.template", "PBS"))
 
-#future::plan(future.callr::callr)
+future::plan(future.callr::callr)
   drake::make(pl, seed = r_seed,
               parallelism = parallelism,
               jobs = jobs, ## 6 jobs, for 6 surveys
