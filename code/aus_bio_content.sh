@@ -107,8 +107,8 @@ tar -czf $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.tar.gz  ./drake_cac
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/drake_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
 #Store the outputs
 
-tar -czf "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.tar.gz"  ./outputs
-7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${git_hash}_outputs.7z"  ./outputs
+tar -czf "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_$GIT_BRANCH_${git_hash}_outputs.tar.gz"  ./outputs
+7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_$GIT_BRANCH_${git_hash}_outputs.7z"  ./outputs
 rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs_history
 
 # #copy outputs to an archive
