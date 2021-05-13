@@ -5,9 +5,8 @@ import (builtins.fetchGit {
   url = https://github.com/PhDyellow/nixpkgs/;
   # Commit hash for nixos-unstable as of 2020-01-20
   # `git ls-remote https://github.com/nixos/nixpkgs-channels nixos-unstable`
-  ref = "refs/heads/master"; #using bleeding edge packages
-  rev = "37e2fbda397880a38af91dbf266b19cd3955ed07";
-
+  ref = "refs/heads/master_fix_pkgs"; #using bleeding edge packages
+  rev = "8ce2a15dba3be64eb71004edc79a777100c21325";
 })
     { #the attributes to import
       overlays = [
