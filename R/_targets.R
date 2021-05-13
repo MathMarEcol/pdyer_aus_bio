@@ -1,0 +1,111 @@
+##essential for _targets.R
+library(targets)
+
+## Load functions and globals
+## Load all files in the functions folder
+source_files = list.files("./functions", full.names = TRUE )
+sapply(source_files, source)
+
+## Load global objects
+## Usually something living inside data()
+source("./functions/params.R")
+
+## Set default options, targets and globals
+tar_option_set(
+  ##qs format is smaller and reads/writes faster than RDS. needs qs package.
+  format = "qs",
+  ## Load libraries here. Faster than library(..) at top of this file.
+  packages = c(
+    "data.table",
+    "tidyverse",
+    "purrr",
+    "rfishbase"
+  ),
+  ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
+  imports = c(
+    "gfbootstrap"
+  )
+
+
+)
+
+## List of targets
+
+list(
+
+## Lists within lists is ok too, if we want to encapsulate
+## eg setup_list_targets(), a function that returns a list of tar_targets.
+
+  ## Steps
+  #
+  # For every survey, we
+  # 1. Load in data <- unique
+  # 2. clean and shape into long form <- unique
+  # 3. merge with env, applying filters <- common
+  # 4. fit a gradientForest object <- common
+  # 5. Predict and cluster using the gradient forest object <- common
+  #
+  # For each trophic level, we fit a combined GF. then predict and cluster it
+  #
+  # For all gf objects, we fit a combined GF, then predict and cluster.
+  #
+  # We also need to set up the env data and polygons, which is common to all surveys
+  #
+  # Last of all, plotting
+
+  track_inputs(), #returns a list of targets
+
+  tar_target(
+    zoo_long,
+    load_zoo_long(zoo_load_script,
+                  zoo_data_dir,
+                  zoo_matching,
+                  zoo_names,
+                  spatial_vars)
+  ),
+
+
+
+  tar_target(
+    phy_long,
+    load_phy_long(phy_load_script,
+                  phy_data_dir,
+                  phy_matching,
+                  phy_names,
+                  spatial_vars)
+  ),
+
+  tar_target(
+    bac_long,
+    load_bac_long(
+      bac_otu_csv,
+      bac_site_csv,
+      spatial_vars,
+      depth_names,
+      depth_range
+                  )
+  ),
+
+  tar_target(
+    fish_long,
+    load_fish_long(
+      fish_taxon_file,
+      fish_data_dir,
+      fish_years,
+      spatial_vars,
+      depth_names,
+      depth_range
+    )
+  ),
+
+
+  tar_target(
+    all_data,
+    data.table::rbindlist(
+                 zoo_long,
+                 phy_long,
+                 bac_long,
+                 fish_long
+                 )
+    )
+)
