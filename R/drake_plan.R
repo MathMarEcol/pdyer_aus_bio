@@ -594,7 +594,14 @@ gf_plot_wrapper <- function(gf_model,
       width = width,
       height = height,
       res = dpi)
-  plot(gf_model, plot.type = plot_type, imp.vars = names(importance(gf_model))[vars])
+  plot_type <- match.arg(plot_type, c("Overall.Importance", "Split.Density",
+                                      "Cumulative.Importance", "Performance",
+                                      "Predictor.Ranges", "Predictor.Density"))
+  if(plot_type %in% c("Split.Density", "Cumulative.Importance")) {
+    plot(gf_model, plot.type = plot_type, imp.vars = names(importance(gf_model))[vars])
+  } else {
+    plot(gf_model, plot.type = plot_type)
+  }
   dev.off()
 }
 
@@ -1007,7 +1014,7 @@ fish_years <- 2007:2017
                gf_bins = 201
                gf_corr_thres = 0.5
                gf_compact = FALSE
-               extrap = 1 / 4
+               extrap = 1 / 100
 
                k_range = seq.int(2,20)
                cluster_reps = seq.int(1,3)
@@ -1019,6 +1026,8 @@ fish_years <- 2007:2017
                clara_rngR = TRUE
                clara_pamLike = TRUE
                clara_correct.d = TRUE
+
+               env_subset_val <- 0.5
 
                min_clust_thres = 0.01
 
@@ -1691,6 +1700,121 @@ pl <- drake::drake_plan(
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
 
+p_mat_full_cov_sub = target(
+{
+  x_row <- seq_along(env_trans_sub_wide_zooplank_boot_gf$y_mean$x_row)
+  pairs <- expand.grid(i = x_row, j = x_row)
+  result <- furrr::future_map2_dbl(pairs$i, pairs$j,
+              ~ {
+                if(.x < .y) {
+                    b_dist <- fpc::bhattacharyya.dist(
+                                   as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.x, env_names_sub]),
+                                   as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.y, env_names_sub]),
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.x]],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.y]]
+                                 )
+                    b_coeff_sim <- exp(-b_dist)
+                  return(b_coeff_sim)
+                } else {
+                  return(NA)
+                }
+              }, env_trans_sub_wide_zooplank_boot_gf, env_names_sub)
+  out <- matrix(result, max(x_row), max(x_row))
+  out[lower.tri(out)] <- t(out)[lower.tri(out)]
+  diag(out) <- 1
+  return(out)
+  },
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+        zooplank_cast_sub_full = target(
+          castcluster::cast_optimal(p_mat_full_cov_sub),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_full_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub_full$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub_full$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub_full$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub_full.png"),
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_full_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub_full.png"),
+             gg_sim_mat(p_mat_full_cov_sub, cast_ob = zooplank_cast_sub_full$cast_ob[[which.max(zooplank_cast_sub_full$gamma)]], highlight = TRUE, aff_thres = zooplank_cast_sub_full$aff_thres[[which.max(zooplank_cast_sub_full$gamma)]])
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+         ##Hotellings p-value similiarity matrix, using diagonal covariance
+        p_mat_diag_cov_sub = target(
+          rmethods:::hotellings_bulk(
+                              means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names_sub],
+                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_diagonal[, env_names_sub]
+                     ),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+        zooplank_cast_sub = target(
+          castcluster::cast_optimal(p_mat_diag_cov_sub),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+ memory_strategy = "autoclean",
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub.png"),
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub.png"),
+             gg_sim_mat(p_mat_diag_cov_sub, cast_ob = zooplank_cast_sub$cast_ob[[which.max(zooplank_cast_sub$gamma)]], highlight = TRUE)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
 
          ##Microbe data
          microbe_sites = target(
@@ -1953,13 +2077,16 @@ pl <- drake::drake_plan(
 
  ##plot some microbe stuff
 
-         plot_range_microbe = target(gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
+plot_range_microbe = target({
+  gf_plot_wrapper(gf_model = microbe_gf[[depth_names]],
                                       plot_type = "Overall.Importance",
                                       vars = 1:9,
-                                      out_file = here::here("outputs", paste0("microbe_gf_varimp_", depth_names, ".png"))),
+                  out_file = here::here("outputs", paste0("microbe_gf_varimp_", depth_names, ".png")))
+},
                                      dynamic = map(
              .trace = depth_names,
              depth_names,
+             microbe_gf
              ),
              trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
@@ -1981,6 +2108,7 @@ pl <- drake::drake_plan(
                                      dynamic = map(
              .trace = depth_names,
              depth_names,
+             microbe_gf
                                      ),
              trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
@@ -1991,6 +2119,7 @@ pl <- drake::drake_plan(
                                      dynamic = map(
              .trace = depth_names,
              depth_names,
+             microbe_gf
                                      ),
              trigger = trigger(condition = TRUE),
                                      hpc = FALSE),
@@ -2314,7 +2443,8 @@ pl <- drake::drake_plan(
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
-         pl_phytoplank_clusters_samples = target(
+pl_phytoplank_clusters_samples = target(
+{
            ggsave_wrapper(
              here::here("outputs",
                         paste0("phytoplank_clust_map_",
@@ -2331,9 +2461,12 @@ pl <- drake::drake_plan(
                grids = phytoplank_env_filter_list_all[[phytoplank_names]][,spatial_vars],
                clip_samples = FALSE
              )
-            ),
-           dynamic = map(phytoplank_names,
+
+           )
+},
+           dynamic = map(cluster_phytoplank_best_df,
                          phytoplank_wide),
+hpc =FALSE,
            trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
            ),
 
@@ -2767,15 +2900,16 @@ drake::vis_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
   selfcontained = TRUE,
   hover = TRUE
 )
-drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
-                          file = here::here("outputs", "drake_graph_pre_sankey.html"),
-  selfcontained = TRUE
-)
-ggsave(
-  filename = here::here("outputs", "drake_ggplot_pre.png"),
-  drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
-)
+## drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
+##                           file = here::here("outputs", "drake_graph_pre_sankey.html"),
+##   selfcontained = TRUE
+## )
+## ggsave(
+##   filename = here::here("outputs", "drake_ggplot_pre.png"),
+##   drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
+## )
 #' Make
+parallelism <- "clustermq"
 if (!interactive()) {
   if(system2("qstat") == 0 ){
     ##We are in a system where qstat is present and working
@@ -2784,32 +2918,28 @@ if (!interactive()) {
       ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
       clustermq.template = here::here("code", "pbs_clustermq.tmpl")
     )
-    parallelism <- "clustermq"
   } else {
     ##no access to qstat/qsub, run multicore/serial
-    jobs <- future::availableCores(methods = c("PBS"), default = 1) - 1 ## number of cores, leave one for master
-    parallelism <- "clustermq"
     options(
       clustermq.scheduler = "multiprocess"
     )
+    workers <- future::availableCores(which="all", na.rm=FALSE) ## number of cores, leave one for master
+    jobs <- max(workers, na.rm=TRUE)
     if (jobs <= 0) {
-      ## not in a PBS job
-      jobs <- future::availableCores(methods = c("mc.cores"))
-    }
-    if (jobs <= 1) {
-      jobs <- 1
       parallelism <- "loop"
+      jobs <- 1 #not used
     }
 
   }
   print(parallelism)
 print(getOption("clustermq.template", "PBS"))
-
-#future::plan(future.callr::callr)
+print("here")
   drake::make(pl, seed = r_seed,
+              # targets = c("pl_phytoplank_clusters_samples"),
               parallelism = parallelism,
-              jobs = jobs, ## 6 jobs, for 6 surveys
+              jobs = jobs, ## for future parallelism, this is number of workers in addition to main process
               log_make = here::here("outputs", "drake_log.log"),
+              #log_worker = here::here("outputs", "drake_log_worker_make.log"),
               template = list(log_file = here::here("outputs", "drake_worker_log.txt"),
                               memory = 16000,
                               cores = 4,
@@ -2818,18 +2948,25 @@ print(getOption("clustermq.template", "PBS"))
               cache = cache_ob,
               caching = "worker",
               garbage_collection = TRUE,
-              prework = quote(future::plan(future.callr::callr, workers = future::availableCores(which = "max")))
+              memory_strategy = "speed",
+              format = "qs",
+              #prework = quote(future::plan(future.callr::callr, workers = max(future::availableCores()-1,1))),
+              retries = 5,
+              keep_going = TRUE
               )
 
+  message("Failed targets, debug with drake::diagnose()\n======")
+  message(paste(drake_failed(cache=cache_ob), collapse ="\n"))
+  message("\n======")
   drake::vis_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
                          file = here::here("outputs", "drake_graph.html"),
                        selfcontained = TRUE,
                        hover = TRUE)
-drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
-                          file = here::here("outputs", "drake_graph_sankey.html"),
-                          selfcontained = TRUE)
-ggsave(filename = here::here("outputs", "drake_ggplot.png"),
-       drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
-       )
+## drake::sankey_drake_graph(plan = pl, cache = cache_ob, seed = r_seed,
+##                           file = here::here("outputs", "drake_graph_sankey.html"),
+##                           selfcontained = TRUE)
+## ggsave(filename = here::here("outputs", "drake_ggplot.png"),
+##        drake::drake_ggraph(plan = pl, cache = cache_ob, seed = r_seed)
+##        )
 
 }
