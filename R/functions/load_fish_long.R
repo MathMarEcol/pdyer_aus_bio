@@ -97,6 +97,8 @@ fish_taxon_depth <-
   ) := NULL]
 
 ## have the taxon keys, but not spatial vars or abundances
+  ## Local function with closure over fish_data_dir
+  fish_file_fn <- function(yr){paste0(fish_data_dir, "/Watson_", yr, "_TotalCatch_bySpecies.csv")}
 
    fish_catch <- data.table::rbindlist(
      purrr::map(fish_years,
@@ -121,4 +123,3 @@ fish_taxon_depth <-
 }
 
 
-fish_file_fn <- function(yr){paste0(fish_data_dir, "/Watson_", yr, "_TotalCatch_bySpecies.csv")}
