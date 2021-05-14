@@ -137,5 +137,5 @@ list(
       spatial_vars,
       bio_oracle_str_template
     )
-  ),
+  )
 )
