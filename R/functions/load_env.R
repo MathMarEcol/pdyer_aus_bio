@@ -16,17 +16,6 @@ load_env_domain <- function(
                             env_id_col
                             ) {
 
-               env_region = target(env_restrict_to_region(bio_oracle_cache = file_in(!!biooracle_folder),
-                                          env_vars = env_vars,
-                                          env_modes = env_modes,
-                                          env_poly = env_poly,
-                                          max_depth = max_depth,
-                                          regrid_res = regrid_resolution,
-                                          spatial_vars = spatial_vars,
-                                          bio_oracle_str_template = bio_oracle_str_template
-                                            ),
-                                   format = "fst_tbl",
-                                   hpc = FALSE), #Workers can't see the same TMPDIR
   env_pairs <- data.table::as.data.table(
                              merge.data.frame(env_vars, env_modes, all = TRUE)
                            )
@@ -67,7 +56,7 @@ load_env_domain <- function(
   setkey(env_region, spatial_vars)
 
   env_clipped <- env_clip_extremes(env_data = env_region,
-                                   std_thres = env_limits_sd),
+                                   std_thres = env_limits_sd)
 
   env_round <- rphildyerphd::align_sp(env_clipped,
                                       spatial_cols = spatial_vars,
