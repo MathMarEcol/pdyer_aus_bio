@@ -41,6 +41,16 @@ track_inputs <- function() {
       fish_data_dir,
       "./data/Watson_Fisheries_Catch_Data/Version5/Output/Annual_TotalCatchSpecies/",
       format = "file"
+    ),
+    tar_target(
+      mapfile_location,
+      "./data/ShapeFiles/World_EEZ_v8",
+      format = "file"
+    ),
+    tar_target(
+      biooracle_folder,
+      "./data/bioORACLE",
+      format = "file"
     )
 
   )

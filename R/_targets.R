@@ -25,7 +25,8 @@ tar_option_set(
   ),
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
   imports = c(
-    "gfbootstrap"
+    "gfbootstrap",
+    "rphildyerphd"
   )
 
 
@@ -116,5 +117,25 @@ list(
                  bac_long,
                  fish_long
                  )
+    ),
+
+  domain_extent_targets(
+    mapfile_location,
+    map_layer,
+    env_bounds
+    ),
+
+  tar_target(
+    env_domain,
+    load_env_domain(
+      biooracle_folder,
+      env_vars,
+      env_modes,
+      env_poly,
+      max_depth,
+      regrid_res,
+      spatial_vars,
+      bio_oracle_str_template
     )
+  ),
 )
