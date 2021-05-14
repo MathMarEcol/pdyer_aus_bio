@@ -77,7 +77,7 @@ phy_matching = list(
 
 #' Zooplankton data params
 
-zooplank_names = c(
+zoo_names = c(
   "nrs",
   "cpr",
   "mckinnon",
@@ -85,7 +85,7 @@ zooplank_names = c(
   "nyan",
   "anita"
 )
-zooplank_matching = list(
+zoo_matching = list(
   nrs = 599,
   cpr = 597,
   mckinnon =
@@ -120,7 +120,7 @@ max_otu = 2000
 #' Environment params
 spatial_vars = c("lon", "lat")
 env_id_col = "env_id"
-mapLayer =  "World_EEZ_v8_2014_HR"
+map_layer =  "World_EEZ_v8_2014_HR"
 max_depth = 1500
 env_offset = 0
 ##in lat lon degrees, use 1/integer fraction
