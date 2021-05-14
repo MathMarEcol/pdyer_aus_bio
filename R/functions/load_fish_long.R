@@ -117,7 +117,7 @@ fish_taxon_depth <-
                      allow.cartesian=TRUE, nomatch = NULL, on = "TaxonKey"]
   fish_long[, `:=` (TaxonKey = NULL,
                     TaxonName = NULL,
-                    taxon = clean_sp_names(TaxonName),
+                    taxon = TaxonName,
                     survey = "watson",
                     trophic = "fish")]
 }
