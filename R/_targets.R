@@ -63,18 +63,25 @@ list(
                   zoo_data_dir,
                   zoo_matching,
                   zoo_names,
-                  spatial_vars)
+                  spatial_vars,
+                  depth_names,
+                  depth_range
+                  )
   ),
 
 
 
   tar_target(
     phy_long,
-    load_phy_long(phy_load_script,
-                  phy_data_dir,
-                  phy_matching,
-                  phy_names,
-                  spatial_vars)
+    load_phy_long(
+      phy_load_script,
+      phy_data_dir,
+      phy_matching,
+      phy_names,
+      spatial_vars,
+      depth_names,
+      depth_range
+    )
   ),
 
   tar_target(
