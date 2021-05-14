@@ -19,6 +19,8 @@ tar_option_set(
     "data.table",
     "tidyverse",
     "purrr",
+    "lutz", # needed for loading phy and zoo
+    "lubridate", # needed for loading phy and zoo
     "rfishbase"
   ),
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
