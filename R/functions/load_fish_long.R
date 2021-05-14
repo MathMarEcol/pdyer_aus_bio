@@ -21,10 +21,7 @@ load_fish_long <- function(
                               ## not all taxa are found in the range fish_years,
                               ## which is not a problem,
                               ## but absent species don't need further processing
-                  ][
-    !(TaxonKey %in% setdiff(unique(fish_taxon$TaxonKey), unique(fish_catch$TaxonKey))),
-      ]
-
+                  ]
 fish_taxon_depth <-
   data.table::setDT(
     rfishbase::species(
