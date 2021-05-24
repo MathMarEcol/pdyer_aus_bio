@@ -6,8 +6,8 @@
 #
 
 set -euo pipefail
-ROOT_STORE_DIR="/90days/uqpdyer/rdm_mirror" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
-TMPDIR_SHARE="/30days/uqpdyer/pbs.$PBS_JOBID"
+ROOT_STORE_DIR="/QRISdata/" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
+TMPDIR_SHARE="/scratch/uqpdyer/pbs.$PBS_JOBID"
 COPY_MODULES=1 #copy HPC modules
 GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "GIT_BRANCH=tagname" during qsub
 echo "Checking out git branch: ${GIT_BRANCH}"
