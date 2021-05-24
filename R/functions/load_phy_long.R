@@ -15,31 +15,30 @@ load_phy_long <- function(
   source(phy_load_script)
   phy_raw <- load_phyto_data(phy_data_dir)
   setDT(phy_raw)
-  phy_raw[ , .(Cells_L := Cells_L*1000,
-               trophic := "phy")]
+  phy_raw[ , `:=`(abund = Cells_L*1000,
+                  Cells_L = NULL,
+               trophic = "phy")]
   for (surv in phy_names) {
-    phy_raw[PROJECT_ID %in% phy_matching[[surv]],
-            .(PROJECT_ID := surv)]
+    phy_raw[ProjectNumber %in% phy_matching[[surv]],
+            survey := surv]
   }
-  phy_raw <- phy_raw[PROJECT_ID %in% phy_names,]
+  phy_raw <- phy_raw[survey %in% phy_names,]
   new_names <- tibble::tribble(
                        ~old, ~new,
                        "Longitude", spatial_vars[1],
                        "Latitude",spatial_vars[2],
-                       "Cells_L", "abund",
-                       "PROJECT_ID", "survey"
+                       "TaxonName", "taxon"
                        )
   setnames(phy_raw,
               new_names$old,
               new_names$new
               )
-  phy_raw[ , .(trophic := "phy",
-               depth := fcase(
-                 depth >= min(depth_range[[1]]) & depth <= max(depth_range[[1]]), depth_names[1],
-                 depth >= min(depth_range[[2]]) & depth <= max(depth_range[[2]]), depth_names[2],
-                 depth >= min(depth_range[[3]]) & depth <= max(depth_range[[3]]), depth_names[3]
-               ))]
+  phy_raw[ , `:=`(
+    depth = 0,
+    SampleDateUTC = NULL,
+    ProjectNumber = NULL)]
 
+  return(phy_raw)
 }
 
   ## ##do this for global list

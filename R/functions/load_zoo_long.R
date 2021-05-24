@@ -16,10 +16,10 @@ load_zoo_long <- function(
   zoo_raw <- load_zoo_data(zoo_data_dir)
   setDT(zoo_raw)
   for (surv in zoo_names) {
-    zoo_raw[PROJECT_ID %in% zoo_matching[[surv]],
-            .(PROJECT_ID := surv)]
+    zoo_raw[ProjectNumber %in% zoo_matching[[surv]],
+            survey := surv]
   }
-  zoo_raw <- zoo_raw[PROJECT_ID %in% zoo_names,]
+  zoo_raw <- zoo_raw[survey %in% zoo_names,]
   new_names <- tibble::tribble(
                        ~old, ~new,
                        "Longitude", spatial_vars[1],
@@ -32,12 +32,16 @@ load_zoo_long <- function(
               new_names$new
               )
 
-  zoo_raw[ , .(trophic := "zoo",
-               depth := fcase(
-                 depth >= min(depth_range[[1]]) & depth <= max(depth_range[[1]]), depth_names[1],
-                 depth >= min(depth_range[[2]]) & depth <= max(depth_range[[2]]), depth_names[2],
-                 depth >= min(depth_range[[3]]) & depth <= max(depth_range[[3]]), depth_names[3]
-               ))]
+  zoo_raw[,
+          c("trophic", "depth") :=
+               .("zoo",
+                 0
+               )
+          ]
+  zoo_raw[, `:=`(SampleDateUTC = NULL,
+            TaxonGroup = NULL,
+            ProjectNumber = NULL)]
+  return(zoo_raw)
 }
   ## ##do this for global list
   ## zoo_raw[ , .(Species := clean_sp_names(Species))]

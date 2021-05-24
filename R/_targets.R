@@ -23,6 +23,9 @@ tar_option_set(
     "lubridate", # needed for loading phy and zoo
     "rfishbase"
   ),
+  ## Debug breaking functions. Otherwise, comment
+  ## debug = "zoo_long",
+  error = "workspace",
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
   imports = c(
     "gfbootstrap",
@@ -110,13 +113,17 @@ list(
 
 
   tar_target(
-    all_data,
+    all_bio_long,
     data.table::rbindlist(
+                  list(
                  zoo_long,
                  phy_long,
                  bac_long,
                  fish_long
-                 )
+                 ),
+                 use.names = TRUE
+                ),
+    iteration = "group"
     ),
 
   domain_extent_targets(
