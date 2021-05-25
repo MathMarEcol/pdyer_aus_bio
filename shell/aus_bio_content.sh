@@ -98,14 +98,12 @@ Rscript -e "targets::tar_make()"
 
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
-tar -czf $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.tar.gz  ./_targets
-7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.7z  ./_targets
-rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
+7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/targets_cache.7z  ./_targets
+rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/targets_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Store the outputs
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-tar -czf "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_$GIT_BRANCH_${git_hash}_outputs.tar.gz"  ./outputs
-7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_$GIT_BRANCH_${git_hash}_outputs.7z"  ./outputs
+7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  ./outputs
 rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #The downloaded variables from bioORACLE are also worth saving
