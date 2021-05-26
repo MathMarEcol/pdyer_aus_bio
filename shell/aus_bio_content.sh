@@ -42,8 +42,7 @@ TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data
 
 #All of the datasets are in smallish blocks of files. no more than a few dozen files per dataset, most are less than 5
 mkdir -p $TMP_DATA_DIR/aus_microbiome/marine_bacteria
-rsync -irc $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria/Bacteria.csv $TMP_DATA_DIR/aus_microbiome/marine_bacteria/
-rsync -irc $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria/contextual.csv $TMP_DATA_DIR/aus_microbiome/marine_bacteria/
+unzip $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria_AustralianMicrobiome-2019-07-03T093815-csv.zip -d $TMP_DATA_DIR/aus_microbiome/marine_bacteria
 mkdir -p $TMP_DATA_DIR/bioORACLE
 rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMP_DATA_DIR/
 mkdir -p $TMP_DATA_DIR/AusCPR
