@@ -94,7 +94,7 @@ TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
 cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/R
 
 
-Rscript -e "targets::tar_make()"
+Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS})"
 
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
