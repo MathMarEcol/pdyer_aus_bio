@@ -34,8 +34,6 @@ mkdir -p /opt
 # mkdir -p /etc/localtime #this is actually a symlink to another directory. don't hardcode it
 # mkdir -p /etc/hosts #already done by singularity in version 3.5+
 mkdir -p /scratch
-mkdir -p /90days
-mkdir -p /30days
 mkdir -p /QRISdata
 mkdir -p /sw
 mkdir -p /sw7
