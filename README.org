@@ -51,13 +51,14 @@ git clone -b f_targets --single-branch https://github.com/MathMarEcol/pdyer_aus_
 #+end_src
 
 Modify the paths in ~./code/shell/aus_bio_pbs_submit.sh~ to point to real folders in the HPC.
+Also modify the job params if needed.
 Change ~aus_bio_module.lua~ to match the scratch location where the singularity image is placed.
 
 
 Then to run the project:
 
 #+begin_src sh
-cd ~/aus_bio
+cd ~/aus_bio/shell
 qsub -v GIT_BRANCH=f_targets_quick WORKERS=2 aus_bio_pbs_submit.sh
 #+end_src
 

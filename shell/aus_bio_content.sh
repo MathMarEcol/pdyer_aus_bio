@@ -15,7 +15,7 @@ set -euo pipefail
 #Assuming that this job was called from /???30days???/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code
 #I no longer assume anything about the calling directory, but depend on the calling script to set the important variables
 
-cd $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio
+cd $ROOT_STORE_DIR
 
 #Essential Code
 
