@@ -123,6 +123,7 @@ The master R script that builds the project.
 
 Run with:
 #+begin_src sh
+Rscript -e "targets::tar_make_clustermq(workers=2)"
 #+end_src
 * The singularity .sif files are large, and are not in the repo
 :PROPERTIES:
