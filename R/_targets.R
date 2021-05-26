@@ -10,7 +10,12 @@ sapply(source_files, source)
 ## Usually something living inside data()
 source("./functions/params.R")
 
-## Set default options, targets and globals
+## Set global R options, mostly clustermq
+configure_parallel(default_clustermq = TRUE,
+                   future_plan = future.callr::callr)
+# options()
+
+## Set targets options
 tar_option_set(
   ##qs format is smaller and reads/writes faster than RDS. needs qs package.
   format = "qs",
