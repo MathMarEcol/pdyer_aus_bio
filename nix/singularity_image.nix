@@ -1,15 +1,14 @@
 #build this image with
-# nix build -f singularity_image.nix -o ~/docker_result  #runs on "singularity_image.nix" in current folder
+# nix build -f singularity_image.nix -o ~/r-singularity-aus-bio.img  #runs on "singularity_image.nix" in current folder
+# If you want to programmatically access the nix store filename:
 # sif_image=$(readlink ~/docker_result | sed -e "s/\/nix\/store\///" -e "s/.tar.gz//" )_singularity_conversion #strip leading /nix/store and trailing .tar.gz
-# echo $sif_image
-# sudo singularity build ${sif_image}.sif  docker-archive:$(readlink ~/docker_result) #build a sif file and store in current folder
 #
 { pkgs
   ? import ./nixpkgs_rev.nix
 }:
 
 let
-  name = "r-singularity-aus_bio";
+  name = "r-singularity-aus-bio";
   allpackages = (import ./all_packages.nix {pkgs = pkgs;});
 
 
@@ -34,8 +33,7 @@ chmod ugo+x /.singularity.d/env/94-appbase.sh
 mkdir -p /opt
 # mkdir -p /etc/localtime #this is actually a symlink to another directory. don't hardcode it
 # mkdir -p /etc/hosts #already done by singularity in version 3.5+
-mkdir -p /30days
-mkdir -p /90days
+mkdir -p /scratch
 mkdir -p /QRISdata
 mkdir -p /sw
 mkdir -p /sw7

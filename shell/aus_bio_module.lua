@@ -10,9 +10,8 @@ whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
          ",/gpfs1/scratch/30days/uqpdyer" ..
-         ",/gpfs1/scratch/30days:/30days" ..
          ",/gpfs1/scratch/90days/uqpdyer" ..
-         ",/gpfs1/scratch/90days:/90days" ..
+         ",/gpfs1/scratch/90days:/scratch" ..
          ",/gpfs1/groups:/groups" ..
          ",/gpfs1/sw1:/sw" ..
          ",/gpfs1/sw7:/sw7" ..
@@ -23,7 +22,7 @@ setenv("SINGULARITYENV_APPEND_PATH", "/home/uqpdyer/bin")
 
 load("singularity/3.5.0")
 singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/90days/uqpdyer/rdm_mirror/Q1216/pdyer/pdyer_aus_bio/code/6qf8hsmy2lfrbh1cald22983r1yc8874-singularity-image-r-singularity-aus_bio.img" --as recommended by RCC, 90days for references, and input data files
+aus_bio_sif = "/90days/uqpdyer/r-singularity-aus-bio.img" --as recommended by RCC, /scratch for references, and input data files
 
 -- Run Rscript on stdin
 execute{cmd="shopt -s expand_aliases", modeA={"all"}}

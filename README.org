@@ -1,4 +1,67 @@
 #+TITLE: Project for finding a Bioregionalisation around Australia
+* Run Locally
+:PROPERTIES:
+:ID:       org:cdc364db-b138-472f-97b8-7563acab7407
+:END:
+Check out the latest commit.
+Currently the ~f_targets~ branch is the latest.
+
+#+begin_src sh
+git clone -b f_targets --single-branch https://github.com/mathmarecol/pdyer_aus_bio.git ./code
+#+end_src
+
+Modify the paths in ~./code/shell/aus_bio_pbs_local.sh~ to point to real folders on your system.
+
+Make sure you have a working R installation.
+If you are using nix, then run:
+
+#+begin_src sh
+cd ./code/nix
+# /vmshare/cust-nix/nix_shell_pin.sh r_shell.nix ~/.nixshellgc #Not contained in the repo, I use it to pin builds so gc doesn't lead to slow rebuilds.
+nix-shell r_shell.nix
+#+end_src
+
+Then to run the project:
+
+#+begin_src sh
+cd ./code/shell
+GIT_BRANCH=f_targets_quick WORKERS=2 ./aus_bio_pbs_local.sh
+#+end_src
+
+* Run on UQ RCC HPC
+:PROPERTIES:
+:ID:       org:18abd131-c324-4b9e-b395-3256b18c62c4
+:END:
+
+First, build the singularity image.
+See [[id:org:08572e87-3196-4198-a161-18df33698dc1][*.nix]] below for how to build it.
+Admin rights are probably required, so don't try to do it on the HPC.
+
+Move the singularity image to the HPC cluster.
+~aus_bio_module.lua~ assumes that you will put it in a scratch location, currently ~/30days/uqpdyer/r-singularity-aus-bio.img~.
+
+#+begin_src sh
+rsync -irc -L --append-verify ~/r-singularity-aus-bio.img awoonga:/30days/uqpdyer/r-singularity-aus-bio.img
+#+end_src
+
+Now check out the latest commit, anywhere on the HPC should work.
+
+#+begin_src sh
+git clone -b f_targets --single-branch https://github.com/MathMarEcol/pdyer_aus_bio.git ~/aus_bio
+#+end_src
+
+Modify the paths in ~./code/shell/aus_bio_pbs_submit.sh~ to point to real folders in the HPC.
+Change ~aus_bio_module.lua~ to match the scratch location where the singularity image is placed.
+
+
+Then to run the project:
+
+#+begin_src sh
+cd ~/aus_bio
+qsub -v GIT_BRANCH=f_targets_quick WORKERS=2 aus_bio_pbs_submit.sh
+#+end_src
+
+
 * Build project
 :PROPERTIES:
 :ID:       org:a5ee9fee-f00d-435e-b85e-85bb6e0428b8
@@ -9,11 +72,6 @@
   cd code/
   Rscript drake_plan.R #Rscript is an alias to call the singularity container and run Rscript from there.
 #+end_src
-* The singularity .sif files are large, and are not in the repo
-:PROPERTIES:
-:ID:       org:76b953b3-3016-497e-bb02-f354644e7903
-:END:
-The *.sif files, which contain R and all relevant packages and system software, are synced via ~scp~ or ~rsync~.
 * Components
 :PROPERTIES:
 :ID:       org:9141685d-4154-42ec-91b5-287b5d201f43
@@ -25,42 +83,39 @@ The *.sif files, which contain R and all relevant packages and system software, 
 Mostly a convenience script, but may be needed for HPC.
 Defines a module.
 To use:
-#+begin_src 
+#+begin_src
 module load use.own
 module load aus_bio_module.lua
 #+end_src
 Now the singularity module is loaded, and the container specifically for this project can be access by using ~R~ and ~Rscript~.
-** The .sif file
+** The .img file
 :PROPERTIES:
 :ID:       org:4c36674c-46fe-40fd-997d-19edcc893d7b
 :END:
-The .sif file is a singularity container. 
-It will have some very long name like this: 
+The .img file is a singularity container.
+It will have some very long name like this:
 
-~8kzygmabzzpzys35d728dri80r89rhws-docker-image-r-singularity-aus_bio_singularity_conversion.sif~
+~r-singularity-aus_bio.img~
 
-The .sif file contains a specific version of R, R packages and system libraries.
+The .img file contains a specific version of R, R packages and system libraries.
 
 The purpose is easy addition of packages, even if they are not supported by HPC, and reproducibility.
-Later on I can give the .sif file and the source code, and they will get the same results.
+Later on I can give the .img file and the source code, and they will get the same results.
+
 ** *.nix
 :PROPERTIES:
 :ID:       org:08572e87-3196-4198-a161-18df33698dc1
 :END:
-All the *.nix files (all_packages.nix, r_packages.nix, singularity_image.nix and r_shell.nix) are files for the Nix package manager, and are the definitive way to reproduce the environment. 
+All the *.nix files (all_packages.nix, r_packages.nix, singularity_image.nix and r_shell.nix) are files for the Nix package manager, and are the definitive way to reproduce the environment.
 
 Using the package manager Nix, you can rebuild the .sif file with the following code:
       #+begin_src sh
-        nix build -f singularity_image.nix -o ~/docker_result  #runs on "singularity_image.nix" in current folder
-        sif_image=$(readlink ~/docker_result | sed -e "s/\/nix\/store\///" -e "s/.tar.gz//" )_singularity_conversion #strip leading /nix/store and trailing .tar.gz
-        echo $sif_image
-        sudo singularity build ${sif_image}.sif  docker-archive:$(readlink ~/docker_result) #build a sif file and store in current folder
+        nix build -f singularity_image.nix -o ~/r-singularity-aus-bio.img  #runs on "singularity_image.nix" in current folder
       #+end_src
-      
+
 The end result is guarenteed to be the exact image I generated with the same commands.
 
-The one thing that must be taken care of is that the git revision in r_shell.nix and singularity_image.nix are supposed to be the same, but I don't know how to do that automatically yet.
-** drake_plan.R
+** _targets.R
 :PROPERTIES:
 :ID:       org:f3d9a7ad-3801-42fb-b165-3c812b2778bc
 :END:
@@ -68,9 +123,14 @@ The master R script that builds the project.
 
 Run with:
 #+begin_src sh
-Rscript drake_plan.R
+Rscript -e "targets::tar_make_clustermq(workers=2)"
 #+end_src
-* Directory structure 
+* The singularity .sif files are large, and are not in the repo
+:PROPERTIES:
+:ID:       org:76b953b3-3016-497e-bb02-f354644e7903
+:END:
+The *.sif files, which contain R and all relevant packages and system software, are synced via ~scp~ or ~rsync~.
+* Directory structure
 :PROPERTIES:
 :ID:       org:09e255e4-a92d-439c-b959-6b998e00880f
 :END:
