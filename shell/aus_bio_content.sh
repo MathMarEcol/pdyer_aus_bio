@@ -75,9 +75,11 @@ if [ $COPY_MODULES -gt 0 ]
 then
 #Always use the latest module, so I don't need to remember to copy it manually
 #but only if I really am on the HPC
+mkdir -p ~/privatemodules
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module.lua \
       ~/privatemodules/aus_bio_module.lua
 #Also make sure I have a wrapped version of qsub and qstat for the containers
+mkdir -p ~/bin
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qsub_wrap.sh \
    ~/bin/qsub
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qdel_wrap.sh \
