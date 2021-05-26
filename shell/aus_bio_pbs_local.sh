@@ -6,7 +6,7 @@ ROOT_STORE_DIR="/vmshare/PARA/resources/qris_sandbox" #directory with same struc
 TMPDIR_SHARE="/vmshare/PARA/resources/hpc_sandbox"
 COPY_MODULES=0 #don't copy HPC module files locally
 GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag
-WORKERS=$WORKERS:-2} # 2 workers by default,
+WORKERS=${WORKERS:-2} # 2 workers by default,
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers"
 source ./aus_bio_content.sh
