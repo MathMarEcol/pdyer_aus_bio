@@ -59,7 +59,7 @@ Then to run the project:
 
 #+begin_src sh
 cd ~/aus_bio/shell
-qsub -v GIT_BRANCH=f_targets_quick WORKERS=2 aus_bio_pbs_submit.sh
+qsub -v GIT_BRANCH=f_targets_quick,WORKERS=8  aus_bio_pbs_submit.sh
 #+end_src
 
 
