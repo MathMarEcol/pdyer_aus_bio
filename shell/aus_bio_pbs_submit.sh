@@ -2,7 +2,7 @@
 #PBS -A UQ-SCI-SMP
 #PBS -l select=1:ncpus=2:mem=60GB
 #PBS -l walltime=12:00:00
-#PBS -q single
+#PBS -q Single
 #
 #
 
