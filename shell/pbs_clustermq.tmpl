@@ -1,12 +1,9 @@
 #!/bin/bash
-#Phil Dyer account string
-#PBS -A UQ-SCI-SMP  
+#PBS -A UQ-SCI-SMP  #Phil Dyer account string
 #PBS -N {{ job_name }}                    
-#Submit a job array
-#PBS -J 1-{{ n_jobs }}
-#Each job gets one task with `cores` and `memory` specified
-#PBS -l select=1:ncpus={{ cores | 1 }}:mpiprocs={{ cores | 1 }}:mem={{ memory | 4096 }}MB
-#PBS -l walltime={{ walltime | 1:00:00 }} 
+#PBS -J 1-{{ n_jobs }} #Submit a job array
+#PBS -l select=1:ncpus={{ cores | 1 }}:mpiprocs={{ cores | 1 }}:mem={{ memory | 4096 }}MB #Each job gets one task with `cores` and `memory` specified
+#PBS -l walltime={{ walltime | 1:00:00 }}
 #PBS -o {{ log_file | /dev/null }}       
 #PBS -j oe                                
 
