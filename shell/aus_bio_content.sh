@@ -76,16 +76,28 @@ then
 #Always use the latest module, so I don't need to remember to copy it manually
 #but only if I really am on the HPC
 mkdir -p ~/privatemodules
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module.lua \
+cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_${SCHEDULER}.lua \
       ~/privatemodules/aus_bio_module.lua
 #Also make sure I have a wrapped version of qsub and qstat for the containers
 mkdir -p ~/bin
+if [ $SCHEDULER == "pbs" ]
+then
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qsub_wrap.sh \
    ~/bin/qsub
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qdel_wrap.sh \
 ~/bin/qdel
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qstat_wrap.sh \
    ~/bin/qstat
+fi
+if [ $SCHEDULER == "slurm" ]
+then
+cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/sbatch_wrap.sh \
+   ~/bin/sbatch
+cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/scancel_wrap.sh \
+~/bin/scancel
+cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
+   ~/bin/squeue
+fi
 module load use.own
 module load aus_bio_module
 fi

@@ -7,6 +7,7 @@ TMPDIR_SHARE="/vmshare/PARA/resources/hpc_sandbox"
 COPY_MODULES=0 #don't copy HPC module files locally
 GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag
 WORKERS=${WORKERS:-2} # 2 workers by default,
+SCHEDULER="multiprocess"
 echo "Checking out git branch: ${GIT_BRANCH}"
-echo "Building with [${WORKERS}] Workers"
+echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source ./aus_bio_content.sh
