@@ -17,4 +17,11 @@ WORKERS=${WORKERS:-2} # 2 workers by default,
 SCHEDULER="slurm"
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
+
+## Needed for compute nodes on Getafix
+if [ ${SLURM_CLUSTER_NAME} == faculty-cluster]
+then
+    https_proxy="http://its-ri-proxy01.hpc.dc.uq.edu.au:3128"
+fi
+
 source $SLURM_SUBMIT_DIR/aus_bio_content.sh

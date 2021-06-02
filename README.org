@@ -62,6 +62,65 @@ cd ~/aus_bio/shell
 qsub -v GIT_BRANCH=f_targets_quick,WORKERS=8  aus_bio_pbs_submit.sh
 #+end_src
 
+* Run on SMP Getafix
+:PROPERTIES:
+:ID:       org:42a50f1e-f6dd-4642-b0a0-65d629987dba
+:END:
+
+First, build the singularity image.
+See [[id:org:08572e87-3196-4198-a161-18df33698dc1][*.nix]] below for how to build it.
+Admin rights are probably required, so don't try to do it on the HPC.
+
+Move the singularity image to the HPC cluster.
+~aus_bio_module.lua~ assumes that you will put it in a scratch location, currently
+~/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img~.
+
+#+begin_src sh
+rsync -irc -L --append-verify ~/r-singularity-aus-bio.img getafix:/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img
+#+end_src
+
+Now check out the latest commit, anywhere on the HPC should work.
+
+#+begin_src sh
+git clone https://github.com/MathMarEcol/pdyer_aus_bio.git /data/uqpdyer/projects/aus_bio_ch3/code
+#+end_src
+
+Modify the paths in ~./code/shell/aus_bio_slurm_submit.sh~ to point to real folders in the HPC.
+Also modify the job params if needed.
+Change ~aus_bio_module_slurm.lua~ to match the scratch location where the singularity image is placed.
+
+
+Then to run the project:
+
+#+begin_src sh
+cd /data/uqpdyer/projects/aus_bio_ch3/code/shell
+sbatch --export=GIT_BRANCH=f_targets_quick,WORKERS=8  aus_bio_slurm_submit.sh
+#+end_src
+
+
+** Things that are fragile
+:PROPERTIES:
+:ID:       org:e7f66cdd-d7b5-42ce-ba5c-fff7ac4378b9
+:END:
+
+Clustermq is run from inside a singularity container, and the singularity container is NOT aware of the different workload managers (slurm, pbs, etc.).
+The solution involves ssh'ing into the login node from the job and submitting a new job from there, see https://mschubert.github.io/clustermq/articles/userguide.html#running-master-inside-containers
+
+Some clusters need proxy settings to access external data.
+Setting the env variable ~https_proxy~ works for many cli commands:
+#+begin_src  sh
+https_proxy="http://its-ri-proxy01.hpc.dc.uq.edu.au:3128"
+#+end_src
+
+Git accepts a global proxy setting, run this once per HPC:
+#+begin_src sh
+git config --global http.proxy  http://its-ri-proxy01.hpc.dc.uq.edu.au:3128
+#+end_src
+
+
+The ~aus_bio_module_*.lua~ files need specific SINGULARITY_BIND setups for each HPC, and in some cases uses my username.
+
+Make sure all the paths are correct
 
 * Build project
 :PROPERTIES:
