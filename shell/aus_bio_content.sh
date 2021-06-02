@@ -98,17 +98,23 @@ cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/scancel_wrap.sh \
 cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
    ~/bin/squeue
 fi
+echo "a"
 module load use.own
+echo "b"
 module load aus_bio_module
+echo "c"
 fi
 
+echo "d"
 #Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
 TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
 cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/R
 
+echo "e"
 
 Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS})"
 
+echo "f"
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
 7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/targets_cache.7z  ./_targets
