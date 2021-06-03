@@ -3,19 +3,20 @@ module-whatis "Singularity container for Aus_bio project"
 module-whatis "philip.dyer1@uqconnect.edu.au"
 module-whatis "20200122"
 
-set aus_bio_sif  "/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img" # as recommended by RCC, /scratch for references, and input data files
+# as recommended by RCC, /scratch for references, and input data files
+set aus_bio_sif  "/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img"
 
-setenv SINGULARITY_BIND  [concat {getenv TMPDIR} \
-                              ",/data" \
-                         ]
-setenv SINGULARITYENV_APPEND_PATH "/home/uqpdyer/bin"
+if {[info exists env(TMPDIR)]} { set bindpath $env(TMPDIR) } else { set bindpath "" }
+append bindpath ",/data"
+setenv SINGULARITY_BIND $bindpath
+setenv SINGULARITYENV_APPEND_PATH "/home/$env(USER)/bin"
 
 system "shopt -s expand_aliases"
 
-set_alias Rscript [concat "singularity exec "  $aus_bio_sif   " Rscript" ]
-set_alias R [concat "singularity exec "  $aus_bio_sif  " R --vanilla"  ]
-set_alias drake_build [concat "singularity exec "  $aus_bio_sif  " Rscript --vanilla"  ]
-set_alias shell [concat "singularity shell "  $aus_bio_sif  ]
+set-alias Rscript [concat "singularity exec "  $aus_bio_sif   " Rscript" ]
+set-alias R [concat "singularity exec "  $aus_bio_sif  " R --vanilla"  ]
+set-alias drake_build [concat "singularity exec "  $aus_bio_sif  " Rscript --vanilla"  ]
+set-alias shell [concat "singularity shell "  $aus_bio_sif  ]
 
 
 proc ModulesHelp { } {
@@ -29,5 +30,3 @@ puts stderr "  Rscript -e "getwd()""
 puts stderr "  cat  \"getwd()\" | Rscript  - "
 puts stderr "  shell"
 }
-
-
