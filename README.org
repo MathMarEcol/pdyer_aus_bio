@@ -204,3 +204,7 @@ The data are all stored in a different QRIScloud collection, ~Q1215~.
 Different HPC systems have a different folder for the QRIScloud data, but Q1215 and Q1216 are always sibling folders, so relative paths will work, and will be more reliable than hard paths.
 
 Given that HPC code should not be run over the network, I copy the relevant parts of ~Q1215~ and ~Q1216~ into ~30days~ or something similar on Awoonga, before running ~Rscript drake_plan.R~
+* Future Layers
+:PROPERTIES:
+:ID:       org:bf84771c-bf91-4a29-976f-42d927d98f10
+:END:

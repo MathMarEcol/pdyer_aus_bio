@@ -44,6 +44,10 @@ with pkgs;[
           # bash_5
 
           gurobi
+
+          ## Functions to work with climate data
+          cdo
+          nco
           
           openssh
           iputils

@@ -21,6 +21,10 @@ tar_option_set(
   format = "qs",
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
+    "jsonlite",
+    "glue",
+    "ncdf4",
+    "ClimateOperators",
     "data.table",
     "tidyverse",
     "purrr",
