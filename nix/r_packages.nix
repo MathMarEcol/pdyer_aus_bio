@@ -55,6 +55,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         robis
         #seaaroundus #removed from CRAN
         raster
+        ncdf4
 
         #simulated data
         coenocliner
@@ -84,6 +85,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         rlist
         lutz
         lubridate
+        ClimateOperators
 
 
         #Parallel processing
