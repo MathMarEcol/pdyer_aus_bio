@@ -11,7 +11,7 @@ fetch_future_env <- function(
                              env_future_vars <- c("tos")
                              env_future_scenarios <- c("ssp126", "ssp245", "ssp585")
                              env_hist_scenarios <- c("historical")
-                             node_thredds_blacklist <- c("esgf3.dkrz.de", "aims3.llnl.gov")
+                             node_thredds_blacklist <- c("esgf3.dkrz.de", "aims3.llnl.gov", "esgf.rcec.sinica.edu.tw")
 
                              ## List? Param?
                              ## Must be in format YYYYMM
@@ -135,8 +135,8 @@ fetch_future_env <- function(
 #shards={search_shards}&",
  metadata <- data.table::rbindlist(lapply(query_str, function(qr) {
    tryCatch({
-    ESGF_file_query <- jsonlite::fromJSON(qr)
-    return(data.table::as.data.table(ESGF_file_query$response$docs))
+    ESGF_dataset_query <- jsonlite::fromJSON(qr)
+    return(data.table::as.data.table(ESGF_dataset_query$response$docs))
     },
     error = function(e) {
       print(qr)
@@ -198,29 +198,27 @@ fetch_future_env <- function(
   ##
 
   ## New plan, folding
+  ## Timeout =3 gave 2 live servers, timeout = 10 gave ~9
+  nodes_active <- unique(metadata$data_node)[sapply(unique(metadata$data_node), function(url) {RCurl::url.exists(url, timeout = 10)})]
+  nodes_whitelist <- setdiff( nodes_active,node_thredds_blacklist)
+
+
+  ## move whitelisting to file level
+  ## metadata_whitelist <- metadata[data_node %in% nodes_whitelist]
+
 
   metadata_by_model_variant <- metadata[, .(all_scenarios = all(c(env_hist_scenarios, env_future_scenarios) %in% .SD[,experiment_id])),
                                 by = list(source_id, variable_id, variant_label)]
+metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:]]", "", variant_label))]
+  first_full_variant <- metadata_by_model_variant[all_scenarios == TRUE, .I[which.min(.SD$variant_label_numeric)], by = c("source_id", "variable_id")]$V1
 
-  metadata_full_variants <- metadata[metadata_by_model_variant[all_scenarios == TRUE],
+
+
+  metadata_full_variants <- metadata[metadata_by_model_variant[first_full_variant],
                                      on = c("source_id", "variable_id", "variant_label"),
-                                     nomatch = NULL]
-
-  metadata_by_data_node <- metadata[, .(all_scenarios = all(c(env_hist_scenarios, env_future_scenarios) %in% .SD[,experiment_id])),
-                                by = list(source_id, variable_id, variant_label, data_node)]
-  metadata_by_data_node_full <- metadata_by_data_node[all_scenarios == TRUE]
-
-  metadata_full_variants <- metadata[metadata_by_data_node_full,
-                                     on = c("source_id", "variable_id", "variant_label", "data_node"),
-                                     nomatch = NULL]
-
-  metadata_nci <- metadata_full_variants[
-    data_node == "esgf.nci.org.au", .(data_node),
-  by  = list(source_id, variable_id, variant_label) ] [
-    , .SD[1,], by = list(source_id, variable_id) ]
-
-  metadata_nci_full <- metadata[metadata_nci, on=names(metadata_nci), nomatch = NULL,
-                                .(data_node,
+                                     nomatch = NULL,
+                                .(
+                                  ##data_node, ## dont filter by data_node at the dataset level
                                 source_id,
                                 variant_label,
                                 variable_id,
@@ -232,27 +230,16 @@ fetch_future_env <- function(
                                 grid_label,
                                 version,
                                 grid_label,
-                                replica,
+                                ## replica, ## only affects data_node, but adds duplicates
                                 master_id,
                                 instance_id,
                                 datetime_start,
                                 datetime_stop)
-           ]
+                                ]
+  metadata_full_variants <- unique(metadata_full_variants)
 
-
-
-  ##find any missed models, and choose the first variant from any data node
-  models_full_no_nci <- setdiff(unique(metadata_full_variants$source_id), metadata_nci_full$source_id)
-  ## empty! Check other models
   all_models <- unique(metadata$source_id)
-  dropped_models <- setdiff(all_models, metadata_nci_full$source_id)
-  metadata_check_dropped <- metadata[source_id %in% dropped_models,
-                                     .(all_scenarios = all(c(env_hist_scenarios, env_future_scenarios) %in% .SD$experiment_id),
-                                       scenarios = list(unique(.SD$experiment_id))),
-                                by = list(source_id, variable_id, variant_label)]
-#metadata[source_id == "MPI-ESM1-2-LR"] ## seems to be creating a separate variant for each run,
-#metadata[source_id == "BCC-ESM1"] ## no future scenarios
-
+  dropped_models <- setdiff(all_models, metadata_full_variants$source_id)
   ## Ideally, all scenarios come from the same variant. Some models create a new variant for each scenario though.
   ## Just pick the first variant for each scenario
   metadata_odd_variants <- metadata[source_id %in% dropped_models,
@@ -261,17 +248,15 @@ fetch_future_env <- function(
                                          data_nodes = list(unique(.SD$data_node)),
                                          variants = list(unique(.SD$variant_label))),
                                     keyby = list(source_id, variable_id)]
-  ## For the last few models, just picking the first variant for each experiement_id
   metadata_random_variant <- metadata[source_id %in% metadata_odd_variants[has_all == TRUE]$source_id,
                                           #print(.SD[, .(source_id, variable_id, experiment_id, data_node, variant_label)])
-                                        data.table::fifelse("esgf.nci.org.au" %in% .SD$data_node,
-                                                            .I[.SD[data_node == "esgf.nci.org.au",.I[1]]],
-                                                            .I[1])
+                                      .I[1] #row number of the first variant in metadata
                                       ,
-                                      keyby = list(source_id, variable_id, experiment_id)]
-  metadata_random_full <- metadata[metadata_random_variant$V1,
+                                      keyby = list(source_id, variable_id, experiment_id)]$V1
+  metadata_random_full <- metadata[metadata_random_variant,
   ## Need all the following variables
-                                .(data_node,
+                                .(
+                                  ## data_node, ## don't filter by data_node at the dataset level
                                 source_id,
                                 variant_label,
                                 variable_id,
@@ -283,13 +268,98 @@ fetch_future_env <- function(
                                 grid_label,
                                 version,
                                 grid_label,
-                                replica,
+                                ## replica, ## only affects data_node, but adds duplicates
                                 master_id,
                                 instance_id,
                                 datetime_start,
                                 datetime_stop)
            ]
-  metadata_full <- rbind(metadata_random_full, metadata_nci_full)
+  metadata_random_full <- unique(metadata_random_full)
+  metadata_full <- rbind(metadata_random_full, metadata_full_variants)
+  ## metadata_by_data_node <- metadata[, .(all_scenarios = all(c(env_hist_scenarios, env_future_scenarios) %in% .SD[,experiment_id])),
+  ##                               by = list(source_id, variable_id, variant_label, data_node)]
+  ## metadata_by_data_node_full <- metadata_by_data_node[all_scenarios == TRUE]
+
+  ## metadata_full_variants <- metadata[metadata_by_data_node_full,
+  ##                                    on = c("source_id", "variable_id", "variant_label", "data_node"),
+  ##                                    nomatch = NULL]
+
+  ## metadata_nci <- metadata_full_variants[
+  ##   data_node == "esgf.nci.org.au", .(data_node),
+  ## by  = list(source_id, variable_id, variant_label) ] [
+  ##   , .SD[1,], by = list(source_id, variable_id) ]
+
+  ## metadata_nci_full <- metadata[metadata_nci, on=names(metadata_nci), nomatch = NULL,
+  ##                               .(data_node,
+  ##                               source_id,
+  ##                               variant_label,
+  ##                               variable_id,
+  ##                               project,
+  ##                               activity_id,
+  ##                               institution_id,
+  ##                               experiment_id,
+  ##                               table_id,
+  ##                               grid_label,
+  ##                               version,
+  ##                               grid_label,
+  ##                               replica,
+  ##                               master_id,
+  ##                               instance_id,
+  ##                               datetime_start,
+  ##                               datetime_stop)
+  ##          ]
+
+
+
+##   ##find any missed models, and choose the first variant from any data node
+##   ## models_full_no_nci <- setdiff(unique(metadata_full_variants$source_id), metadata_nci_full$source_id)
+##   ## empty! Check other models
+##   all_models <- unique(metadata$source_id)
+##   dropped_models <- setdiff(all_models, metadata_nci_full$source_id)
+##   metadata_check_dropped <- metadata[source_id %in% dropped_models,
+##                                      .(all_scenarios = all(c(env_hist_scenarios, env_future_scenarios) %in% .SD$experiment_id),
+##                                        scenarios = list(unique(.SD$experiment_id))),
+##                                 by = list(source_id, variable_id, variant_label)]
+## #metadata[source_id == "MPI-ESM1-2-LR"] ## seems to be creating a separate variant for each run,
+## #metadata[source_id == "BCC-ESM1"] ## no future scenarios
+
+##   ## Ideally, all scenarios come from the same variant. Some models create a new variant for each scenario though.
+##   ## Just pick the first variant for each scenario
+##   metadata_odd_variants <- metadata[source_id %in% dropped_models,
+##                                        .(experiments = list(unique(.SD$experiment_id)),
+##                                          has_all = all(c(env_future_scenarios, env_hist_scenarios) %in% .SD$experiment_id),
+##                                          data_nodes = list(unique(.SD$data_node)),
+##                                          variants = list(unique(.SD$variant_label))),
+##                                     keyby = list(source_id, variable_id)]
+##   ## For the last few models, just picking the first variant for each experiement_id
+##   metadata_random_variant <- metadata[source_id %in% metadata_odd_variants[has_all == TRUE]$source_id,
+##                                           #print(.SD[, .(source_id, variable_id, experiment_id, data_node, variant_label)])
+##                                         data.table::fifelse("esgf.nci.org.au" %in% .SD$data_node,
+##                                                             .I[.SD[data_node == "esgf.nci.org.au",.I[1]]],
+##                                                             .I[1])
+##                                       ,
+##                                       keyby = list(source_id, variable_id, experiment_id)]
+##   metadata_random_full <- metadata[metadata_random_variant$V1,
+##   ## Need all the following variables
+##                                 .(data_node,
+##                                 source_id,
+##                                 variant_label,
+##                                 variable_id,
+##                                 project,
+##                                 activity_id,
+##                                 institution_id,
+##                                 experiment_id,
+##                                 table_id,
+##                                 grid_label,
+##                                 version,
+##                                 grid_label,
+##                                 replica,
+##                                 master_id,
+##                                 instance_id,
+##                                 datetime_start,
+##                                 datetime_stop)
+##            ]
+##   metadata_full <- rbind(metadata_random_full, metadata_nci_full)
 
 
 
@@ -350,6 +420,11 @@ fetch_future_env <- function(
   ## ## Select just the first variant listed for each model.
   ## metadata_variant <- metadata[metadata[ ,.I[1]  , by =list(variable_id, realm, grid_label, experiment_id, source_id, frequency)]$V1]
 
+
+  ## NCI does not have all the files for some models
+  ## Get a file from:
+  ##  1. NCI if available
+  ##  2. First node if NCI not available
   metadata_full_copy <- data.table::copy(metadata_full)
   metadata_full[, chunks := ceiling(seq.int(1, nrow(metadata_full))/18)]
   file_data <- data.table::rbindlist(lapply(unique(metadata_full$chunks), function(chunk, shards) {
@@ -357,7 +432,7 @@ fetch_future_env <- function(
     tryCatch({
       all_dataset_id <- glue::glue_collapse(glue::glue_data(metadata_full[chunks == chunk], "{instance_id}|{data_node}"), sep = "%2C")
       query_str <- glue::glue("https://{shards}/esg-search/search?type=File&",
-                              "limit=1000&",
+                              "limit=9000&",
                               "dataset_id={all_dataset_id}&",
                               ##"&master_id={master_id}&",#&replica={fifelse(replica, \"true\", \"false\")}&",
                               "format=application%2Fsolr%2Bjson")
@@ -383,7 +458,7 @@ fetch_future_env <- function(
 
  }, shards = shards), fill = TRUE)
 
-##  backup_file_data<-data.table::copy(file_data)
+  backup_file_data<-data.table::copy(file_data)
   file_data<-data.table::copy(backup_file_data)
     target_hist_start <- "200501"
     target_hist_end <- "201412"
@@ -401,7 +476,7 @@ fetch_future_env <- function(
                   )
 
   # Remove list cols that cannot be converted to a vector
-  drop_cols <- c("url", "branch_method", "source_type", "directory_format_template_")
+  drop_cols <- c("url", "source_type", "directory_format_template_")
   file_data[, (drop_cols) := NULL]
   ## Convert all other cols to vectors
   for(f in names(file_data)) {
@@ -422,28 +497,55 @@ fetch_future_env <- function(
       as_date_set_day(substr(x, date_pos, date_pos+5))
       }
 
-    target_hist_start <- as_date_set_day(target_hist_start)
-    target_hist_end <- as_date_set_day(target_hist_end)
-  target_hist_interval <- lubridate::interval(target_hist_start, target_hist_end)
-    target_2050_start <- as_date_set_day(target_2050_start)
-    target_2050_end <- as_date_set_day(target_2050_end)
-  target_2050_interval <- lubridate::interval(target_2050_start, target_2050_end)
-    target_2100_start <- as_date_set_day(target_2100_start)
-    target_2100_end <- as_date_set_day(target_2100_end)
-  target_2100_interval <- lubridate::interval(target_2100_start, target_2100_end)
 
-   file_data[,  `:=`(start_date  = get_start_date(instance_id),
-                     end_date = get_end_date(instance_id))]
+  target_dates <- list(
+    baseline = list(
+      start = as_date_set_day(target_hist_start),
+      end = as_date_set_day(target_hist_end)
+      ),
+    f_2050 = list(
+    start = as_date_set_day(target_2050_start),
+    end = as_date_set_day(target_2050_end)
+    ),
+    f_2100 = list(
+    start = as_date_set_day(target_2100_start),
+    end = as_date_set_day(target_2100_end)
+    )
+    )
+
+  for (target_yr in names(target_dates)) {
+    target_dates[[target_yr]]$interval <- lubridate::interval(target_dates[[target_yr]]$start, target_dates[[target_yr]]$end)
+  }
+
+   ## file_data[,  `:=`(start_date  = get_start_date(instance_id),
+   ##                   end_date = get_end_date(instance_id))]
+  # TODO ~400 files have no opendap url?!
+   file_data[,  `:=`(start_date  = get_start_date(url_opendap),
+                     end_date = get_end_date(url_opendap))]
              #date_interval = lubridate::interval(get_start_date(instance_id), get_end_date(instance_id)))]
 
+  ## manually drop bad data_nodes
+  ## file_data <- file_data[!is.na(start_date)]
 
-    file_data[, `:=`(any_hist = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_hist_interval),
-                     any_2050 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2050_interval),
-                     any_2100 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2100_interval),
-                     all_hist = target_hist_interval %within% lubridate::interval(start_date, end_date),
-                     all_2050 = target_2050_interval %within% lubridate::interval(start_date, end_date),
-                     all_2100 = target_2100_interval %within% lubridate::interval(start_date, end_date)
-                     )]
+  for(target_yr in names(target_dates)) {
+    data.table::set(file_data, i = NULL, glue::glue("any_{target_yr}"),
+                    lubridate::int_overlaps(
+                                 lubridate::interval(
+                                              file_data$start_date,
+                                              file_data$end_date
+                                            ),
+                                 target_dates[[target_yr]]$interval
+                               )
+                    )
+    }
+
+    ## file_data[, `:=`(any_hist = ,
+    ##                  any_2050 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2050_interval),
+    ##                  any_2100 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2100_interval),
+    ##                  all_hist = target_hist_interval %within% lubridate::interval(start_date, end_date),
+    ##                  all_2050 = target_2050_interval %within% lubridate::interval(start_date, end_date),
+    ##                  all_2100 = target_2100_interval %within% lubridate::interval(start_date, end_date)
+    ##                  )]
 
   ## metadata_full[ , by = chunks, {
   ##   all_dataset_id <- glue::glue_collapse(glue::glue_data(.SD, "{instance_id}|{data_node}"), sep = "%2C")
@@ -475,26 +577,6 @@ fetch_future_env <- function(
 
   ##   ESGF_dataset_query <- jsonlite::fromJSON(query_str[2])
   ## file_data <- data.table::as.data.table(ESGF_dataset_query$response$docs)
-  ##Within each model/variable combination, get historical, and 2040-2050 + 2090-2100 for each future scenario
-  pairs <- purrr::cross2(unique(metadata_full$source_id), unique(metadata_full$variable_id))
-  purrr::map(pairs[31], ~{
-    source_id = .x[[1]]
-    variable_id = .x[[2]]
-    metadata_local <- metadata_full[source_id == .x[[1]] & variable_id == .x[[2]],]
-    file_data_local <- file_data[source_id == .x[[1]] & variable_id == .x[[2]],]
-
-    ## Quick start, use a file if it contains ALL of what I need.
-    ## if none do, then skip for now.
-    file_data_hist <- file_data_local[experiment_id == "historical"]
-
-    file_data_hist_all <- file_data_hist[all_hist == TRUE]
-    if (nrow(file_data_hist_all) == 1) {
-      ##Exactly one file provides all data, easy
-      ## find slices
-
-      start_slice <- lubridate::interval(file_data_hist_all$start_date, target_hist_start) %/% months(1) #nco indexes from 0
-      end_slice <- start_slice +  target_hist_interval %/% months(1)
-
 env_bounds = list(
   x = c(109 + 1 / 24, 163 + 23 / 24),
   y = c(-47 - 23 / 24, -8 - 1 / 24)
@@ -510,38 +592,6 @@ regrid_resolution = 1 / 2 #TODO: 1 / 12,
               ceiling(((env_bounds$x[2])*regrid_resolution)/regrid_resolution + env_offset)),
         y = c(floor(((env_bounds$y[1])*regrid_resolution)/regrid_resolution + env_offset),
               ceiling(((env_bounds$y[2])*regrid_resolution)/regrid_resolution + env_offset)))
-
-      ## best way to summarize a netcdf file
-      nc_file <- ncdf4::nc_open(file_data_hist_all$url_opendap)
-      valid_slices <- start_slice < nc_file$dim$time$len &
-        end_slice <= nc_file$dim$time$len &
-        start_slice >= 1 &
-        end_slice >= 2
-      if (!valid_slices) {
-        print(glue::glue("Issue with {file_data_hist_all$url_opendap}"))
-      }
-
-
-## adapted from https://publicwiki.deltares.nl/display/OET/OPeNDAP+subsetting+with+R
-## The indicies i and j are not in rectangular lat,lon format.
-## subsetting is not as easy as setting the bounding boxe
-      grid_x=ncvar_get(nc_file,"longitude")
-      grid_y=ncvar_get(nc_file,"latitude")
-
-      grid_cells <- grid_x > env_bounds_rounded$x[1] & grid_x < env_bounds_rounded$x[2] &
-        grid_y > env_bounds_rounded$y[1] & grid_y < env_bounds_rounded$y[2]
-
-      lonlat_indicies <- which(grid_cells, arr.ind=TRUE)
-      x_min <- min(lonlat_indicies[,1])-1 ## nco indexes from 0
-      x_max <- max(lonlat_indicies[,1])-1
-      y_min <- min(lonlat_indicies[,2])-1
-      y_max <- max(lonlat_indicies[,2])-1
-
-
-  print(paste("Indices:",x_min,y_min,x_max,y_max));# <== print bbox in indices
-
-
-
         grid_desc <- glue::glue("gridtype = lonlat\n",
 "xfirst = {env_bounds_rounded$x[1]}\n",
 "xinc = {regrid_resolution}\n",
@@ -549,9 +599,288 @@ regrid_resolution = 1 / 2 #TODO: 1 / 12,
 "yfirst = {env_bounds_rounded$y[1]}\n",
 "yinc = {regrid_resolution}\n",
 "ysize = {(env_bounds_rounded$y[2] -  env_bounds_rounded$y[1]) / regrid_resolution}\n")
+
 file_conn<-file("grid_des.txt")
 writeLines(grid_desc, file_conn)
 close(file_conn)
+  ##Within each model/variable combination, get historical, and 2040-2050 + 2090-2100 for each future scenario
+  pairs <- purrr::cross(list(
+                          source_id = unique(metadata_full$source_id),
+                            variable_id = unique(metadata_full$variable_id),
+                            experiment_id = unique(metadata_full$experiment_id)
+                  ))
+  purrr::walk(pairs, ~{
+    metadata_local <- metadata_full[source_id == .x$source_id & variable_id == .x$variable_id & experiment_id == .x$experiment_id]
+    file_data_local <- file_data[source_id == .x$source_id & variable_id == .x$variable_id & experiment_id == .x$experiment_id]
+
+    ## for historical, we want baseline
+    if(.x$experiment_id %in% env_hist_scenarios) {
+      target_names <- c("baseline")
+    } else {
+        # experiment_id is a future scenario. Use f_2050 and f_2100
+      target_names <- c("f_2050", "f_2100")
+    }
+        purrr::walk(target_names, .y = .x, ~ {
+      file_data_target <- file_data_local[file_data_local[[glue::glue("any_{.x}")]] == TRUE]
+      print(file_data_target$url_opendap[1])
+      nc_stats <- ncdf4::nc_open(file_data_target$url_opendap[1]) ## assuming all files in a run have the same spatial dims
+## nc_stats<-ncdf4::nc_open(
+##      "http://esgf.nci.org.au/thredds/dodsC/replica/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/tos/gn/v20190308/tos_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc"
+##"http://esgf.nci.org.au/thredds/dodsC/replica/CMIP6/CMIP/BCC/BCC-CSM2-MR/historical/r1i1p1f1/Omon/tos/gn/v20181126/tos_Omon_BCC-CSM2-MR_historical_r1i1p1f1_gn_185001-201412.nc"
+##       )
+##       print(nc_stats)
+
+      print(file_data_target$url_opendap[1])
+      print(glue::glue("{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
+      if (!file.exists(glue::glue("{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))) {
+      lat_options <- c("nav_lat", "lat", "latitude")
+      guess_lat <- lat_options[lat_options %in% names(nc_stats$var)][1]
+      lon_options <- c("nav_lon", "lon", "longitude")
+      guess_lon <- lon_options[lon_options %in% names(nc_stats$var)][1]
+      x_dim_name <- nc_stats$var[[.y$variable_id]]$dim[[1]]$name
+      y_dim_name <- nc_stats$var[[.y$variable_id]]$dim[[2]]$name
+
+      print(glue::glue("guess_lat: {guess_lat}, guess_lon: {guess_lon}, x_dim_name: {x_dim_name}, y_dim_name: {y_dim_name}"))
+      if(all(x_dim_name %in% lon_options) & is.na(guess_lon)){
+        ##Rectangular grid
+        is_rect <- TRUE
+      } else {
+        ## Curvilinera or unstructured
+        ## adapted from https://publicwiki.deltares.nl/display/OET/OPeNDAP+subsetting+with+R
+        ## The indicies i and j are not in rectangular lat,lon format.
+        ## subsetting is not as easy as setting the bounding boxe
+        is_rect <- FALSE
+        grid_x=ncvar_get(nc_stats,guess_lon)
+        grid_y=ncvar_get(nc_stats,guess_lat)
+
+        ## Longitude is periodic, and not all models use 0 to 360.
+        ## modulo can be used to rescale all longitude values into the same
+        ## period. basic modulo %% in R will bring all values into the 0 to 360 range
+        ## If your bounding box crosses longitude == 0, see:
+        ## https://en.wikipedia.org/wiki/Modulo_operation#Modulo_with_offset
+        ## for an algorithm to set a different longitude block
+        grid_cells <- grid_x %% 360 > env_bounds_rounded$x[1] %% 360 & grid_x %% 360 < env_bounds_rounded$x[2] %% 360 &
+          grid_y > env_bounds_rounded$y[1] & grid_y < env_bounds_rounded$y[2]
+      }
+
+        format_with_decimal <- function(num) {
+          ret <- as.character(num)
+          if (grepl("\\.", ret)) {
+            return(ret)
+          } else {
+            return(format(num, nsmall = 1))
+          }
+        }
+      if (is_rect) {
+
+        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+                        "-d {x_dim_name},{format_with_decimal(env_bounds_rounded$x[1])},{format_with_decimal(env_bounds_rounded$x[2])} ",
+                        "-d {y_dim_name},{format_with_decimal(env_bounds_rounded$y[1])},{format_with_decimal(env_bounds_rounded$y[2])} ",
+                        "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
+
+        cdo(glue::glue("-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
+                       "-remapbil,grid_des.txt, ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"))
+
+        ##Check date range
+        start_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+        end_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,-1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+
+        format_yrmon <- function(d) {
+          format(d, "%Y%m")
+        }
+        if( !all(format_yrmon(start_date) == format_yrmon(target_dates[[.x]]$start),
+            format_yrmon(end_date) == format_yrmon(target_dates[[.x]]$end))) {
+          print(glue::glue("{paste(file_data_target$url_opendap, collapse = \" \")} do not cover full date range of {target_dates$interval}"))
+        }
+
+
+
+       } else if (y_dim_name == "time") {
+
+         ## 1 dimensional unstructured array
+         ## nco offers --auxilliary coordinates option for 1d arrays
+         ## however manually pulling indices took ~300s ve ~4800s
+      lonlat_indicies <- which(grid_cells)
+         ## 100 is a magic number. Smaller values means more -d commands, which may be slower or even break the CLI call, but loads less data.
+         lonlat_runs <- diff(lonlat_indicies) > 100
+         start_cells <- c(TRUE, lonlat_runs)
+         end_cells <- c(lonlat_runs, TRUE)
+
+         cells <- paste(glue::glue("-d {x_dim_name},{lonlat_indicies[start_cells]},{lonlat_indicies[end_cells]}"), collapse = " ")
+
+        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+                        "{cells} ",
+                        "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
+
+         ##remapbil is good and fast over regular grids, but won't accept unstructured. Using remapcon here, which will take unstructured
+        cdo(glue::glue("-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
+                       "-remapcon,grid_des.txt, ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"))
+        ##Check date range
+        start_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+        end_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,-1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+        format_yrmon <- function(d) {
+          format(d, "%Y%m")
+        }
+        if( !all(format_yrmon(start_date) == format_yrmon(target_dates[[.x]]$start),
+            format_yrmon(end_date) == format_yrmon(target_dates[[.x]]$end))) {
+          print(glue::glue("{paste(file_data_target$url_opendap, collapse = \" \")} do not cover full date range of {target_dates$interval}"))
+        }
+       } else {
+         ## Curvilinear data
+
+
+      lonlat_indicies <- which(grid_cells, arr.ind=TRUE)
+      x_min <- min(lonlat_indicies[,1]) -1 ## nco indexes from 0
+      if (x_min > 0) x_min <- x_min - 1 #add buffer
+      x_max <- max(lonlat_indicies[,1]) -1
+      if (x_max < nc_stats$dim[[x_dim_name]]$len - 1) x_max <- x_max + 1
+      y_min <- min(lonlat_indicies[,2]) -1
+      if (y_min > 0) y_min <- y_min- 1
+      y_max <- max(lonlat_indicies[,2]) -1
+      if (y_max < nc_stats$dim[[y_dim_name]]$len - 1) y_max <- y_max + 1
+      ##
+      ## This seems to be the best approach.
+      ## all files that contain any part of 2005-2014 (target_hist_start to target_hist_end(
+      ## are passed in. -d time,...,... tels ncrcat to only take time slices in the target range and
+      ## concatenate them together. Time slice outside the desired range are not even downloaded
+      ## -d i,...,... and -d j,...,... extract just a subset of space, in whatever grid system
+      ## the nc file uses. Data outside those i,j coordinates are not downloaded.
+      ## I may get values outside the bounding box in rectangular lat lon, but that is fine.
+      ## The loading is pretty fast, and subsequent operations only work on the data being used.
+
+      ## Primitive caching, don't download again
+        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+                        "-d {x_dim_name},{x_min},{x_max} -d {y_dim_name},{y_min},{y_max}  ",
+                        "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
+        cdo(glue::glue("-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
+                       "-remapbil,grid_des.txt, ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"))
+        ##Check date range
+        start_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+        end_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,-1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
+        format_yrmon <- function(d) {
+          format(d, "%Y%m")
+        }
+        if( !all(format_yrmon(start_date) == format_yrmon(target_dates[[.x]]$start),
+            format_yrmon(end_date) == format_yrmon(target_dates[[.x]]$end))) {
+          print(glue::glue("{paste(file_data_target$url_opendap, collapse = \" \")} do not cover full date range of {target_dates$interval}"))
+        }
+      }
+      }
+      ## File should exist now, local operations are cheap, run them anyway
+        ## cdo(glue::glue("-remapbil,grid_des.txt, -sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
+        ##              "{variable_id}_{source_id}_{experiment_id}_raw.nc {variable_id}_{source_id}_{experiment_id}_raw_grid.nc"))
+
+      ## Now calculate all the statistics
+      ## long term mean, min and max
+      cdo(glue::glue("-timmean {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_long_mean.nc"))
+      ## long term average min max
+      cdo(glue::glue("-timmean -yearmin {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_min.nc"))
+      cdo(glue::glue("-timmean -yearmax {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_max.nc"))
+      ## average range
+      cdo(glue::glue("-timmean -yearrange {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
+                     "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_range.nc"))
+
+        })
+
+    })
+
+
+    ## Now walk over each variable experiment stat combo and calculate the ensemble means
+  pairs <- purrr::cross(list(
+                            variable_id = unique(metadata_full$variable_id),
+                            experiment_id = unique(metadata_full$experiment_id)
+                    target_name <- names(target_dates)
+                  ))
+  purrr::walk(pairs, ~{
+
+      ## long term mean, min and max
+      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
+                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc"))
+      ## long term average min max
+      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
+                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc"))
+      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
+                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc"))
+      ## average range
+      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
+                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc"))
+      })
+  ## Finally, walk over all variables and create deltas from baseline to each future year for each scenario
+  ## Assuming for now that all historical experiments use baseline
+  pairs <- purrr::cross(list(
+                            variable_id = unique(metadata_full$variable_id),
+                            experiment_id = env_future_scenarios,
+                    historical_exp <- env_hist_scenarios,
+                    target_name <- c("f_2050", "f_2100")
+                  ))
+  purrr:walk(unique(metadata_full$variable_id, ~{
+      ## long term mean, min and max
+      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
+                     "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_long_mean.nc ",
+                     "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_long_mean.nc"))
+      ## long term average min max
+      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
+                     "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_min.nc ",
+                     "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_min.nc"))
+      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
+                     "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_max.nc ",
+                     "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_max.nc"))
+      ## average range
+      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
+                     "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_range.nc ",
+                     "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_range.nc"))
+  })
+    ## for all future, we want f_2050 and f_2100
+
+  ##   purrr::map(c(env_hist_, ~{
+  ##     ## if (nrow(file_data_target) >= 1) {
+
+  ##       # need experiments somewher here
+
+  ##     ## find slices
+
+  ##     ## start_slice <- lubridate::interval(file_data_hist_all$start_date, target_hist_start) %/% months(1) #nco indexes from 0
+  ##     ## end_slice <- start_slice +  target_hist_interval %/% months(1)
+
+
+  ##     ## best way to summarize a netcdf file
+  ##     nc_file <- ncdf4::nc_open(file_data_hist$url_opendap[1])
+  ##     ## valid_slices <- start_slice < nc_file$dim$time$len &
+  ##     ##   end_slice <= nc_file$dim$time$len &
+  ##     ##   start_slice >= 1 &
+  ##     ##   end_slice >= 2
+  ##     ## if (!valid_slices) {
+  ##     ##   print(glue::glue("Issue with {file_data_hist_all$url_opendap}"))
+  ##     ## }
+
+
+  ##     grid_x=ncvar_get(nc_file,"longitude")
+  ##     grid_y=ncvar_get(nc_file,"latitude")
+
+  ##     grid_cells <- grid_x > env_bounds_rounded$x[1] & grid_x < env_bounds_rounded$x[2] &
+  ##       grid_y > env_bounds_rounded$y[1] & grid_y < env_bounds_rounded$y[2]
+
+  ##     lonlat_indicies <- which(grid_cells, arr.ind=TRUE)
+  ##     x_min <- min(lonlat_indicies[,1])-1 -1 ## nco indexes from 0. Also add buffer, currently naive
+  ##     if (x_min > 0) x_min <- x_min - 1
+  ##     x_max <- max(lonlat_indicies[,1])-1 +1
+  ##     if (x_max < nc_file$dim$i$len - 1) x_max <- x_max + 1
+  ##     y_min <- min(lonlat_indicies[,2])-1 -1
+  ##     if (y_min > 0) y_min <- y_min- 1
+  ##     y_max <- max(lonlat_indicies[,2])-1 +1
+  ##     if (y_max < nc_file$dim$j$len - 1) y_max <- y_max + 1
+
+
+  ## print(paste("Indices:",x_min,y_min,x_max,y_max));# <== print bbox in indices
+
+
+
 
         ## ncks (from ndo) subsets both time and space over opendap, while cdo subsets one or the other,
         ## then does the second subset on a local copy, resulting in a larger download.
@@ -559,20 +888,64 @@ close(file_conn)
         ## cdo seltimestep first, ~30 seconds
         ## ncks first, ~3 seconds
         ## cdo makes regridding simpler, so using cdo on the local dataset.
-        ncks(glue::glue("-q -R -O -d time,{start_slice},{end_slice} ",
-                        "-d i,{x_min},{x_max} -d j,{y_min},{y_max}  ",
-                        "-l ./  {file_data_hist_all$url_opendap} {variable_id}_{source_id}_raw_ncks.nc"))
-        cdo(glue::glue("-remapbil,grid_des.txt, ",
-                     "{variable_id}_{source_id}_raw_ncks.nc {variable_id}_{source_id}_raw_ncks_regrid.nc"))
+        ## nco (and cdo) can use date ranges, and calculate the appropriate slices from dates.
+      ##  It is just as fast (~3 seconds to ~4 seconds, could be internet issues), safer and clearer
+      ## Date ranges bigger than the file just return the extents of the file, no harm going over.
+        ## ncks(glue::glue("-q -R -O -d time,{start_slice},{end_slice} ",
+        ##                 "-d i,{x_min},{x_max} -d j,{y_min},{y_max}  ",
+        ##                 "-l ./  {file_data_hist_all$url_opendap} {variable_id}_{source_id}_raw_ncks.nc"))
+        ## cdo(glue::glue("-remapbil,grid_des.txt, ",
+        ##              "{variable_id}_{source_id}_raw_ncks.nc {variable_id}_{source_id}_raw_ncks_regrid.nc"))
+
+        ## ncks(glue::glue("-q -R -O -d time,{target_hist_start},{target_hist_end} ",
+        ##                 "-d i,{x_min},{x_max} -d j,{y_min},{y_max}  ",
+        ##                 "-l ./  {file_data_hist_all$url_opendap} {variable_id}_{source_id}_raw_ncks_date.nc"))
+        ## cdo(glue::glue("-remapbil,grid_des.txt, ",
+        ##              "{variable_id}_{source_id}_raw_ncks.nc {variable_id}_{source_id}_raw_ncks_date_regrid.nc"))
 
 
-    } else {
-      print("either many files (needs merging) or no files. Deal with later")
+## http://nco.sourceforge.net/nco.html#Subcycle
+## http://nco.sourceforge.net/nco.html#Specifying-Input-Files
+## http://nco.sourceforge.net/nco.html#ncrcat-netCDF-Record-Concatenator
+     ## test a multifile pull
+     #file_data_multi <- file_data[variable_id == "tos" & source_id == "EC-Earth3-Veg" & experiment_id == "historical" & any_hist == TRUE]
+     #
+
+        ## If I am getting errors, look back here
+##       ## There is no effective way to read the error message from nco, short of changing the climateoperators packaeg
+##       nco.cmd <- function(cmd,...,debug) {
+##   #Build command
+##   cmd.args <- paste(c(getOption("ClimateOperators")$nco,
+##                       unlist(list(...))),collapse=" ")
+##   this.cmd <-paste(cmd,cmd.args)
+
+##   if(!debug) {
+##     #Run the command
+##     suppressWarnings(
+##     run.time <- system.time(rtn <- system2(cmd,cmd.args, stderr = TRUE, stdout = TRUE))
+##     )
+##     if(length(rtn ) > 0 ){
+##       if(attr(rtn, "status")!=0) stop( sprintf("%s command failed with error code %s.\n Message: [%s]\n Command issued: \n %s",cmd, attr(rtn, "status"), rtn,this.cmd))
+##     }
+##     attr(this.cmd,"run.time") <- run.time["elapsed"]
+##   }
+##   return(this.cmd)
+## }
+## assignInNamespace("nco.cmd",nco.cmd,ns="ClimateOperators")
+
+ ## file_data_hist$url_opendap <- "http://esgf-cnr.hpc.cineca.it/thredds/dodsC/cmip6/vhis/CMIP6/CMIP/EC-Earth-Consortium/EC-Earth3-Veg/historical/r4i1p1f1/Omon/tos/gn/v20200425/tos_Omon_EC-Earth3-Veg_historical_r4i1p1f1_gn_185001-185012.nc"
+ ## ret <-  tryCatch(
+ ##        ncrcat(glue::glue("-R -O -d time,1900-01-01,1910-01-01 ",
+ ##                        "-d i,{x_min},{x_max} -d j,{y_min},{y_max}  ",
+ ##                        "-l ./  {paste(file_data_hist$url_opendap, collapse = \" \")} {variable_id}_{source_id}_{experiment_id}_raw.nc")),
+ ##        error = function(e) return(e)
+ ##        )
+#test ret for success or error
+
     }
 
 
 
-    ## Extract 2004-2014
       }
 
 
