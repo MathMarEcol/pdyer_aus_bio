@@ -6,26 +6,33 @@
 #'
 
 
+    ## library(lubridate)
+    ## library(data.table)
+    ## library(purrr)
+    ## library(ncdf4)
+    ## library(ClimateOperators)
+    ## library(stars)
 fetch_future_env <- function(
                              ## Step 1.
-                             env_future_vars <- c("tos")
-                             env_future_scenarios <- c("ssp126", "ssp245", "ssp585")
-                             env_hist_scenarios <- c("historical")
-                             node_thredds_blacklist <- c("esgf3.dkrz.de", "aims3.llnl.gov", "esgf.rcec.sinica.edu.tw")
+                             env_future_vars = c("tos")
+                             env_future_scenarios = c("ssp126", "ssp245", "ssp585")
+                             env_hist_scenarios = c("historical")
+                             node_thredds_blacklist = c("esgf3.dkrz.de", "aims3.llnl.gov", "esgf.rcec.sinica.edu.tw")
 
                              ## List? Param?
                              ## Must be in format YYYYMM
-    target_hist_start <- "200501"
-    target_hist_end <- "201412"
-    target_2050_start <- "204001"
-    target_2050_end <- "205001"
-    target_2100_start <- "209001"
-    target_2100_end <- "209912"
+    target_hist_start = "200501"
+    target_hist_end = "201412"
+    target_2050_start = "204001"
+    target_2050_end = "205001"
+    target_2100_start = "209001"
+    target_2100_end = "209912"
     library(lubridate)
     library(data.table)
     library(purrr)
     library(ncdf4)
     library(ClimateOperators)
+    library(stars)
                              ) {
 
   ## Project for the day, get this function working!
@@ -106,7 +113,7 @@ fetch_future_env <- function(
   shards <- c(
 #"localhost",
 "esgf-node.llnl.gov",
-"esgdata.gfdl.noaa.gov",
+#"esgdata.gfdl.noaa.gov", ## keeps failing to return search results
 "esgf.nci.org.au",
 "esgf-data.dkrz.de",
 "esgf-node.ipsl.upmc.fr",
@@ -232,9 +239,10 @@ metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:
                                 grid_label,
                                 ## replica, ## only affects data_node, but adds duplicates
                                 master_id,
-                                instance_id,
-                                datetime_start,
-                                datetime_stop)
+                                instance_id
+                                #datetime_start, ## creating duplicates
+                                #datetime_stop
+                                )
                                 ]
   metadata_full_variants <- unique(metadata_full_variants)
 
@@ -270,9 +278,10 @@ metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:
                                 grid_label,
                                 ## replica, ## only affects data_node, but adds duplicates
                                 master_id,
-                                instance_id,
-                                datetime_start,
-                                datetime_stop)
+                                instance_id
+                                #datetime_start, ## creating duplicates
+                                #datetime_stop
+                                )
            ]
   metadata_random_full <- unique(metadata_random_full)
   metadata_full <- rbind(metadata_random_full, metadata_full_variants)
@@ -419,53 +428,99 @@ metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:
 
   ## ## Select just the first variant listed for each model.
   ## metadata_variant <- metadata[metadata[ ,.I[1]  , by =list(variable_id, realm, grid_label, experiment_id, source_id, frequency)]$V1]
+  metadata_full[, r_id := 1:nrow(metadata_full)]
+ file_data <- purrr::pmap_dfr(metadata_full[data.table::CJ(shards, r_id = 1:nrow(metadata_full), sorted=FALSE), on = "r_id"],
+            function(...){
+              .x <- data.frame(...)
 
+
+              query_str <- glue::glue("https://{.x$shards}/esg-search/search/?offset=0&limit=2000&type=File&latest=true&distrib=true&",
+                                      "retracted=false&",
+                                      "source_id={.x$source_id}&",
+                                      "experiment_id={.x$experiment_id}&",
+                                      "variant_label={.x$variant_label}&",
+                                      "variable_id={.x$variable_id}&",
+                                      "table_id={.x$table_id}&",
+                                      "grid_label={.x$grid_label}&",
+                                      "format=application%2Fsolr%2Bjson")
+
+   ret <- tryCatch({
+    ESGF_file_query <- jsonlite::fromJSON(query_str)
+    ret <- data.table::as.data.table(ESGF_file_query$response$docs)
+    },
+    error = function(e) {
+      print("Query failed")
+      return(NULL)
+      }
+    )
+   print(glue::glue("Fetched {nrow(ret)} file records for dataset {.x$master_id} from {length(unique(ret$data_node))} data nodes via shard {.x$shards}"))
+   return(ret)
+   })
 
   ## NCI does not have all the files for some models
   ## Get a file from:
   ##  1. NCI if available
   ##  2. First node if NCI not available
-  metadata_full_copy <- data.table::copy(metadata_full)
-  metadata_full[, chunks := ceiling(seq.int(1, nrow(metadata_full))/18)]
-  file_data <- data.table::rbindlist(lapply(unique(metadata_full$chunks), function(chunk, shards) {
-    print(chunk)
-    tryCatch({
-      all_dataset_id <- glue::glue_collapse(glue::glue_data(metadata_full[chunks == chunk], "{instance_id}|{data_node}"), sep = "%2C")
-      query_str <- glue::glue("https://{shards}/esg-search/search?type=File&",
-                              "limit=9000&",
-                              "dataset_id={all_dataset_id}&",
-                              ##"&master_id={master_id}&",#&replica={fifelse(replica, \"true\", \"false\")}&",
-                              "format=application%2Fsolr%2Bjson")
-      file_data <- data.table::rbindlist(lapply(query_str, function(qr) {
-        tryCatch({
-          ESGF_file_query <- jsonlite::fromJSON(qr)
-          return(data.table::as.data.table(ESGF_file_query$response$docs))
-        },
-        error = function(e) {
-          print(qr)
-          return(NULL)
-        }
-        )
+  ## metadata_full_copy <- data.table::copy(metadata_full)
+  ## metadata_full[, chunks := ceiling(seq.int(1, nrow(metadata_full))/18)]
 
-      }), fill = TRUE)
-    print(file_data)
-   },
-   error = function(e) {
-     print(e)
-     return(NULL)
-   }
-   )
+  ## query_set <- purrr::cross(list(shard = shards,
+  ##                          id = metadata_full$master_id))
+  ## file_data <- purrr::map_dfr(query_set, ~{
 
- }, shards = shards), fill = TRUE)
+  ##   query_str <- glue::glue(
+  ##                     "https://{.x$shard}/esg-search/search/?offset=0&limit=100&",
+  ##                     "type=File&distrib=true&master_id={.x$id}&",
+  ##                     "format=application%2Fsolr%2Bjson")
+  ##   print(query_str)
+  ##  ret <- tryCatch({
+  ##   ESGF_file_query <- jsonlite::fromJSON(query_str)
+  ##   ret <- data.table::as.data.table(ESGF_file_query$response$docs)
+  ##   },
+  ##   error = function(e) {
+  ##     print("Query failed")
+  ##     return(NULL)
+  ##     }
+  ##   )
+  ##  print(ret)
+  ##  return(ret)
+  ##  })
+#fields={return_fields}
+#facets={return_facets}&
+#shards={search_shards}&",
+ ##  file_data <- data.table::rbindlist(lapply(unique(metadata_full$chunks), function(chunk, shards) {
+ ##    print(chunk)
+ ##    tryCatch({
+ ##      all_dataset_id <- glue::glue_collapse(glue::glue_data(metadata_full[chunks == chunk], "{master_id}"), sep = "%2C")
+ ##      query_str <- glue::glue("https://{shards}/esg-search/search?type=File&",
+ ##                              "limit=1000&",
+ ##                              "master_id={all_dataset_id}&",
+ ##                              ##"&master_id={master_id}&",#&replica={fifelse(replica, \"true\", \"false\")}&",
+ ##                              "format=application%2Fsolr%2Bjson")
+ ##      file_data <- data.table::rbindlist(lapply(query_str, function(qr) {
+ ##        tryCatch({
+ ##          ESGF_file_query <- jsonlite::fromJSON(qr)
+ ##          return(data.table::as.data.table(ESGF_file_query$response$docs))
+ ##        },
+ ##        error = function(e) {
+ ##          print(qr)
+ ##          return(NULL)
+ ##        }
+ ##        )
+
+ ##      }), fill = TRUE)
+ ##    print(file_data)
+ ##   },
+ ##   error = function(e) {
+ ##     print(e)
+ ##     return(NULL)
+ ##   }
+ ##   )
+
+ ## }, shards = shards), fill = TRUE)
 
   backup_file_data<-data.table::copy(file_data)
   file_data<-data.table::copy(backup_file_data)
-    target_hist_start <- "200501"
-    target_hist_end <- "201412"
-    target_2050_start <- "204001"
-    target_2050_end <- "205001"
-    target_2100_start <- "209001"
-    target_2100_end <- "209912"
 
   data.table::set(file_data, i= NULL, "url_opendap",
                   gsub(".html\\|application/opendap-html\\|OPENDAP", "",
@@ -476,13 +531,26 @@ metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:
                   )
 
   # Remove list cols that cannot be converted to a vector
-  drop_cols <- c("url", "source_type", "directory_format_template_")
-  file_data[, (drop_cols) := NULL]
+  ## drop_cols <- c("url", "source_type", "directory_format_template_", "mod_time", "short_description")
+  ## file_data[, (drop_cols) := NULL]
   ## Convert all other cols to vectors
-  for(f in names(file_data)) {
-      data.table::set(file_data, i = NULL, f, unlist(file_data[[f]]))
-  }
+  drop_cols <- purrr::map(names(file_data), ~{
+    flat_col <- unlist(file_data[[.x]])
+    if(length(flat_col) == nrow(file_data)) {
+      data.table::set(file_data, i = NULL, .x, flat_col)
+      return(NULL)
+    } else {
+      print(glue::glue("Dropping col {.x} from file_data, uneven vector produced"))
+      #data.table::set(file_data, i = NULL, .x, NULL)
+      return(.x)
+    }
+  })
+  ## unlist will drop NULLs
+  drop_cols <- unlist(drop_cols)
+  file_data[, (drop_cols) := NULL]
   file_data <- unique(file_data)
+
+  ## Now filter files by data_node
   ## Assumes a string in YYYYMM format
   as_date_set_day <- function(d){
     as.Date(glue::glue("{d}01"), "%Y%m%d")
@@ -539,6 +607,24 @@ metadata_by_model_variant[, variant_label_numeric := as.numeric(gsub("[^[:digit:
                     )
     }
 
+  ## Assuming that there is only one set of files for a run
+  ## and that  each node chooses to either host or not host it.
+  ## Therefor for each file, choose one node
+  keep_files <- file_data[ ,
+                        ## print(.SD),
+                        if ("esgf.nci.org.au" %in% .SD$data_node) {
+                          .I[.SD$data_node == "esgf.nci.org.au"]
+                        } else {
+                          .I[1]
+                        },
+                    by = title]
+  file_data <- file_data[keep_files$V1]
+
+  file_data[ , dataset_id_stripped := gsub( "\\.v[0-9]{8}\\|.*" , "", dataset_id)]
+  dataset_gaps <- setdiff(unique(metadata_full$master_id), unique(file_data$dataset_id_stripped))
+  if (length(dataset_gaps) > 0 ) {
+    stop(glue::glue("Problems accessing file records for datasets: {dataset_gaps}"))
+    }
     ## file_data[, `:=`(any_hist = ,
     ##                  any_2050 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2050_interval),
     ##                  any_2100 = lubridate::int_overlaps(lubridate::interval(start_date, end_date), target_2100_interval),
@@ -603,12 +689,15 @@ regrid_resolution = 1 / 2 #TODO: 1 / 12,
 file_conn<-file("grid_des.txt")
 writeLines(grid_desc, file_conn)
 close(file_conn)
+  ## Assumes grid natural (gn) and monthly data (Omon)
   ##Within each model/variable combination, get historical, and 2040-2050 + 2090-2100 for each future scenario
   pairs <- purrr::cross(list(
                           source_id = unique(metadata_full$source_id),
                             variable_id = unique(metadata_full$variable_id),
                             experiment_id = unique(metadata_full$experiment_id)
                   ))
+      nc_open_retry <- purrr::insistently(ncdf4::nc_open, rate_delay(2, 10), quiet = FALSE)
+      ncrcat_retry <-   purrr::insistently(ClimateOperators::ncrcat, rate_delay(2, 10), quiet = FALSE)
   purrr::walk(pairs, ~{
     metadata_local <- metadata_full[source_id == .x$source_id & variable_id == .x$variable_id & experiment_id == .x$experiment_id]
     file_data_local <- file_data[source_id == .x$source_id & variable_id == .x$variable_id & experiment_id == .x$experiment_id]
@@ -622,8 +711,11 @@ close(file_conn)
     }
         purrr::walk(target_names, .y = .x, ~ {
       file_data_target <- file_data_local[file_data_local[[glue::glue("any_{.x}")]] == TRUE]
+      if( nrow(file_data_target) == 0) {
+        stop(glue::glue("dataset has no files to load: {.y$variable_id}_{.y$source_id}_{.y$experiment_id}"))
+        }
       print(file_data_target$url_opendap[1])
-      nc_stats <- ncdf4::nc_open(file_data_target$url_opendap[1]) ## assuming all files in a run have the same spatial dims
+      nc_stats <- nc_open_retry(file_data_target$url_opendap[1]) ## assuming all files in a run have the same spatial dims
 ## nc_stats<-ncdf4::nc_open(
 ##      "http://esgf.nci.org.au/thredds/dodsC/replica/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/tos/gn/v20190308/tos_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc"
 ##"http://esgf.nci.org.au/thredds/dodsC/replica/CMIP6/CMIP/BCC/BCC-CSM2-MR/historical/r1i1p1f1/Omon/tos/gn/v20181126/tos_Omon_BCC-CSM2-MR_historical_r1i1p1f1_gn_185001-201412.nc"
@@ -673,7 +765,7 @@ close(file_conn)
         }
       if (is_rect) {
 
-        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+        ncrcat_retry(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
                         "-d {x_dim_name},{format_with_decimal(env_bounds_rounded$x[1])},{format_with_decimal(env_bounds_rounded$x[2])} ",
                         "-d {y_dim_name},{format_with_decimal(env_bounds_rounded$y[1])},{format_with_decimal(env_bounds_rounded$y[2])} ",
                         "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
@@ -681,6 +773,7 @@ close(file_conn)
         cdo(glue::glue("-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
                        "-remapbil,grid_des.txt, ",
                      "{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"))
+
 
         ##Check date range
         start_date <- as.Date(cdo(glue::glue("outputtab,date,nohead -selgridcell,1 -seltimestep,1  {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc")))
@@ -709,7 +802,7 @@ close(file_conn)
 
          cells <- paste(glue::glue("-d {x_dim_name},{lonlat_indicies[start_cells]},{lonlat_indicies[end_cells]}"), collapse = " ")
 
-        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+        ncrcat_retry(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
                         "{cells} ",
                         "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
 
@@ -751,7 +844,7 @@ close(file_conn)
       ## The loading is pretty fast, and subsequent operations only work on the data being used.
 
       ## Primitive caching, don't download again
-        ncrcat(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
+        ncrcat_retry(glue::glue("-R -O -d time,{target_dates[[.x]]$start},{target_dates[[.x]]$end} -v {.y$variable_id} ",
                         "-d {x_dim_name},{x_min},{x_max} -d {y_dim_name},{y_min},{y_max}  ",
                         "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} {.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"))
         cdo(glue::glue("-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
@@ -769,6 +862,13 @@ close(file_conn)
         }
       }
       }
+
+        ## Regridding is occasionally introducing invalid numbers. Set to NA and write to file.
+        grid_file <- nc_open(glue::glue("{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc" ), write=TRUE)
+        grid_var <- ncvar_get(grid_file, .y$variable_id)
+        grid_var[which(grid_var < -1e10 | grid_var > 1e10)] <- NA
+        ncvar_put(grid_file, .y$variable_id, grid_var)
+        nc_close(grid_file)
       ## File should exist now, local operations are cheap, run them anyway
         ## cdo(glue::glue("-remapbil,grid_des.txt, -sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
         ##              "{variable_id}_{source_id}_{experiment_id}_raw.nc {variable_id}_{source_id}_{experiment_id}_raw_grid.nc"))
@@ -794,48 +894,102 @@ close(file_conn)
     ## Now walk over each variable experiment stat combo and calculate the ensemble means
   pairs <- purrr::cross(list(
                             variable_id = unique(metadata_full$variable_id),
-                            experiment_id = unique(metadata_full$experiment_id)
-                    target_name <- names(target_dates)
+                            experiment_id = unique(metadata_full$experiment_id),
+                    target_name = names(target_dates)
                   ))
   purrr::walk(pairs, ~{
 
-      ## long term mean, min and max
-      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
-                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc"))
-      ## long term average min max
-      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
-                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc"))
-      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
-                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc"))
-      ## average range
-      cdo(glue::glue("ensmean {.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
-                     "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc"))
-      })
+    if(any(.x$experiment_id %in% env_future_scenarios & .x$target_name %in% c("f_2050", "f_2100"),
+           .x$experiment_id %in% env_hist_scenarios & .x$target_name %in% c("baseline"))) {
+
+          ## long term mean, min and max
+          cdo(glue::glue("-O -ensmean '{.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_long_mean.nc' ",
+                        "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc"))
+          ## long term average min max
+          cdo(glue::glue("-O -ensmean '{.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc' ",
+                        "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc"))
+          cdo(glue::glue("-O -ensmean '{.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc' ",
+                        "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc"))
+          ## average range
+          cdo(glue::glue("-O -ensmean '{.x$variable_id}_*_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc' ",
+                        "{.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc"))
+      }
+    })
   ## Finally, walk over all variables and create deltas from baseline to each future year for each scenario
   ## Assuming for now that all historical experiments use baseline
   pairs <- purrr::cross(list(
                             variable_id = unique(metadata_full$variable_id),
                             experiment_id = env_future_scenarios,
-                    historical_exp <- env_hist_scenarios,
-                    target_name <- c("f_2050", "f_2100")
+                    historical_exp = env_hist_scenarios,
+                    target_name = c("f_2050", "f_2100")
                   ))
-  purrr:walk(unique(metadata_full$variable_id, ~{
+  purrr::walk(pairs, ~{
       ## long term mean, min and max
-      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
+      cdo(glue::glue("-O sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
                      "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_long_mean.nc ",
                      "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_long_mean.nc"))
       ## long term average min max
-      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
+      cdo(glue::glue("-O sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
                      "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_min.nc ",
                      "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_min.nc"))
-      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
+      cdo(glue::glue("-O sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
                      "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_max.nc ",
                      "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_max.nc"))
       ## average range
-      cdo(glue::glue("sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
+      cdo(glue::glue("-O sub {.x$variable_id}_ensemble_{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
                      "{.x$variable_id}_ensemble_{.x$historical_exp}_baseline_avg_yr_range.nc ",
                      "{.x$variable_id}_delta_{.x$target_name}_{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_range.nc"))
+      })
+
+
+
+  files_plot <- list.files(path = ".", pattern = "tos_delta_*")
+
+  purrr::walk(files_plot, ~{
+
+    pl <- stars::read_stars(.x)
+    qin <- tmap::qtm(pl)
+    tmap::tmap_save(qin, glue::glue("{.x}.png"))
+    })
+
+
+  ## Everything is in place, but getting strange -5000000000 bln values for many
+  ## Test inputs
+  pairs <- purrr::cross(list(
+                          source_id = unique(metadata_full$source_id),
+                            variable_id = unique(metadata_full$variable_id),
+                            experiment_id = unique(metadata_full$experiment_id)
+                  ))
+  purrr::map(pairs, ~{
+
+    if(.x$experiment_id %in% env_hist_scenarios) {
+      target_names <- c("baseline")
+    } else {
+        # experiment_id is a future scenario. Use f_2050 and f_2100
+      target_names <- c("f_2050", "f_2100")
+    }
+        purrr::walk(target_names, .y = .x, ~{
+          nc_testing <-nc_open(glue::glue("{.y$variable_id}_{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"))
+          test_range <- range(ncvar_get(nc_testing, .y$variable_id), na.rm=TRUE)
+          if(min(test_range) < -10 | min(test_range > 50)) {
+            print(.x)
+            print(.y)
+            print(test_range)
+          }
+          nc_close(nc_testing)
+        })
   })
+#issue here
+t <- nc_open("tos_IITM-ESM_historical_baseline_raw_grid.nc")
+
+  ## test ensembles
+  pairs <- purrr::cross(list(
+                            variable_id = unique(metadata_full$variable_id),
+                            experiment_id = unique(metadata_full$experiment_id),
+                    target_name = names(target_dates)
+                  ))
+
+
     ## for all future, we want f_2050 and f_2100
 
   ##   purrr::map(c(env_hist_, ~{
