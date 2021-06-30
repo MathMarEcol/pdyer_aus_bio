@@ -382,7 +382,7 @@ fetch_future_env <- function(
                     historical_exp = env_hist_scenarios,
                     target_name = c("f_2050", "f_2100")
                   ))
-  purrr::walk(pairs, ~{
+  purrr::map_dfr(pairs, ~{
       ## long term mean, min and max
      ClimateOperators::cdo(glue::glue(
        "-O sub {out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
@@ -417,7 +417,20 @@ fetch_future_env <- function(
        "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_range.nc"
      ))
+     outfile_names <- c("long_mean", "avg_yr_min", "avg_yr_max", "avg_yr_range")
+    dataset_row <- data.frame(variable = .x$variable_id,
+                              future_exp = .x$experiment_id,
+                              baseline_exp = .x$historical_exp,
+                              target_year = as.numeric(
+                                gsub("f_", "", .x$target_name)),
+                              stat = outfile_names,
+                              filename = glue::glue(
+       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{.x$experiment_id}_{.x$historical_exp}_baseline_{outfile_names}.nc"
+                              ))
+    return(dataset_row)
       })
+
 
 
 
