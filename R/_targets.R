@@ -21,6 +21,11 @@ tar_option_set(
   format = "qs",
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
+    "stars",
+    "RCurl",
+    "tmap",
+    "ggplot2",
+    "ggthemes",
     "jsonlite",
     "glue",
     "ncdf4",

@@ -54,7 +54,6 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         sdmpredictors
         robis
         #seaaroundus #removed from CRAN
-        raster
         ncdf4
 
         #simulated data
@@ -75,6 +74,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         RColorBrewer
         R_devices
         quantreg
+        tmap
 
         #Data manipulation
         tidyverse
@@ -86,6 +86,9 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         lutz
         lubridate
         ClimateOperators
+        raster
+        terra
+        stars
 
 
         #Parallel processing
@@ -144,6 +147,8 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
         janitor
         stringr
         here
+        formatR
+        r_import
 
         #vim support
         nvimcom
