@@ -20,6 +20,7 @@ library(lutz)
 library(glue)
 library(lubridate)
 library(rfishbase)
+library(Hotelling)
 ##Data
 library(sdmpredictors)
 ##Plots
@@ -897,85 +898,87 @@ jobs <- 5
 
 ## parameters
 
-                         phytoplank_names = c("nrs",
+phytoplank_names = c(
+  #"nrs",
                                    "cpr",
                                    "brett",
-                                    "other_1050",
-                                    "other_1051",
-                                    "other_1054",
-                                    "other_1056",
-                                    "other_1057",
-                                    "other_1058",
-                                    "other_1059",
-                                    "other_1066",
-                                    "other_479",
-                                    "other_1068",
-                                    "other_1067",
-                                    "other_1069",
-                                    "other_54",
-                                    "other_591",
-                                    "other_782",
-                                    "other_786",
-                                    "other_790",
-                                    "other_796",
-                                    "other_795",
-                                    "other_806",
-                                    "other_801",
-                                    "other_805",
-                                    "other_804",
-                                    "other_807",
-                                    "other_517",
-                                    "other_519"
+                                    ## "other_1050",
+                                    ## "other_1051",
+                                    ## "other_1054",
+                                    ## "other_1056",
+                                    ## "other_1057",
+                                    ## "other_1058",
+                                    ## "other_1059",
+                                    ## "other_1066",
+                                    ## "other_479",
+                                    ## "other_1068",
+                                    ## "other_1067",
+                                    ## "other_1069",
+                                    ## "other_54",
+                                    ## "other_591",
+                                    ## "other_782",
+                                    ## "other_786",
+                                    ## "other_790",
+                                    ## "other_796",
+                                    ## "other_795",
+                                    ## "other_806",
+                                    ## "other_801",
+                                    ## "other_805",
+                                    ## "other_804",
+                                    "other_807"
+                                    ## "other_517",
+                                    ## "other_519"
                                    )
-                         phytoplank_matching = list(nrs = 599,
+                         phytoplank_matching = list(#nrs = 599,
                                          cpr = 597,
                                          brett = 794,
-                                        other_1050 = 1050,
-                                        other_1051 = 1051,
-                                        other_1054 = 1054,
-                                        other_1056 = 1056,
-                                        other_1057 = 1057,
-                                        other_1058 = 1058,
-                                        other_1059 = 1059,
-                                        other_1066 = 1066,
-                                        other_479 = 479,
-                                        other_1068 = 1068,
-                                        other_1067 = 1067,
-                                        other_1069 = 1069,
-                                        other_54 = 54,
-                                        other_591 = 591,
-                                        other_782 = 782,
-                                        other_786 = 786,
-                                        other_790 = 790,
-                                        other_796 = 796,
-                                        other_795 = 795,
-                                        other_806 = 806,
-                                        other_801 = 801,
-                                        other_805 = 805,
-                                        other_804 = 804,
-                                        other_807 = 807,
-                                        other_517 = 517,
-                                        other_519 = 519
+                                        ## other_1050 = 1050,
+                                        ## other_1051 = 1051,
+                                        ## other_1054 = 1054,
+                                        ## other_1056 = 1056,
+                                        ## other_1057 = 1057,
+                                        ## other_1058 = 1058,
+                                        ## other_1059 = 1059,
+                                        ## other_1066 = 1066,
+                                        ## other_479 = 479,
+                                        ## other_1068 = 1068,
+                                        ## other_1067 = 1067,
+                                        ## other_1069 = 1069,
+                                        ## other_54 = 54,
+                                        ## other_591 = 591,
+                                        ## other_782 = 782,
+                                        ## other_786 = 786,
+                                        ## other_790 = 790,
+                                        ## other_796 = 796,
+                                        ## other_795 = 795,
+                                        ## other_806 = 806,
+                                        ## other_801 = 801,
+                                        ## other_805 = 805,
+                                        ## other_804 = 804,
+                                        other_807 = 807
+                                        ## other_517 = 517,
+                                        ## other_519 = 519
                                          )
-                         zooplank_names = c("nrs",
+                         zooplank_names = c(#"nrs",
                                    "cpr",
                                    "mckinnon",
                                    "goc",
-                                   "nyan",
+                                   ## "nyan",
                                    "anita")
-                         zooplank_matching = list(nrs = 599,
+                         zooplank_matching = list(#nrs = 599,
                                          cpr = 597,
                                          mckinnon =
                                            c(4, 5, 7, 9, 12, 15, 16, 24), #McKinnon surveys
                                          goc = 1, #Gulf of Capentaria
-                                         nyan = 21, #SE Tasmania
+                                         ## nyan = 21, #SE Tasmania
                                          anita = 18) #Tasmania data
 depth_range = list(epi = c(0, 200),
                    meso = c(201, 1000 ),
                    bathy = c(1001, Inf))
 depth_names <- c("epi",
-                 "meso",
-                 "bathy")
+                 "meso"
+                # "bathy"
+                 )
                freq_range = c(0.05, 1)
                min_occurrence = 6
                cov_min = 1.0
@@ -1002,15 +1005,14 @@ fish_years <- 2007:2017
                ##in lat lon degrees, use 1/integer fraction
                ##for proper rastering later,
                ##currently 1/12 to allign with BioORACLE
-               regrid_resolution = 1 / 4#TODO: 1 / 12,
+               regrid_resolution = 1 / 2#TODO: 1 / 12,
                ##Extent chosen to match the largest extents of
                ##the Aus EEZ polygon and the FRDC benthic data
                ##FRDC is not being used, but previous effort
                ##has used this extent and the full sampling of the GoC is useful
                env_bounds = list(x = c(109 + 1 / 24, 163 + 23 / 24),
                                  y = c(-47 - 23 / 24, -8 - 1 / 24))
-
-               gf_trees = 200
+               gf_trees = 20
                gf_bins = 201
                gf_corr_thres = 0.5
                gf_compact = FALSE
@@ -1148,10 +1150,10 @@ pl <- drake::drake_plan(
                ## env_poly is a polygon that defines the study area.
                ## env_bbox is the bounding box of env_extent
                ## ausEEZ = marine_map[marine_map$Country == "Australia", ],
-               ## env_poly = marine_map[marine_map$Country == "Australia", ],
-               env_poly = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
-                                       crs = sf::st_crs(marine_map)
-                                       ),
+               env_poly = marine_map[marine_map$Country == "Australia", ],
+               ## env_poly = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
+               ##                         crs = sf::st_crs(marine_map)
+               ##                         ),
                env_extent = raster::extent(env_poly),
 
                env_region = target(env_restrict_to_region(bio_oracle_cache = file_in(!!biooracle_folder),
@@ -1699,6 +1701,243 @@ pl <- drake::drake_plan(
 
          ## env_trans_spatial = env_merge_spatial(env_trans, env_round, spatial_vars),
          ## env_trans_wide = env_wide_list(env_trans_spatial),
+        env_names_sub = c(
+## "BO2_salinitymin_ss",
+## "BO2_salinitymean_ss",
+## "BO2_salinityrange_ss",
+## "BO2_salinitymax_ss",
+"BO2_nitratemin_ss",
+"BO2_nitratemean_ss",
+"BO2_nitraterange_ss",
+"BO2_nitratemax_ss",
+## "BO2_silicatemin_ss",
+## "BO2_silicatemean_ss",
+## "BO2_silicaterange_ss",
+## "BO2_silicatemax_ss",
+## "BO2_chlomin_ss",
+## "BO2_chlomean_ss",
+## "BO2_chlorange_ss",
+## "BO2_chlomax_ss",
+"BO2_tempmin_ss",
+"BO2_tempmean_ss",
+"BO2_temprange_ss",
+"BO2_tempmax_ss"
+),
+         ##Fit GF models
+         zooplank_boot_gf = target(
+
+           if(zooplank_names %in% c("cpr", "mckinnon")){
+           gfbootstrap::bootstrapGradientForest(
+                             as.data.frame(zooplank_env_filter),
+                             predictor.vars = env_names_sub,
+                             response.vars = zooplank_sp_keep,
+                             nbootstrap = gf_trees,
+                             compact = gf_compact,
+                             nbin = gf_bins,
+                             transform = NULL,
+                             corr.threshold = gf_corr_thres,
+                             maxLevel = floor(log2(length(zooplank_sp_keep) * 0.368 / 2)),
+                             trace = TRUE
+                        )} else {
+                             NULL
+                           },
+           dynamic = map(
+             zooplank_env_filter,
+             zooplank_sp_keep,
+             zooplank_names,
+             .id = zooplank_names
+           ),
+           format = "qs"
+         ),
+
+        zooplank_boot_gf_filtered = target(
+          purrr::compact(zooplank_boot_gf),
+          format = "qs"
+          ),
+         ##combined GF for copepods
+         zooplank_boot_combined_gf = target(
+          do.call(gfbootstrap::combinedBootstrapGF,
+                  c(zooplank_boot_gf_filtered, nbin = gf_bins, n_samp = gf_trees)
+                  ),
+           format = "qs"
+         ),
+
+        env_trans_zooplank_boot_gf = target(
+          predict(object = zooplank_boot_combined_gf,
+                                          newdata = env_round[, env_names_sub],
+                                          ## newdata = env_round[env_round$lon %% 2 == 0 & env_round$lat %% 2 == 0, env_names],
+                                          type = c("mean", "variance", "points"),
+                                          extrap = extrap),
+          format = "qs"
+        ),
+
+        env_trans_wide_zooplank_boot_gf = target(
+        {
+          out <- list(y_mean = tidyr::pivot_wider(env_trans_zooplank_boot_gf$mean, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                     dplyr::arrange(x_row),
+                     y_diagonal = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$diagonal, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                       dplyr::arrange(x_row),
+                     y_variance = env_trans_zooplank_boot_gf$variance
+                      )
+        },
+          format = "qs"
+        ),
+
+         ##Hotellings p-value similiarity matrix, using diagonal covariance
+        ## p_mat_diag_cov = target(
+        ##   rmethods:::hotellings_bulk(
+        ##                       means = env_trans_wide_zooplank_boot_gf$y_mean[, env_names],
+        ##                       res_sq = env_trans_wide_zooplank_boot_gf$y_variance[, env_names]
+        ##              ),
+        ##   format = "qs"
+        ## ),
+
+        env_trans_sub_zooplank_boot_gf = target(
+          predict(object = zooplank_boot_combined_gf,
+                                          newdata = env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, env_names_sub],
+                                          type = c("mean", "variance", "diagonal", "points"),
+                                          extrap = extrap),
+          format = "qs"
+        ),
+
+        env_trans_sub_wide_zooplank_boot_gf = target(
+        {
+          out <- list(y_mean = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$mean, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                     dplyr::arrange(x_row),
+                     y_diagonal = tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$diagonal, id_cols = "x_row", names_from = "pred", values_from = "y") %>%
+                       dplyr::arrange(x_row),
+                     y_variance = env_trans_sub_zooplank_boot_gf$variance
+
+                      )
+        },
+          format = "qs"
+        ),
+
+
+p_mat_full_cov_sub = target(
+{
+  x_row <- seq_along(env_trans_sub_wide_zooplank_boot_gf$y_mean$x_row)
+  pairs <- expand.grid(i = x_row, j = x_row)
+  result <- furrr::future_map2_dbl(pairs$i, pairs$j,
+              ~ {
+                if(.x < .y) {
+                    b_dist <- fpc::bhattacharyya.dist(
+                                   as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.x, env_names_sub]),
+                                   as.numeric(env_trans_sub_wide_zooplank_boot_gf$y_mean[.y, env_names_sub]),
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.x]],
+                                   env_trans_sub_wide_zooplank_boot_gf$y_variance[[.y]]
+                                 )
+                    b_coeff_sim <- exp(-b_dist)
+                  return(b_coeff_sim)
+                } else {
+                  return(NA)
+                }
+              }, env_trans_sub_wide_zooplank_boot_gf, env_names_sub)
+  out <- matrix(result, max(x_row), max(x_row))
+  out[lower.tri(out)] <- t(out)[lower.tri(out)]
+  diag(out) <- 1
+  return(out)
+  },
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+        zooplank_cast_sub_full = target(
+          castcluster::cast_optimal(p_mat_full_cov_sub),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_full_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub_full$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub_full$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub_full$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub_full.png"),
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_full_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub_full = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub_full.png"),
+             gg_sim_mat(p_mat_full_cov_sub, cast_ob = zooplank_cast_sub_full$cast_ob[[which.max(zooplank_cast_sub_full$gamma)]], highlight = TRUE, aff_thres = zooplank_cast_sub_full$aff_thres[[which.max(zooplank_cast_sub_full$gamma)]])
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+         ##Hotellings p-value similiarity matrix, using diagonal covariance
+        p_mat_diag_cov_sub = target(
+          rmethods:::hotellings_bulk(
+                              means = env_trans_sub_wide_zooplank_boot_gf$y_mean[, env_names_sub],
+                              res_sq = env_trans_sub_wide_zooplank_boot_gf$y_diagonal[, env_names_sub]
+                     ),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+        zooplank_cast_sub = target(
+          castcluster::cast_optimal(p_mat_diag_cov_sub),
+ memory_strategy = "autoclean",
+          format = "qs"
+        ),
+
+
+        zooplank_cast_sub_clust_ind = target(
+          {
+            max_ind <- which.max(zooplank_cast_sub$gamma)
+            clust_ind <- do.call("rbind", lapply(seq_along(zooplank_cast_sub$cast_ob[[max_ind]]), function(x) {data.frame(x_row = zooplank_cast_sub$cast_ob[[max_ind]][[x]], cl = x)}))
+            clust_ind2 <- clust_ind[order(clust_ind$x_row),]
+          },
+ memory_strategy = "autoclean",
+          format = "qs"
+          ),
+
+        pl_zooplank_cast_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sub.png"),
+             plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
+                             zooplank_cast_sub_clust_ind$cl,
+                             spatial_vars,
+                             marine_map,
+                             env_poly,
+                             regrid_res = env_subset_val)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+        pl_zooplank_sim_mat_sub = target(
+           ggsave_wrapper(
+             here::here("outputs", "zooplank_cast_sim_mat_sub.png"),
+             gg_sim_mat(p_mat_diag_cov_sub, cast_ob = zooplank_cast_sub$cast_ob[[which.max(zooplank_cast_sub$gamma)]], highlight = TRUE)
+            ),
+ memory_strategy = "autoclean",
+           trigger = trigger(condition = TRUE) #Always replot the figures, dynamic variables cannot be used here
+        ),
+
+env_trans_sub_wide_points_zooplank_boot_gf = target(
+                     tidyr::pivot_wider(env_trans_sub_zooplank_boot_gf$points, id_cols = c("x_row", "gf"), names_from = "pred", values_from = "y") %>%
+                     dplyr::arrange(x_row) %>%
+                     as.data.table() %>%
+ data.table::setkey("x_row"),
+ memory_strategy = "autoclean",
+  format = "qs"
+  ),
 
 p_mat_full_cov_sub = target(
 {
@@ -2921,7 +3160,7 @@ if (!interactive()) {
   } else {
     ##no access to qstat/qsub, run multicore/serial
     options(
-      clustermq.scheduler = "multiprocess"
+      clustermq.scheduler = "multisession"
     )
     workers <- future::availableCores(which="all", na.rm=FALSE) ## number of cores, leave one for master
     jobs <- max(workers, na.rm=TRUE)
@@ -2934,6 +3173,8 @@ if (!interactive()) {
   print(parallelism)
 print(getOption("clustermq.template", "PBS"))
 print("here")
+
+future::plan(future.callr::callr)
   drake::make(pl, seed = r_seed,
               # targets = c("pl_phytoplank_clusters_samples"),
               parallelism = parallelism,
