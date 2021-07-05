@@ -9,20 +9,19 @@ whatis("For more detail, run ")
 whatis(" ")
 
 setenv("SINGULARITY_BIND", os.getenv("TMPDIR") ..
-         ",/gpfs1/scratch/30days/uqpdyer" ..
-         ",/gpfs1/scratch/90days/uqpdyer" ..
-         ",/gpfs1/scratch/90days:/scratch" ..
-         ",/gpfs1/groups:/groups" ..
-         ",/gpfs1/sw1:/sw" ..
-         ",/gpfs1/sw7:/sw7" ..
+         ",/scratch/uqpdyer:/usrscratch" ..
+         ",/scratch/uqpdyer" ..
+         ",/scratch" ..
+         ",/mnt/sw/legacy/sw1:/sw" ..
+         ",/mnt/sw/legacy/sw7:/sw7" ..
          ",/QRISdata"
 
        )
 setenv("SINGULARITYENV_APPEND_PATH", "/home/uqpdyer/bin")
 
 load("singularity/3.5.0")
-singularity = "/sw/Containers/singularity/bin/run_singularity"
-aus_bio_sif = "/90days/uqpdyer/r-singularity-aus-bio.img" --as recommended by RCC, /scratch for references, and input data files
+-- singularity = "/sw/Containers/singularity/3.5.0/bin/run_singularity"
+aus_bio_sif = "/home/uqpdyer/r-singularity-aus-bio.img" --as recommended by RCC, /scratch for references, and input data files
 
 -- Run Rscript on stdin
 execute{cmd="shopt -s expand_aliases", modeA={"all"}}
