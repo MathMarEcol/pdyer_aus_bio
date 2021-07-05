@@ -74,7 +74,8 @@
 #' @param out_dir Character string of path to save files. For safety, dir is not
 #'   created if it does not exist and fetch_future_env will fail. out_dir
 #'   should either be an absolute path or start with ./ (.\ on windows), any
-#'   other setup may not work
+#'   other setup may not work. Outputs will be sorted into subfolders within
+#'   out_dir.
 #' @param env_future_vars Character vector of ESGF CMIP6 variable_id's. These
 #'   variables will be fetched from ESGF to create deltas.
 #' @param env_future_scenarios Character vector of ESGF CMIP6 experiment_id's. A
@@ -150,7 +151,7 @@ if (interactive) {
   import::here(data.table, ":=")
 }
 fetch_future_env <- function(
-                              out_dir = "./outputs",
+                              out_dir = "./cmip_future",
                               env_future_vars = c("tos"),
                               env_future_scenarios =
                                 c("ssp126", "ssp245", "ssp585"),
@@ -230,6 +231,13 @@ fetch_future_env <- function(
                               ) {
 
   stopifnot(file.exists(out_dir))
+  out_models <- file.path(out_dir, "models")
+  dir.create(out_models)
+  out_ensembles <- file.path(out_dir, "ensembles")
+  dir.create(out_ensembles)
+  out_deltas <- file.path(out_dir, "deltas")
+  dir.create(out_deltas)
+
   ## Code Flow
   ## 1. Get metadata for datasets (A dataset is a CMIP6 model run)
   metadata <- fetch_future_env_fetch_metadata(
@@ -310,7 +318,7 @@ fetch_future_env <- function(
   ##     the subset of data needed, and
   ## generate statistics for each dataset.
   fetch_future_env_get_nc_files(
-    out_dir = out_dir,
+    out_models = out_models,
     metadata_full = metadata_full,
     file_data = file_data,
     env_hist_scenarios = env_hist_scenarios,
@@ -338,32 +346,36 @@ fetch_future_env <- function(
       ## long term mean, min and max
       ClimateOperators::cdo(glue::glue(
         "-O -ensmean ",
-        "'{out_dir}{.Platform$file.sep}{.x$variable_id}_*_",
+        "'{out_models}{var_folder(.x$variable_id)}",
+        "{.x$variable_id}_*_",
         "{.x$experiment_id}_{.x$target_name}_long_mean.nc' ",
-        "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+        "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
         "{.x$experiment_id}_{.x$target_name}_long_mean.nc"
       ))
       ## long term average min max
       ClimateOperators::cdo(glue::glue(
         "-O -ensmean ",
-        "'{out_dir}{.Platform$file.sep}{.x$variable_id}_*",
-        "_{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc' ",
-        "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+        "'{out_models}{var_folder(.x$variable_id)}",
+        "{.x$variable_id}_*_",
+        "{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc' ",
+        "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
         "{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc"
       ))
       ClimateOperators::cdo(glue::glue(
         "-O -ensmean ",
-        "'{out_dir}{.Platform$file.sep}{.x$variable_id}_*_",
+        "'{out_models}{var_folder(.x$variable_id)}",
+        "{.x$variable_id}_*_",
         "{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc' ",
-        "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+        "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
         "{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc"
       ))
       ## average range
       ClimateOperators::cdo(glue::glue(
         "-O -ensmean ",
-        "'{out_dir}{.Platform$file.sep}{.x$variable_id}_*_",
+        "'{out_models}{var_folder(.x$variable_id)}",
+        "{.x$variable_id}_*_",
         "{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc' ",
-        "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+        "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
         "{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc"
       ))
     }
@@ -385,36 +397,44 @@ fetch_future_env <- function(
   purrr::map_dfr(pairs, ~{
       ## long term mean, min and max
      ClimateOperators::cdo(glue::glue(
-       "-O sub {out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "-O sub {out_ensembles}{var_folder(.x$variable_id)}",
+       "{.x$variable_id}_ensemble_",
        "{.x$experiment_id}_{.x$target_name}_long_mean.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
        "{.x$historical_exp}_baseline_long_mean.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{out_deltas}{var_folder(.x$variable_id)}{.x$variable_id}_",
+       "delta_{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_long_mean.nc"
      ))
       ## long term average min max
      ClimateOperators::cdo(glue::glue(
-       "-O sub {out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "-O sub {out_ensembles}{var_folder(.x$variable_id)}",
+       "{.x$variable_id}_ensemble_",
        "{.x$experiment_id}_{.x$target_name}_avg_yr_min.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
        "{.x$historical_exp}_baseline_avg_yr_min.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{out_deltas}{var_folder(.x$variable_id)}{.x$variable_id}_",
+       "delta_{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_min.nc"))
      ClimateOperators::cdo(glue::glue(
-       "-O sub {out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "-O sub {out_ensembles}{var_folder(.x$variable_id)}",
+       "{.x$variable_id}_ensemble_",
        "{.x$experiment_id}_{.x$target_name}_avg_yr_max.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
        "{.x$historical_exp}_baseline_avg_yr_max.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{out_deltas}{var_folder(.x$variable_id)}{.x$variable_id}_",
+       "delta_{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_max.nc"
      ))
       ## average range
      ClimateOperators::cdo(glue::glue(
-       "-O sub {out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "-O sub {out_ensembles}{var_folder(.x$variable_id)}",
+       "{.x$variable_id}_ensemble_",
        "{.x$experiment_id}_{.x$target_name}_avg_yr_range.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_ensemble_",
+       "{out_ensembles}{var_folder(.x$variable_id)}{.x$variable_id}_ensemble_",
        "{.x$historical_exp}_baseline_avg_yr_range.nc ",
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{out_deltas}{var_folder(.x$variable_id)}{.x$variable_id}_delta_",
+       "{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_avg_yr_range.nc"
      ))
      outfile_names <- c("long_mean", "avg_yr_min", "avg_yr_max", "avg_yr_range")
@@ -425,7 +445,8 @@ fetch_future_env <- function(
                                 gsub("f_", "", .x$target_name)),
                               stat = outfile_names,
                               filename = glue::glue(
-       "{out_dir}{.Platform$file.sep}{.x$variable_id}_delta_{.x$target_name}_",
+       "{out_deltas}{var_folder(.x$variable_id)}{.x$variable_id}_",
+       "delta_{.x$target_name}_",
        "{.x$experiment_id}_{.x$historical_exp}_baseline_{outfile_names}.nc"
                               ))
     return(dataset_row)
@@ -440,21 +461,31 @@ fetch_future_env <- function(
 }
 
 ## Useful for quickly plotting deltas for a variable to check
-test_fetch_future_env <- function(variable_id = "tos") {
+test_fetch_future_env <- function(variable_id = "tos",
+                                  out_deltas,
+                                  out_plots = "./cmip_future/plots") {
+  if( !dir_exists(out_plots) ) {
+    dir.create(out_plots, recursive = TRUE)
+  }
   files_plot <-
-    list.files(path = ".", pattern = glue::glue("{variable_id}_delta_*"))
+    list.files(path = ".",
+               pattern =
+                 glue::glue("{var_folder(variable_id)}{variable_id}_delta_*")
+               )
   purrr::walk(files_plot, ~ {
     pl <- stars::read_stars(.x)
     qin <- tmap::qtm(pl)
     tmap::tmap_save(qin, file.path(
-      out_dir,
+      out_plots,
       glue::glue("{.x}.png")
     ))
   })
 }
 
-
-
+## Generate platform dependent "/tos/", for easy gluing
+var_folder <- function(variable_id){
+  glue::glue("{.Platform$file.sep}{.x$variable_id}{.Platform$file.sep}")
+}
 
 
 fetch_future_env_fetch_metadata <- function(env_future_vars,
@@ -816,7 +847,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                                             x_dim_name,
                                             y_dim_name,
                                             env_bounds_rounded,
-                                            out_dir,
+                                            out_models,
                                             file_data_target,
                                             grid_des_file,
                                             target_dates) {
@@ -830,7 +861,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
       "{fetch_future_env_format_with_decimal(env_bounds_rounded$y[1])},",
       "{fetch_future_env_format_with_decimal(env_bounds_rounded$y[2])} ",
       "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} ",
-      "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+      "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
       "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"
     ))
 
@@ -838,9 +869,9 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
       "-sellonlatbox,{env_bounds_rounded$x[1]},{env_bounds_rounded$x[2]},",
       "{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
       "-remapbil,{grid_des_file}, ",
-      "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+      "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
       "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc ",
-      "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+      "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
       "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
     ))
 
@@ -848,12 +879,12 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
     ## Check date range
     start_date <- as.Date(ClimateOperators::cdo(glue::glue(
       "outputtab,date,nohead -selgridcell,1 -seltimestep,1 ",
-      "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+      "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
       "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
     )))
     end_date <- as.Date(ClimateOperators::cdo(glue::glue(
       "outputtab,date,nohead -selgridcell,1 -seltimestep,-1 ",
-      "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+      "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
       "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
     )))
 
@@ -873,7 +904,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                                                            x_dim_name,
                                                            y_dim_name,
                                                            env_bounds_rounded,
-                                                           out_dir,
+                                                           out_models,
                                                            file_data_target,
                                                            grid_des_file,
                                                            grid_cells,
@@ -898,7 +929,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
              "{target_dates[[.x]]$end} -v {.y$variable_id} ",
              "{cells} ",
              "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"
            ))
 
@@ -909,20 +940,20 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
              "{env_bounds_rounded$x[2]},",
              "{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
              "-remapcon,{grid_des_file}, ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
            ))
            ## Check date range
            start_date <- as.Date(ClimateOperators::cdo(glue::glue(
              "outputtab,date,nohead -selgridcell,1 -seltimestep,1  ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_{.y$source_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_{.y$source_id}_",
              "{.y$experiment_id}_{.x}_raw_grid.nc"
            )))
            end_date <- as.Date(ClimateOperators::cdo(glue::glue(
              "outputtab,date,nohead -selgridcell,1 -seltimestep,-1  ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_{.y$source_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_{.y$source_id}_",
              "{.y$experiment_id}_{.x}_raw_grid.nc"
            )))
            if (!all(
@@ -940,7 +971,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                                                           x_dim_name,
                                                           y_dim_name,
                                                           env_bounds_rounded,
-                                                          out_dir,
+                                                          out_models,
                                                           file_data_target,
                                                           grid_des_file,
                                                           grid_cells,
@@ -974,7 +1005,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
              "-d {x_dim_name},{x_min},{x_max} ",
              "-d {y_dim_name},{y_min},{y_max}  ",
              "-l ./  {paste(file_data_target$url_opendap, collapse = \" \")} ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc"
            ))
            ClimateOperators::cdo(glue::glue(
@@ -982,20 +1013,20 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
              "{env_bounds_rounded$x[2]},",
              "{env_bounds_rounded$y[1]},{env_bounds_rounded$y[2]}, ",
              "-remapbil,{grid_des_file}, ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw.nc ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
            ))
            ## Check date range
            start_date <- as.Date(ClimateOperators::cdo(glue::glue(
              "outputtab,date,nohead -selgridcell,1 -seltimestep,1  ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
            )))
            end_date <- as.Date(ClimateOperators::cdo(glue::glue(
              "outputtab,date,nohead -selgridcell,1 -seltimestep,-1  ",
-             "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+             "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
              "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
            )))
            if (!all(
@@ -1008,7 +1039,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
              ))
            }
          }
-         fetch_future_env_get_nc_files <- function(out_dir,
+         fetch_future_env_get_nc_files <- function(out_models,
                                                    metadata_full,
                                                    file_data,
                                                    env_hist_scenarios,
@@ -1058,13 +1089,13 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
 
                message(file_data_target$url_opendap[1])
                message(file.path(
-                 out_dir,
+                 out_models,
                  glue::glue("{.y$variable_id}_{.y$source_id}_",
                  "{.y$experiment_id}_{.x}_raw.nc")
                ))
                ## Primitive caching, don't download again
                if (!file.exists(file.path(
-                 out_dir,
+                 out_models,
                  glue::glue("{.y$variable_id}_{.y$source_id}_",
                  "{.y$experiment_id}_{.x}_raw.nc")
                ))) {
@@ -1115,7 +1146,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                      x_dim_name = x_dim_name,
                      y_dim_name = y_dim_name,
                      env_bounds_rounded = env_bounds_rounded,
-                     out_dir = out_dir,
+                     out_models = out_models,
                      file_data_target = file_data_target,
                      grid_des_file = grid_des_file,
                      target_dates = target_dates,
@@ -1128,7 +1159,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                      x_dim_name = x_dim_name,
                      y_dim_name = y_dim_name,
                      env_bounds_rounded = env_bounds_rounded,
-                     out_dir = out_dir,
+                     out_models = out_models,
                      file_data_target = file_data_target,
                      grid_des_file = grid_des_file,
                      grid_cells = grid_cells,
@@ -1143,7 +1174,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                      x_dim_name = x_dim_name,
                      y_dim_name = y_dim_name,
                      env_bounds_rounded = env_bounds_rounded,
-                     out_dir = out_dir,
+                     out_models = out_models,
                      file_data_target = file_data_target,
                      grid_des_file = grid_des_file,
                      grid_cells = grid_cells,
@@ -1157,7 +1188,7 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                ## NA and write to file.
                grid_file <- ncdf4::nc_open(
                  glue::glue(
-                   "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                   "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                    "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc"
                  ),
                  write = TRUE
@@ -1173,32 +1204,32 @@ fetch_future_env_grid_des <- function(env_bounds_rounded,
                ## long term mean
                ClimateOperators::cdo(glue::glue(
                  "-timmean ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_long_mean.nc"
                ))
                ## average annual min max
                ClimateOperators::cdo(glue::glue(
                  "-timmean -yearmin ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_min.nc"
                ))
                ClimateOperators::cdo(glue::glue(
                  "-timmean -yearmax ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_max.nc"
                ))
                ## average annual range
                ClimateOperators::cdo(glue::glue(
                  "-timmean -yearrange ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_raw_grid.nc ",
-                 "{out_dir}{.Platform$file.sep}{.y$variable_id}_",
+                 "{out_models}{var_folder(.y$variable_id)}{.y$variable_id}_",
                  "{.y$source_id}_{.y$experiment_id}_{.x}_avg_yr_range.nc"
                  ))
              })
