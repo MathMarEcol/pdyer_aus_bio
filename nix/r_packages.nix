@@ -52,6 +52,7 @@ with pkgs.rPackages; [#All  R packages that I use in my code.
 
         #data sources
         sdmpredictors
+        wdpar
         robis
         #seaaroundus #removed from CRAN
         ncdf4

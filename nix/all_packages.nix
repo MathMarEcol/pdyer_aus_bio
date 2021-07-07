@@ -52,6 +52,8 @@ with pkgs;[
           openssh
           iputils
 
+          phantomjs2 ## hack for wdman, needed by wdpar
+
           (pkgs.callPackage /vmshare/cust-nix/Rshell/nix_r_combined.nix {rPa = rpackages;})
           # (rWrapper.override {
           #     packages = [
