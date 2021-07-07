@@ -61,3 +61,34 @@ clust_ratio_df <- rbind(clust_ratio_df, c(9, 0))
 pl <-ggplot(clust_ratio_df, aes(x = Var1, y = Freq)) + geom_bar(stat= "identity") +theme_tufte() + ylim(0,1)
 
 ggsave("ratio.png", pl)
+
+## Test hacking wdman
+##
+if (grepl("nixos", Sys.info()["version"], ignore.case = TRUE)){
+
+  phantom_ver <- function(platform, version){
+    phantomver <- binman::list_versions("phantomjs")[[platform]]
+    phantomver <- if(identical(version, "latest")){
+                    as.character(max(semver::parse_version(phantomver)))
+                  }else{
+                    mtch <- match(version, phantomver)
+                    if(is.na(mtch) || is.null(mtch)){
+                      stop("version requested doesnt match versions available = ",
+                           paste(phantomver, collapse = ","))
+                    }
+                    phantomver[mtch]
+                  }
+    phantomsysver <- as.character(max(semver::parse_version(gsub("\n", "", (processx::run("phantomjs",  "--version")$stdout)))))
+    if(phantomsysver != phantomver) {
+      stop(paste0("This is a hacked version of wdman for NixOS systems, NixOS does not play well with external binaries.\n",
+                  "You must specify a phantomjs version of [", phantomsysver, "]. If that number is empty, phantomjs may not be installed on the system")
+           )
+    }
+    phantompath <- strsplit(processx::run("which", "phantomjs")$stdout, "\n")[[1]]
+    phantomdir <- dirname(phantompath)
+    list(version = phantomver, dir = phantomdir, path = phantompath)
+  }
+
+  assignInNamespace("phantom_ver", phantom_ver, ns="wdman")
+
+}

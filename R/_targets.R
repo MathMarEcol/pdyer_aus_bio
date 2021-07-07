@@ -22,6 +22,8 @@ tar_option_set(
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
     "stars",
+    "semver",
+    "processx",
     "RCurl",
     "tmap",
     "ggplot2",
