@@ -14,6 +14,7 @@ source("./functions/params.R")
 configure_parallel(default_clustermq = TRUE,
                    future_plan = future.callr::callr)
 # options()
+print(options())
 
 ## Set targets options
 tar_option_set(
