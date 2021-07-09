@@ -26,11 +26,11 @@ git clone -b $GIT_BRANCH --single-branch https://github.com/MathMarEcol/pdyer_au
 
 #capture current git hash for use later
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code
-git_hash=$(git rev-parse --short HEAD)
-date_run=$(date +%Y-%m-%d_%H-%M-%S)
+export git_hash=$(git rev-parse --short HEAD)
+export date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
 #For playing nice on the hpc, put all data into a cluster network disk, don't leave it on UQ RDM
-TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data
+export TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data
 
 #Have to carefully make sure all files make it over
 #"Input" files are stored in 90days
@@ -107,7 +107,7 @@ fi
 fi
 
 #Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
-TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
+export TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
 cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/R
 
 Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS})"
