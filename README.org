@@ -24,7 +24,7 @@ nix-shell r_shell.nix
 Then to run the project:
 
 #+begin_src sh
-cd ./code/shell
+cd ../code/shell
 GIT_BRANCH=f_targets_quick WORKERS=2 ./aus_bio_pbs_local.sh
 #+end_src
 
