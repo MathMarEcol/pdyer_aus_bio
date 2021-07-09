@@ -24,6 +24,7 @@ tar_option_set(
     "stars",
     "semver",
     "processx",
+    "wdpar",
     "RCurl",
     "tmap",
     "ggplot2",
