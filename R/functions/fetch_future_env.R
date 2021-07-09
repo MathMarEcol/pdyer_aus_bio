@@ -136,7 +136,7 @@
 
 ## Quick access to the needed packages
 ## Will not load in scripts or automated pipelines
-if (interactive) {
+if (interactive()) {
   library(lubridate)
   library(data.table)
   library(purrr)
