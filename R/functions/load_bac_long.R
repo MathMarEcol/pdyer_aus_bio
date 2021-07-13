@@ -48,7 +48,7 @@ load_bac_long <- function(
                                check.names = TRUE,
                                key = c("Sample.ID", "OTU"),
                                data.table = TRUE,
-                               stringsAsFactors = FALSE)},
+                               stringsAsFactors = FALSE)
 
   bac_otu[bac_sites,  c(spatial_vars, "depth")  := mget(paste0("i.", c(spatial_vars, "depth")))]
   bac_otu[ , c("survey", "trophic", "Sample.ID") := .("bac", "microbe", NULL)]
