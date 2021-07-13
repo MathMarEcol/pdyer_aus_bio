@@ -100,16 +100,18 @@ fish_years = 2007:2017
 
 #' Depth filtering params
 
-depth_range = list(
-  epi = c(0, 200),
-  meso = c(201, 1000 ),
-  bathy = c(1001, Inf)
-)
 depth_names = c(
   "epi",
   "meso",
   "bathy"
 )
+
+depth_range = list()
+
+## Include lower bound, exclude upper bound d \in [a,b)
+depth_range[[depth_names[1]]] <- c(0, 200)
+depth_range[[depth_names[2]]] <- c(200, 1000)
+depth_range[[depth_names[3]]] <- c(1000, Inf)
 
 #' Species sampling filter params
 freq_range = c(0.05, 1)
