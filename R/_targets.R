@@ -170,7 +170,5 @@ list(
     ),
     pattern = map(env_poly), # maps over box polygon and
     iteration = "list"
-  ),
-    )
   )
 )
