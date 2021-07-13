@@ -131,7 +131,6 @@ list(
 
   tar_target(
     all_bio_long,
-    {
     data.table::rbindlist(
                   list(
                  zoo_long,
@@ -143,7 +142,7 @@ list(
                 )[,
                   tar_group := .GRP,
                   by = c("survey",  "trophic")] %>%
-setkeyv(spatial_vars),
+      data.table::setkeyv(spatial_vars),
     iteration = "group"
   ),
 
