@@ -18,13 +18,16 @@ domain_extent_targets <- function(
     ## env_bounds are manually specified extents to the study area
     tar_target(
       env_poly,
+      list(
       ## Use Aus EEZ as study area
-      ## marine_map[marine_map$Country == "Australia", ]
+      aus_eez = marine_map[marine_map$Country == "Australia", ],
 
       ## Use box around Aus as study area
-      sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
+      aux_bbox = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
                    crs = sf::st_crs(marine_map)
                    )
+      ),
+      iteration = "list"
     ),
 
     tar_target(

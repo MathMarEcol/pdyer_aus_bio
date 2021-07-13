@@ -2,7 +2,7 @@
 #' adds survey and trophic identifiers,
 #' and converts to long form
 #' The final colNames are
-#' c("survey", "trophic", "depth" spatial_vars, "taxon", "abund")
+#' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")
 load_bac_long <- function(
                           bac_otu_csv,
                           bac_site_csv,
@@ -33,23 +33,32 @@ load_bac_long <- function(
                                  data.table = TRUE,
                                  stringsAsFactors = FALSE)
 
-  ## For reasons I don't understand, wrapping the fread call in microbenchmark prevents failure
-  dt_time <- microbenchmark::microbenchmark({
-    ## micro_dt <- data.table::fread(microbe_bacteria_csv, sep = ",", select =1:3, check.names = TRUE, key = c("Sample.ID", "OTU" ), data.table = TRUE, stringsAsFactors = FALSE)
-    bac_otu <- data.table::fread(bac_otu_csv,
-                             sep = ",",
-                             select =1:3,
-                             check.names = TRUE,
-                             key = c("Sample.ID", "OTU"),
-                             data.table = TRUE,
-                             stringsAsFactors = FALSE)
-  }, times= 1)
+  ## NA depths are not meaningful, drop
+  ## Only 3 samples, all from Geoffrey bay, Magnetic Island.
+  ## 286 other samples at identical lat and lon coordinate.
+  bac_sites <- bac_sites[!is.na(depth)]
+
+  ## For reasons I don't understand, wrapping the fread call in microbenchmark was preventing failure
+  ## fread takes ~270s, readr::read_csv take ~500s, but read_csv is more stable.
+  ## fread required me to wrap it in a call to microbenchmark, which is non-obvious and sounds fragile.
+  ## fread is working now. Maybe a bug was fixed.
+  bac_otu <- data.table::fread(bac_otu_csv,
+                               sep = ",",
+                               select =1:3,
+                               check.names = TRUE,
+                               key = c("Sample.ID", "OTU"),
+                               data.table = TRUE,
+                               stringsAsFactors = FALSE)},
 
   bac_otu[bac_sites,  c(spatial_vars, "depth")  := mget(paste0("i.", c(spatial_vars, "depth")))]
   bac_otu[ , c("survey", "trophic", "Sample.ID") := .("bac", "microbe", NULL)]
-
-  bac_otu[ , c("survey", "trophic", "Sample.ID") := .("bac", "microbe", NULL)]
-  setnames(bac_otu, c("OTU", "OTU.Count"), c("taxon", "abund"))
+  bac_otu[ , depth_cat := data.table::fcase(
+                                    depth >= depth_range[[depth_names[1]]][1] & depth < depth_range[[depth_names[1]]][2], depth_names[1],
+                                    depth >= depth_range[[depth_names[2]]][1] & depth < depth_range[[depth_names[2]]][2], depth_names[2],
+                                    depth >= depth_range[[depth_names[3]]][1] & depth < depth_range[[depth_names[3]]][2], depth_names[3],
+                                    default = NA
+                                    )]
+  data.table::setnames(bac_otu, c("OTU", "OTU.Count"), c("taxon", "abund"))
 
 
 

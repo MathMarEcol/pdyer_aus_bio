@@ -2,7 +2,7 @@
 #' adds survey and trophic identifiers,
 #' and converts to long form
 #' The final colNames are
-#' c("survey", "trophic", "depth" spatial_vars, "taxon", "abund")
+#' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")
 load_fish_long <- function(
                           fish_taxon_file,
                           fish_data_dir,
@@ -85,16 +85,17 @@ fish_taxon_depth <-
   ## convert is.<depth> to long form
   fish_taxon_sp_depth <- data.table::melt(fish_taxon_sp,
                                        measure.vars =  depth_names,
-                                       variable.name = "depth",
+                                       variable.name = "depth_cat",
                                        value.name = "depth_keep"
                                       )[depth_keep == TRUE]
-  setkey(fish_taxon_sp_depth, "TaxonKey")
+  data.table::setkey(fish_taxon_sp_depth, "TaxonKey")
   fish_taxon_sp_depth[, which(
       !(colnames(fish_taxon_sp_depth) %in%
         c("TaxonKey", "TaxonName",
-          "depth")
+          "depth_cat")
       )
   ) := NULL]
+  fish_taxon_sp_depth[, depth := sapply(depth_cat, function(x){depth_range[[x]][1]})]
 
 ## have the taxon keys, but not spatial vars or abundances
   ## Local function with closure over fish_data_dir
@@ -109,9 +110,9 @@ fish_taxon_depth <-
                   }
                 )
      )
-  setkey(fish_catch, "TaxonKey")
+  data.table::setkey(fish_catch, "TaxonKey")
   fish_catch_mean <- fish_catch[, .(abund = mean(abund)), by = .(TaxonKey, lat, lon)]
-  setkey(fish_catch_mean, "TaxonKey")
+  data.table::setkey(fish_catch_mean, "TaxonKey")
 
  fish_long <- fish_taxon_sp_depth[fish_catch_mean,
                      allow.cartesian=TRUE, nomatch = NULL, on = "TaxonKey"]
@@ -120,6 +121,7 @@ fish_taxon_depth <-
                     taxon = TaxonName,
                     survey = "watson",
                     trophic = "fish")]
+  return(fish_long)
 }
 
 

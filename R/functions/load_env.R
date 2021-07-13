@@ -7,11 +7,10 @@ load_env_domain <- function(
                             env_modes,
                             env_poly,
                             max_depth,
-                            regrid_res,
+                            regrid_resolution,
                             spatial_vars,
                             bio_oracle_str_template = "BO2_%s%s_ss",
                             env_limits_sd,
-                            regrid_resolution,
                             env_offset,
                             env_id_col
                             ) {
@@ -33,7 +32,7 @@ load_env_domain <- function(
                                            rasterstack = FALSE)
 
   target_grid <- raster::raster(x = env_poly,
-                                     resolution = regrid_res,
+                                     resolution = regrid_resolution,
                                      crs = "+proj=longlat +datum=WGS84")
 
   raster_crop <- raster::brick(lapply(env_raster,
@@ -45,15 +44,15 @@ load_env_domain <- function(
                                      method = "bilinear")
   ##mask is much quicker than st_intersection
   raster_masked <- raster::mask(raster_rescale, env_poly)
-  crs(raster_masked) <-"+proj=longlat +datum=WGS84"
-  env_points <- data.table::setDT(rasterToPoints(raster_masked))
+  raster::crs(raster_masked) <-"+proj=longlat +datum=WGS84"
+  env_points <- data.table::data.table(raster::rasterToPoints(raster_masked))
 
 
   env_region <- na.omit(env_points)
 
-  setnames(env_region, 1:2, spatial_vars)
+  data.table::setnames(env_region, 1:2, spatial_vars)
 
-  setkey(env_region, spatial_vars)
+  data.table::setkeyv(env_region, spatial_vars)
 
   env_clipped <- env_clip_extremes(env_data = env_region,
                                    std_thres = env_limits_sd)
@@ -63,8 +62,8 @@ load_env_domain <- function(
                                       res = regrid_resolution,
                                       offset = env_offset,
                                     fun = mean)
-  setDT(env_round)
-  env_round[, env_id_col :=  seq_len(nrow(env_round))]
+  data.table::setDT(env_round)
+  env_round[, c(env_id_col) :=  seq_len(nrow(env_round))]
   return(env_round)
 
 }

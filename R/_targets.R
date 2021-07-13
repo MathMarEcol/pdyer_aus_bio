@@ -131,6 +131,7 @@ list(
 
   tar_target(
     all_bio_long,
+    {
     data.table::rbindlist(
                   list(
                  zoo_long,
@@ -139,9 +140,12 @@ list(
                  fish_long
                  ),
                  use.names = TRUE
-                ),
+                )[,
+                  tar_group := .GRP,
+                  by = c("survey",  "trophic")] %>%
+setkeyv(spatial_vars),
     iteration = "group"
-    ),
+  ),
 
   domain_extent_targets(
     mapfile_location,
@@ -155,11 +159,18 @@ list(
       biooracle_folder,
       env_vars,
       env_modes,
-      env_poly,
+      env_poly[[1]],
       max_depth,
       regrid_res,
       spatial_vars,
-      bio_oracle_str_template
+      bio_oracle_str_template,
+      env_limits_sd,
+      env_offset,
+      env_id_col
+    ),
+    pattern = map(env_poly), # maps over box polygon and
+    iteration = "list"
+  ),
     )
   )
 )
