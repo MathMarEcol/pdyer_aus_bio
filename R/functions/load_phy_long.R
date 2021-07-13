@@ -2,7 +2,7 @@
 #' adds survey and trophic identifiers,
 #' and converts to long form
 #' The final colNames are
-#' c("survey", "trophic", "depth", spatial_vars, "taxon", "abund")
+#' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")
 load_phy_long <- function(
                           phy_load_script,
                           phy_data_dir,
@@ -34,7 +34,8 @@ load_phy_long <- function(
               new_names$new
               )
   phy_raw[ , `:=`(
-    depth = 0,
+    depth = 0, ## all samples are epipelagic
+    depth_cat = depth_names[1], ## all samples are epipelagic
     SampleDateUTC = NULL,
     ProjectNumber = NULL)]
 
