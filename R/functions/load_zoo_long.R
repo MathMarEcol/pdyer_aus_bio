@@ -10,9 +10,7 @@ load_zoo_long <- function(
                           zoo_names,
                           spatial_vars,
                           depth_names,
-                          <#part type="application/octet-stream" filename=clean_sp_names.R disposition=attachment>
-<#/part>
-depth_range
+                          depth_range
                           ) {
   source(zoo_load_script)
   zoo_raw <- load_zoo_data(zoo_data_dir)
