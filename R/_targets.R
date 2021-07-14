@@ -159,7 +159,7 @@ list(
       biooracle_folder,
       env_vars,
       env_modes,
-      env_poly[[1]],
+      env_poly,
       max_depth,
       regrid_res,
       spatial_vars,
