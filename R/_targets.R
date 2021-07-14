@@ -114,7 +114,7 @@ list(
       spatial_vars,
       depth_names,
       depth_range
-                  ),
+    ),
     deployment = "worker",
     storage = "worker",
     retrieval = "worker",
@@ -149,6 +149,11 @@ list(
                   tar_group := .GRP,
                   by = c("survey",  "trophic")] %>%
       data.table::setkeyv(spatial_vars),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
     iteration = "group"
   ),
 
