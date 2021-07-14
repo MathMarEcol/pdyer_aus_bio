@@ -113,7 +113,12 @@ list(
       spatial_vars,
       depth_names,
       depth_range
-                  )
+                  ),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
   ),
 
   tar_target(
