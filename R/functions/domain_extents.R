@@ -27,13 +27,18 @@ domain_extent_targets <- function(
                    crs = sf::st_crs(marine_map)
                    )
       ),
+      ## Downstream targets will get a list, or, if they map over env_poly,
+      ## they will get env_poly[[i]], so downstream targets do not need to
+      ## unroll the list with env_poly[[1]] themselves.
       iteration = "list"
     ),
 
     tar_target(
       env_extent,
-      raster::extent(env_poly[[1]]),
+      raster::extent(env_poly),
       iteration = "list",
+      ## Without pattern, env_poly will be a list containing all values of
+      ## env_poly
       pattern = map(env_poly)
     )
   )
