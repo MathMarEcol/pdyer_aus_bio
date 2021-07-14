@@ -32,7 +32,9 @@ domain_extent_targets <- function(
 
     tar_target(
       env_extent,
-      raster::extent(env_poly),
+      raster::extent(env_poly[[1]]),
+      iteration = "list",
+      pattern = map(env_poly)
     )
   )
 }
