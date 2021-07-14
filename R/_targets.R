@@ -153,7 +153,7 @@ list(
     storage = "worker",
     retrieval = "worker",
     garbage_collection = TRUE,
-    memory = "transient"
+    memory = "transient",
     iteration = "group"
   ),
 
