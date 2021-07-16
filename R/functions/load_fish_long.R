@@ -131,7 +131,7 @@ fish_taxon_depth <-
     survey = "watson",
     trophic = "fish"
   )]
-  fish_long <- data.table::rbind(fish_long, fish_no_taxa)
+  fish_long <- rbind(fish_long, fish_no_taxa)
 
   return(fish_long)
 }
