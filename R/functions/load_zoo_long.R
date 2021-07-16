@@ -43,6 +43,10 @@ load_zoo_long <- function(
             TaxonGroup = NULL,
             ProjectNumber = NULL)]
 
+  all_sites_no_taxa <- zoo_raw[ ,
+                                    data.table(unique(.SD[, ..spatial_vars]), depth = mean(.SD$depth), abund = NA, taxon = "No taxa"),
+               by = c("survey", "trophic", "depth_cat")]
+  zoo_raw <- data.table::rbind(zoo_raw, all_sites_no_taxa)
 
 
   return(zoo_raw)

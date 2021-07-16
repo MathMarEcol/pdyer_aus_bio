@@ -39,6 +39,11 @@ load_phy_long <- function(
     SampleDateUTC = NULL,
     ProjectNumber = NULL)]
 
+  all_sites_no_taxa <- phy_raw[ ,
+                                    data.table(unique(.SD[, ..spatial_vars]), depth = mean(.SD$depth), abund = NA, taxon = "No taxa"),
+               by = c("survey", "trophic", "depth_cat")]
+  phy_raw <- data.table::rbind(phy_raw, all_sites_no_taxa)
+
   return(phy_raw)
 }
 
