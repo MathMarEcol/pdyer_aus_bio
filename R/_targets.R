@@ -77,8 +77,11 @@ list(
   #
   # Last of all, plotting
 
+  ## Load in all the input targets
   track_inputs(), #returns a list of targets
 
+  ## Load in biological data and convert to
+  ## long form
   tar_target(
     zoo_long,
     load_zoo_long(zoo_load_script,
@@ -90,8 +93,6 @@ list(
                   depth_range
                   )
   ),
-
-
 
   tar_target(
     phy_long,
@@ -130,25 +131,23 @@ list(
       fish_years,
       spatial_vars,
       depth_names,
-      depth_range
+      depth_range,
+      regrid_resolution,
+      env_offset
     )
   ),
 
-
+  ## Combine all biological data together
+  ## Operations will be done over groups
   tar_target(
     all_bio_long,
-    data.table::rbindlist(
-                  list(
-                 zoo_long,
-                 phy_long,
-                 bac_long,
-                 fish_long
-                 ),
-                 use.names = TRUE
-                )[,
-                  tar_group := .GRP,
-                  by = c("survey",  "trophic")] %>%
-      data.table::setkeyv(spatial_vars),
+    merge_all_bio(
+      zoo_long,
+      phy_long,
+      bac_long,
+      fish_long,
+      spatial_vars = spatial_vars
+    ),
     deployment = "worker",
     storage = "worker",
     retrieval = "worker",
@@ -157,6 +156,7 @@ list(
     iteration = "group"
   ),
 
+  ## Load in environmental data and domain
   domain_extent_targets(
     mapfile_location,
     map_layer,
