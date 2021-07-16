@@ -9,7 +9,9 @@ load_fish_long <- function(
                           fish_years,
                           spatial_vars,
                           depth_names,
-                          depth_range
+                          depth_range,
+                          regrid_resolution,
+                          env_offset
                           ) {
 
    fish_taxon  <- data.table::setDT(readRDS(fish_taxon_file), key = "TaxonKey")
@@ -121,6 +123,16 @@ fish_taxon_depth <-
                     taxon = TaxonName,
                     survey = "watson",
                     trophic = "fish")]
+  fish_no_taxa <- data.table::CJ(lat = seq(-90, 90, regrid_resolution)+env_offset, lon = seq(0, 360-regrid_resolution, regrid_resolution)+env_offset, depth_cat = depth_names)
+  fish_no_taxa[, `:=`(
+    depth = sapply(depth_cat, function(x){depth_range[[x]][1]}),
+    taxon = "No taxa",
+    abund = NA,
+    survey = "watson",
+    trophic = "fish"
+  )]
+  fish_long <- data.table::rbind(fish_long, fish_no_taxa)
+
   return(fish_long)
 }
 
