@@ -27,7 +27,7 @@ load_phy_long <- function(
                        ~old, ~new,
                        "Longitude", spatial_vars[1],
                        "Latitude",spatial_vars[2],
-                       "TaxonName", "taxon"
+                       "Species", "taxon"
                        )
   setnames(phy_raw,
               new_names$old,

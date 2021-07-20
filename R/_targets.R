@@ -141,10 +141,15 @@ list(
   tar_target(
     all_bio_long,
     merge_all_bio(
-      zoo_long,
-      phy_long,
-      bac_long,
-      fish_long,
+      list(
+        zoo_long,
+        phy_long,
+        bac_long,
+        fish_long
+      ),
+      regrid_res = regrid_resolution,
+      env_offset = env_offset,
+      agg_fun = mean,
       spatial_vars = spatial_vars
     ),
     deployment = "worker",
