@@ -119,6 +119,9 @@ min_occurrence = 6
 cov_min = 1.0
 max_taxa = 2000
 
+#' Site species abundance merge function
+agg_fun <- mean
+
 #' Environment params
 spatial_vars = c("lon", "lat")
 env_id_col = "env_id"
