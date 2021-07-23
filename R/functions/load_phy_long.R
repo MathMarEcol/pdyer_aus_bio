@@ -14,7 +14,7 @@ load_phy_long <- function(
                           ) {
   source(phy_load_script)
   phy_raw <- load_phyto_data(phy_data_dir)
-  setDT(phy_raw)
+  data.table::setDT(phy_raw)
   phy_raw[ , `:=`(abund = Cells_L*1000,
                   Cells_L = NULL,
                trophic = "phy")]
@@ -39,10 +39,9 @@ load_phy_long <- function(
     SampleDateUTC = NULL,
     ProjectNumber = NULL)]
 
-  all_sites_no_taxa <- phy_raw[ ,
-                                    data.table(unique(.SD[, ..spatial_vars]), depth = mean(.SD$depth), abund = NA, taxon = "No taxa"),
-               by = c("survey", "trophic", "depth_cat")]
-  phy_raw <- rbind(phy_raw, all_sites_no_taxa)
+  phy_rows <- phy_raw[,
+                      normalise_bio(.SD, spatial_vars),
+                      by = c("survey", "trophic",  "depth_cat")]
 
   return(phy_raw)
 }
@@ -56,3 +55,4 @@ load_phy_long <- function(
   ## get_uncertain_sp_names(phyplank_surv, -999, "Abund_m3"),
 
   ## ##Before converting to wide, extract list of species names, but after global list
+

@@ -11,7 +11,8 @@ load_fish_long <- function(
                           depth_names,
                           depth_range,
                           regrid_resolution,
-                          env_offset
+                          env_offset,
+                          biooracle_folder
                           ) {
 
    fish_taxon  <- data.table::setDT(readRDS(fish_taxon_file), key = "TaxonKey")
@@ -114,26 +115,87 @@ fish_taxon_depth <-
      )
   data.table::setkey(fish_catch, "TaxonKey")
   fish_catch_mean <- fish_catch[, .(abund = mean(abund)), by = .(TaxonKey, lat, lon)]
+  rm(fish_catch)
   data.table::setkey(fish_catch_mean, "TaxonKey")
 
  fish_long <- fish_taxon_sp_depth[fish_catch_mean,
                      allow.cartesian=TRUE, nomatch = NULL, on = "TaxonKey"]
+  rm(fish_catch_mean)
   fish_long[, `:=` (TaxonKey = NULL,
                     TaxonName = NULL,
                     taxon = TaxonName,
                     survey = "watson",
                     trophic = "fish")]
-  fish_no_taxa <- data.table::CJ(lat = seq(-90, 90, regrid_resolution)+env_offset, lon = seq(0, 360-regrid_resolution, regrid_resolution)+env_offset, depth_cat = depth_names)
-  fish_no_taxa[, `:=`(
-    depth = sapply(depth_cat, function(x){depth_range[[x]][1]}),
-    taxon = "No taxa",
-    abund = NA,
-    survey = "watson",
-    trophic = "fish"
-  )]
-  fish_long <- rbind(fish_long, fish_no_taxa)
+  ## fish_long[, c(spatial_vars[1]) := (.SD %% 360), .SDcols = spatial_vars[1]]
+  ## Fish are sampled globally
+  ##
+  data("wrld_simpl", package = 'maptools')
+  world_poly <- st_as_sf(wrld_simpl)
 
-  return(fish_long)
+  bathy_raster <- terra::rast(sdmpredictors::load_layers("MS_bathy_5m",
+                                           datadir = biooracle_folder,
+                                           rasterstack = FALSE)[[1]])
+  bathy_sites <- lapply(depth_names, function(d, bathy_raster, depth_range, fish_long, spatial_vars){
+
+  fish_sites <- data.table::CJ(lat = seq(-89.75, 89.75, 0.5), lon = seq(-179.75, 179.75, 0.5))
+  fish_sites_sf <- sf::st_as_sf(fish_sites, coords = spatial_vars, crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+    depth_raster <- bathy_raster <= -depth_range[[d]][1]
+    depth_raster <- terra::subst(depth_raster, 0, NA)
+    depth_poly <- sf::st_as_sf(terra::as.polygons(depth_raster))
+    depth_sites <- fish_sites[!sf::st_intersects(fish_sites_sf, depth_poly) %>% lengths > 0, ]
+    depth_sites <- unique(rbind(fish_long[, ..spatial_vars], depth_sites[, ..spatial_vars]))
+    depth_sites[, site_id := seq.int(1,nrow(depth_sites))]
+
+## tmap::qtm(sf::st_as_sf(depth_poly), fill = "blue")
+}, bathy_raster = bathy_raster, depth_range=depth_range, fish_long=fish_long, spatial_vars=spatial_vars)
+  names(bathy_sites) <- depth_names
+
+  ## fish_sites <- fish_sites[!sf::st_intersects(st_as_sf(fish_sites, coords = spatial_vars, crs = st_crs(world_poly)), world_poly) %>% lengths > 0, ]
+  ## fish_sites <- unique(rbind(fish_long[, ..spatial_vars], fish_sites[, ..spatial_vars]))
+  ## fish_sites[, site_id := seq.int(1,nrow(fish_sites))]
+  ##verified with:
+  ## ggplot(fish_sites, aes(x=lon, y=lat))+geom_raster()
+  ## ggplot(fish_long, aes(x=lon, y=lat))+geom_raster()
+  ## ggplot(fish_long[, aes(x=lon, y=lat))+geom_raster()
+  ## fish_remerge <- fish_long[fish_sites, on = c(spatial_vars)]
+
+  ##                         obs <- data.table::copy(fish_long)
+  ##                         sites <- data.table(fish_sites,  depth = depth_range[["epi"]][1])
+  ##                         obs[sites, site_id := i.site_id, on = c(spatial_vars)]
+  #fish_raw[fish_no_taxa, site_id := i.site_id, on = c(spatial_vars)],
+  fish_rows <- fish_long[,
+                        {
+                          obs <- data.table::copy(.SD)
+                          ## sites <- data.table(fish_sites,  depth = depth_range[[.BY$depth_cat]][1])
+                          sites <- bathy_sites[[.BY$depth_cat]]
+                          obs[sites, site_id := i.site_id, on = c(spatial_vars)]
+                          #obs[, c(spatial_vars, "depth") := NULL]
+
+                        taxa <- data.table(taxon = unique(obs[, taxon]))
+                        taxa[ , taxon_id := seq.int(1, nrow(taxa))]
+                        obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
+                        obs[ , taxon := NULL]
+
+data.table(sites = list(sites),
+                                            taxa = list(taxa),
+                                            obs = list(obs)
+                                            )
+                        },
+                      by = c("survey", "trophic",  "depth_cat")]
+## ggplot(fish_rows$obs[[2]][fish_rows$sites[[2]], on = "site_id", nomatch = NULL], aes(x=lon, y= lat, size = abund)) + geom_point()
+
+
+  ## fish_no_taxa <- data.table::CJ(lat = seq(-90, 90, regrid_resolution)+env_offset, lon = seq(0, 360-regrid_resolution, regrid_resolution)+env_offset, depth_cat = depth_names)
+  ## fish_no_taxa[, `:=`(
+  ##   depth = sapply(depth_cat, function(x){depth_range[[x]][1]}),
+  ##   taxon = "No taxa",
+  ##   abund = NA,
+  ##   survey = "watson",
+  ##   trophic = "fish"
+  ## )]
+  ## fish_long <- rbind(fish_long, fish_no_taxa)
+
+  return(fish_rows)
 }
-
 

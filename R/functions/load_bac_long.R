@@ -71,5 +71,10 @@ load_bac_long <- function(
   if(length(setdiff(sites_sample_id, otu_sample_id)) != 0) {
     stop("Bacteria sites found with no taxa. Needs investigation and a No taxa category")
   }
-  return(bac_otu)
+
+
+  bac_rows <- bac_otu[,
+                      normalise_bio(.SD, spatial_vars),
+                      by = c("survey", "trophic",  "depth_cat")]
+  return(bac_rows)
 }

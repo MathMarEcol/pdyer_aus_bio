@@ -8,7 +8,7 @@ sapply(source_files, source)
 
 ## Load global objects
 ## Usually something living inside data()
-source("./functions/params.R")
+source("./functions/params.R") ##might be redundant, probably sourced above
 
 ## Set global R options, mostly clustermq
 configure_parallel(default_clustermq = TRUE,
@@ -132,7 +132,8 @@ list(
       depth_names,
       depth_range,
       regrid_resolution,
-      env_offset
+      env_offset,
+      biooracle_folder
     )
   ),
 
