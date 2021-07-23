@@ -132,9 +132,9 @@ fish_taxon_depth <-
   ## data("wrld_simpl", package = 'maptools')
   ## world_poly <- st_as_sf(wrld_simpl)
 
-  bathy_raster <- terra::rast(sdmpredictors::load_layers("MS_bathy_5m",
+  bathy_raster <- terra::rast(suppressWarnings(sdmpredictors::load_layers("MS_bathy_5m",
                                            datadir = biooracle_folder,
-                                           rasterstack = FALSE)[[1]])
+                                           rasterstack = FALSE))[[1]])
   bathy_sites <- lapply(depth_names, function(d, bathy_raster, depth_range, fish_long, spatial_vars){
 
   fish_sites <- data.table::CJ(lat = seq(-89.75, 89.75, 0.5), lon = seq(-179.75, 179.75, 0.5))

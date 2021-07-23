@@ -26,10 +26,9 @@ load_env_domain <- function(
   ## Add bathymetry separately
   env_bio_oracle_names <- c(env_bio_oracle_names, "MS_bathy_5m")
 
-
-  env_raster <- sdmpredictors::load_layers(env_bio_oracle_names,
+  env_raster <- suppressWarnings(sdmpredictors::load_layers(env_bio_oracle_names,
                                            datadir = biooracle_folder,
-                                           rasterstack = FALSE)
+                                           rasterstack = FALSE))
 
   target_grid <- raster::raster(x = env_poly,
                                      resolution = regrid_resolution,
