@@ -22,7 +22,7 @@ merge_all_bio <- function(
   ## Clean up names
     taxa_clean <- data.table::data.table(taxon = clean_sp_names(.SD$taxa[[1]]$taxon), taxon_id = .SD$taxa[[1]]$taxon_id)
 
-    out <- data.table(sites = list(sites_round), obs = list(.SD$obs[[1]]) taxa = list(taxa_clean))
+    out <- data.table(sites = list(sites_round), obs = list(.SD$obs[[1]]), taxa = list(taxa_clean))
 
     },
     by = c("trophic", "survey")]
