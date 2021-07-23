@@ -117,7 +117,7 @@ depth_range[[depth_names[3]]] <- c(1000, Inf)
 freq_range = c(0.05, 1)
 min_occurrence = 6
 cov_min = 1.0
-max_otu = 2000
+max_taxa = 2000
 
 #' Environment params
 spatial_vars = c("lon", "lat")

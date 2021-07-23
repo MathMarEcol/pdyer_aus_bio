@@ -84,6 +84,32 @@ list(
 
   ## Load in all the input targets
   track_inputs(), #returns a list of targets
+  ##
+  ## Load in environmental data and domain
+  domain_extent_targets(
+    mapfile_location,
+    map_layer,
+    env_bounds
+    ),
+
+  tar_target(
+    env_domain,
+    load_env_domain(
+      biooracle_folder,
+      env_vars,
+      env_modes,
+      env_poly,
+      max_depth,
+      regrid_resolution,
+      spatial_vars,
+      bio_oracle_str_template,
+      env_limits_sd,
+      env_offset,
+      env_id_col
+    ),
+    pattern = map(env_poly), # maps over box polygon and
+    iteration = "list"
+  ),
 
   ## Load in biological data and convert to
   ## long form
@@ -144,7 +170,8 @@ list(
   ),
 
   ## Combine all biological data together
-  ## Operations will be done over groups
+  ## Each row is a survey, the unit GF models are fit over
+  ## Downstream targets can iterate over rows
   tar_target(
     all_bio_long,
     merge_all_bio(
@@ -164,32 +191,35 @@ list(
     retrieval = "worker",
     garbage_collection = TRUE,
     memory = "transient",
-    iteration = "group"
+    iteration = "vector"
   ),
-
-  ## Load in environmental data and domain
-  domain_extent_targets(
-    mapfile_location,
-    map_layer,
-    env_bounds
-    ),
+  ##
+  ## Combine biological and environmental data
+  ## At this step we also
+  ## filter and merge the samples
+  ##  - Clean species names
+  ##  - remove rare or uninformative species
+  ##  - remove species with inconsistent sampling over time
+  ##  The output has env row keys, ready to push into wide form for GF
+  ##  and merge with environmental data
 
   tar_target(
-    env_domain,
-    load_env_domain(
-      biooracle_folder,
-      env_vars,
-      env_modes,
-      env_poly,
-      max_depth,
-      regrid_resolution,
+    all_bio_env,
+    merge_bio_env(
+      env_domain,
+      all_bio_long,
       spatial_vars,
-      bio_oracle_str_template,
-      env_limits_sd,
+      regrid_res,
       env_offset,
-      env_id_col
-    ),
-    pattern = map(env_poly), # maps over box polygon and
-    iteration = "list"
-  )
+      agg_fun,
+      env_id_col,
+      freq_range,
+      cov_min,
+      min_occurrence,
+      max_taxa
+      ),
+    pattern = cross(env_domain, all_bio_long),
+    iteration = "vector"
+
+    )
 )
