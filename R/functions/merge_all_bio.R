@@ -13,10 +13,10 @@ merge_all_bio <- function(
                  use.names = TRUE
                 ) -> all_bio_long
 
-  all_bio_long[, {
+  all_bio_round <- all_bio_long[, {
   ## Aggregate biological samples into grid cells
-    sites_round <- round((.SD$sites[[1]][, ..spatial_vars]-env_offset) / regrid_res) * regrid_resolution +  env_offset
-    sites_round[, site_id := .SD$sites[[1]][, site_id]]
+    sites_round <- round((.SD$sites[[1]][, c(spatial_vars), with=FALSE]-env_offset) / regrid_res) * regrid_res +  env_offset
+    sites_round[, c("site_id") := .SD$sites[[1]]$site_id]
     ## Convert all longitudes to range [0, 360]
     sites_round[, c(spatial_vars[1]) := .(.SD[[spatial_vars[1]]] %% 360)]
   ## Clean up names
@@ -25,8 +25,8 @@ merge_all_bio <- function(
     out <- data.table(sites = list(sites_round), obs = list(.SD$obs[[1]]), taxa = list(taxa_clean))
 
     },
-    by = c("trophic", "survey")]
-  
+    by = c("trophic", "survey", "depth_cat")]
+
   ## Aggregate biological samples into grid cells
   #spatial_vars_raw <- paste0(spatial_vars, "_raw")
   ## all_bio_long is a data.table, using := updates in place GLOBALLY
@@ -59,7 +59,7 @@ merge_all_bio <- function(
   ##                 tar_group := .GRP,
   ##                 by = c("survey",  "trophic")]
 
-  return(all_bio_long)
+  return(all_bio_round)
 
 }
 
