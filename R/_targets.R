@@ -22,6 +22,10 @@ tar_option_set(
   format = "qs",
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
+    "qs",
+    "sf",
+    "terra",
+    "raster",
     "stars",
     "semver",
     "processx",
@@ -34,6 +38,7 @@ tar_option_set(
     "glue",
     "ncdf4",
     "ClimateOperators",
+    "sdmpredictors",
     "data.table",
     "tidyverse",
     "purrr",
@@ -177,7 +182,7 @@ list(
       env_modes,
       env_poly,
       max_depth,
-      regrid_res,
+      regrid_resolution,
       spatial_vars,
       bio_oracle_str_template,
       env_limits_sd,
