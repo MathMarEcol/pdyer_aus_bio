@@ -129,8 +129,8 @@ fish_taxon_depth <-
   ## fish_long[, c(spatial_vars[1]) := (.SD %% 360), .SDcols = spatial_vars[1]]
   ## Fish are sampled globally
   ##
-  data("wrld_simpl", package = 'maptools')
-  world_poly <- st_as_sf(wrld_simpl)
+  ## data("wrld_simpl", package = 'maptools')
+  ## world_poly <- st_as_sf(wrld_simpl)
 
   bathy_raster <- terra::rast(sdmpredictors::load_layers("MS_bathy_5m",
                                            datadir = biooracle_folder,
@@ -143,7 +143,7 @@ fish_taxon_depth <-
     depth_raster <- bathy_raster <= -depth_range[[d]][1]
     depth_raster <- terra::subst(depth_raster, 0, NA)
     depth_poly <- sf::st_as_sf(terra::as.polygons(depth_raster))
-    depth_sites <- fish_sites[!sf::st_intersects(fish_sites_sf, depth_poly) %>% lengths > 0, ]
+    depth_sites <- fish_sites[!lengths(sf::st_intersects(fish_sites_sf, depth_poly)) > 0, ]
     depth_sites <- unique(rbind(fish_long[, ..spatial_vars], depth_sites[, ..spatial_vars]))
     depth_sites[, site_id := seq.int(1,nrow(depth_sites))]
 
@@ -172,12 +172,12 @@ fish_taxon_depth <-
                           obs[sites, site_id := i.site_id, on = c(spatial_vars)]
                           #obs[, c(spatial_vars, "depth") := NULL]
 
-                        taxa <- data.table(taxon = unique(obs[, taxon]))
+                        taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
                         taxa[ , taxon_id := seq.int(1, nrow(taxa))]
                         obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
                         obs[ , taxon := NULL]
 
-data.table(sites = list(sites),
+                          data.table::data.table(sites = list(sites),
                                             taxa = list(taxa),
                                             obs = list(obs)
                                             )
