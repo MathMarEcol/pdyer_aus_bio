@@ -43,7 +43,7 @@ load_phy_long <- function(
                       normalise_bio(.SD, spatial_vars),
                       by = c("survey", "trophic",  "depth_cat")]
 
-  return(phy_raw)
+  return(phy_rows)
 }
 
   ## ##do this for global list
