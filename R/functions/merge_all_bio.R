@@ -15,8 +15,11 @@ merge_all_bio <- function(
 
   all_bio_round <- all_bio_long[, {
   ## Aggregate biological samples into grid cells
-    sites_round <- round((.SD$sites[[1]][, c(spatial_vars), with=FALSE]-env_offset) / regrid_res) * regrid_res +  env_offset
-    sites_round[, c("site_id") := .SD$sites[[1]]$site_id]
+    copy_SD <- data.table::copy(.SD)
+    sites_round <- data.table::data.table(
+                                 round((copy_SD$sites[[1]][, c(spatial_vars), with=FALSE]-env_offset) / regrid_res) * regrid_res +  env_offset)
+    sites_round[, `:=`(site_id = copy_SD$sites[[1]]$site_id,
+                       depth = copy_SD$sites[[1]]$depth)]
     ## Convert all longitudes to range [0, 360]
     sites_round[, c(spatial_vars[1]) := .(.SD[[spatial_vars[1]]] %% 360)]
   ## Clean up names
