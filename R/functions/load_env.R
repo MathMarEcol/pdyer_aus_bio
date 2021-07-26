@@ -3,8 +3,7 @@
 
 load_env_domain <- function(
                             biooracle_folder,
-                            env_vars,
-                            env_modes,
+                            env_biooracle_names,
                             env_poly,
                             max_depth,
                             regrid_resolution,
@@ -15,18 +14,8 @@ load_env_domain <- function(
                             env_id_col
                             ) {
 
-  env_pairs <- data.table::as.data.table(
-                             merge.data.frame(env_vars, env_modes, all = TRUE)
-                           )
 
-  env_bio_oracle_names <- apply(env_pairs[x != "depth"], 1,
-                                function(x) {
-                                  sprintf(bio_oracle_str_template, x[1], x[2])
-                                })
-  ## Add bathymetry separately
-  env_bio_oracle_names <- c(env_bio_oracle_names, "MS_bathy_5m")
-
-  env_raster <- suppressWarnings(sdmpredictors::load_layers(env_bio_oracle_names,
+  env_raster <- suppressWarnings(sdmpredictors::load_layers(env_biooracle_names,
                                            datadir = biooracle_folder,
                                            rasterstack = FALSE))
 
