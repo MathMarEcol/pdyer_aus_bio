@@ -168,7 +168,7 @@ env_biooracle_names <- apply(env_pairs[x != "depth"], 1,
                                 sprintf(bio_oracle_str_template, x[1], x[2])
                               })
 ## Add bathymetry separately
-env_biooracle_names <- c(env_bio_oracle_names, "MS_bathy_5m")
+env_biooracle_names <- c(env_biooracle_names, "MS_bathy_5m")
 #' Environmental clipping params
 ##For each predictor, I have specified limits.
 ##Not all variables hit the limits, shwon in comment
