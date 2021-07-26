@@ -25,8 +25,8 @@ domain_extent_targets <- function(
 
       ## Use box around Aus as study area
       data.table(name = "aus_bbox",
-                 data = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
-                                     crs = sf::st_crs(marine_map)
+                 data = list(sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
+                                     crs = sf::st_crs(marine_map))
                    )
                  )
       ),
