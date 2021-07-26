@@ -42,6 +42,9 @@ merge_bio_env <- function(
   obs_env <- obs[!is.na(get(env_id_col))]
 
 
+  ## drop "No_taxa"
+  obs_env <- obs_env[!(taxon_id == taxa[taxon == "No_taxa"]$taxon_id)]
+
 
   ## Remove uncertain species
   obs_env %>%
@@ -59,14 +62,14 @@ merge_bio_env <- function(
   ## Need to know how many samples total, not just non-zeros
   site_times_est <- obs[, .(n_times = .N), by = c("site_id", "taxon_id")][,
                                                                           .(n_times = max(n_times)), by = site_id]
+  sites_env <- sites_env[, .(site_id = list(c(site_id)), n_sites = length(c(site_id))), by = env_id_col]
   grid_times_est <- purrr::map2_df(sites_env$site_id, sites_env[[env_id_col]], ~{
     out <- sum(site_times_est[site_id %in% .x, n_times])
     ret <- data.table(n_total = out, .y)
     names(ret) <- c("n_total", env_id_col)
     return(ret)
     })
-  sites_env <- sites_env[, .(site_id = list(c(site_id)), n_sites = length(c(site_id))), by = env_id_col]
-  sites_env[grid_times_est , n_total := i.n_total, on = env_id_col]
+  sites_env[grid_times_est , n_total := .(i.n_total), on = env_id_col]
 
   ## For each env_id and taxon combination, find the merged abundance
   ## Also need to merge across time.
@@ -102,7 +105,7 @@ merge_bio_env <- function(
   ## frequency
   ## coefficient of variation
   ## min_occurrences
-  n_sites <-nrow(sites_env)
+  n_sites <- nrow(sites_env)
 
   taxa_keep <- grid_env[ ,
                         .(cov = sd(abund) / mean(abund),
