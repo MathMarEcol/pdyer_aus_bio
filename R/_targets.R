@@ -96,8 +96,7 @@ list(
     env_domain,
     load_env_domain(
       biooracle_folder,
-      env_vars,
-      env_modes,
+      env_biooracle_names,
       env_poly,
       max_depth,
       regrid_resolution,
