@@ -43,7 +43,9 @@ merge_bio_env <- function(
 
 
   ## drop "No_taxa"
-  obs_env <- obs_env[!(taxon_id == taxa[taxon == "No_taxa"]$taxon_id)]
+  if ( length(taxa[taxon == "No_taxa"]$taxon_id) > 0) {
+    obs_env <- obs_env[!(taxon_id == taxa[taxon == "No_taxa"]$taxon_id)]
+  }
 
 
   ## Remove uncertain species
