@@ -133,14 +133,23 @@ merge_bio_env <- function(
   taxa[, taxon_id_chr := paste0("sp.",taxon_id)]
   grid_env[, taxon_id_chr := paste0("sp.",taxon_id)]
 
-wide_surv <- env_domain[get(env_id_col) %in% sites_env[[env_id_col]]]
-## wide_surv <- rbind(wide_surv, env_domain[1,])
-wide_taxa <- data.table::dcast(obs_env, env_id ~ taxon_id_chr, value.var = "abund", fill = 0)
-wide_taxa_env <- wide_taxa[wide_surv, on = env_id_col, nomatch = NA]
+  wide_surv <- env_domain[get(env_id_col) %in% sites_env[[env_id_col]]]
+    ## wide_surv <- rbind(wide_surv, env_domain[1,])
+    if (nrow(grid_env) == 0) {
+    return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
+                    wide_taxa_env = NA,
+                    taxa = NA,
+                    obs_env = NA,
+                    sites_env = NA
+                    ))
+    }
 
-wide_taxa_env[, (unique(obs_env$taxon_id_chr)) :=
-                  lapply(.SD, function(x){x[is.na(x)] <- 0}),
-              .SDcols = unique(obs_env$taxon_id_chr) ]
+    wide_taxa <- data.table::dcast(grid_env, env_id ~ taxon_id_chr, value.var = "abund", fill = 0)
+    wide_taxa_env <- wide_taxa[wide_surv, on = env_id_col, nomatch = NA]
+
+    ## wide_taxa_env[, (unique(obs_env$taxon_id_chr)) :=
+    ##                   lapply(.SD, function(x){x[is.na(x)] <- 0}),
+    ##               .SDcols = unique(obs_env$taxon_id_chr) ]
 
  return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
                    wide_taxa_env = list(wide_taxa_env),
