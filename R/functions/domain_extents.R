@@ -18,26 +18,30 @@ domain_extent_targets <- function(
     ## env_bounds are manually specified extents to the study area
     tar_target(
       env_poly,
-      list(
+      rbind(
       ## Use Aus EEZ as study area
-      aus_eez = marine_map[marine_map$Country == "Australia", ],
+      data.table(name = "aus_eez",
+                 data = list(marine_map[marine_map$Country == "Australia", ])),
 
       ## Use box around Aus as study area
-      aux_bbox = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
-                   crs = sf::st_crs(marine_map)
+      data.table(name = "aus_bbox",
+                 data = sf::st_as_sf(as(raster::extent(env_bounds), "SpatialPolygons"),
+                                     crs = sf::st_crs(marine_map)
                    )
+                 )
       ),
-      ## Downstream targets will get a list, or, if they map over env_poly,
-      ## they will get env_poly[[i]], so downstream targets do not need to
-      ## unroll the list with env_poly[[1]] themselves.
-      iteration = "list"
+      ## Downstream targets will get a data.table row
+      ## env_poly$name will return a single string
+      ## but env_poly$data will return a list
+      ## Most functions will want to use env_poly$data[[1]]
+      iteration = "vector"
     ),
 
     tar_target(
       env_extent,
-      raster::extent(env_poly),
-      iteration = "list",
-      ## Without pattern, env_poly will be a list containing all values of
+      data.table(name = env_poly$name, extent = list(raster::extent(env_poly$data[[1]]))),
+      iteration = "vector",
+      ## Without pattern, env_poly will be a data.table containing all values of
       ## env_poly
       pattern = map(env_poly)
     )
