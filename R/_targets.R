@@ -106,7 +106,7 @@ list(
       env_id_col
     ),
     pattern = map(env_poly), # maps over box polygon and
-    iteration = "list"
+    iteration = "vector"
   ),
 
   ## Load in biological data and convert to

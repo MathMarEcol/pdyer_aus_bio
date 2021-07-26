@@ -19,7 +19,7 @@ load_env_domain <- function(
                                            datadir = biooracle_folder,
                                            rasterstack = FALSE))
 
-  target_grid <- raster::raster(x = env_poly,
+  target_grid <- raster::raster(x = env_poly$data[[1]],
                                      resolution = regrid_resolution,
                                      crs = "+proj=longlat +datum=WGS84")
 
@@ -31,7 +31,7 @@ load_env_domain <- function(
                                      target_grid,
                                      method = "bilinear")
   ##mask is much quicker than st_intersection
-  raster_masked <- raster::mask(raster_rescale, env_poly)
+  raster_masked <- raster::mask(raster_rescale, env_poly$data[[1]])
   raster::crs(raster_masked) <-"+proj=longlat +datum=WGS84"
   env_points <- data.table::data.table(raster::rasterToPoints(raster_masked))
 
@@ -52,7 +52,8 @@ load_env_domain <- function(
                                     fun = mean)
   data.table::setDT(env_round)
   env_round[, c(env_id_col) :=  seq_len(nrow(env_round))]
-  return(env_round)
+  env_domain <- data.table::data.table(domain = env_poly$name, data = list(env_round))
+  return(env_domain)
 
 }
 

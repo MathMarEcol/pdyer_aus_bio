@@ -27,7 +27,7 @@ merge_bio_env <- function(
   ## sites with no env will be
   ## NA, and can be dropped
 
-  sites <- env_domain[sites,
+  sites <- env_domain$data[[1]][sites,
                       c("site_id", spatial_vars, env_id_col),
                       on = spatial_vars,
                       with = FALSE]
@@ -133,7 +133,7 @@ merge_bio_env <- function(
   taxa[, taxon_id_chr := paste0("sp.",taxon_id)]
   grid_env[, taxon_id_chr := paste0("sp.",taxon_id)]
 
-  wide_surv <- env_domain[get(env_id_col) %in% sites_env[[env_id_col]]]
+  wide_surv <- env_domain$data[[1]][get(env_id_col) %in% sites_env[[env_id_col]]]
     ## wide_surv <- rbind(wide_surv, env_domain[1,])
     if (nrow(grid_env) == 0) {
     return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
@@ -152,6 +152,7 @@ merge_bio_env <- function(
     ##               .SDcols = unique(obs_env$taxon_id_chr) ]
 
  return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
+                   env_domain = env_domain$domain,
                    wide_taxa_env = list(wide_taxa_env),
                    taxa = list(taxa),
                    obs_env = list(grid_env),
