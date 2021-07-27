@@ -41,6 +41,16 @@ merge_bio_env <- function(
   sites_env[, c(spatial_vars) := NULL]
   obs_env <- obs[!is.na(get(env_id_col))]
 
+  if(nrow(sites_env) == 0 | nrow(obs_env) == 0) {
+    return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
+                      env_domain = env_domain$domain,
+                      wide_taxa_env = NA,
+                      taxa = NA,
+                      obs_env = NA,
+                      sites_env = NA
+                      ))
+  }
+
 
   ## drop "No_taxa"
   if ( length(taxa[taxon == "No_taxa"]$taxon_id) > 0) {
@@ -142,11 +152,12 @@ merge_bio_env <- function(
     ## wide_surv <- rbind(wide_surv, env_domain[1,])
     if (nrow(grid_env) == 0) {
     return(data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                    wide_taxa_env = NA,
-                    taxa = NA,
-                    obs_env = NA,
-                    sites_env = NA
-                    ))
+                      env_domain = env_domain$domain,
+                      wide_taxa_env = NA,
+                      taxa = NA,
+                      obs_env = NA,
+                      sites_env = NA
+                      ))
     }
 
     wide_taxa <- data.table::dcast(grid_env, env_id ~ taxon_id_chr, value.var = "abund", fill = 0)
