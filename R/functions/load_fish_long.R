@@ -3,6 +3,13 @@
 #' and converts to long form
 #' The final colNames are
 #' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")
+#' New approach:
+#' data.table with list cols
+#' each row contains "trophic", "survey" and "depth_cat" character cols as grouping variables
+#' and samples, obs and taxa list cols.
+#' taxa contains taxon and taxon_id cols
+#' obs contains abund samp_id taxon_id
+#' samps contains lon   lat samp_id depth
 load_fish_long <- function(
                           fish_taxon_file,
                           fish_data_dir,
@@ -178,7 +185,10 @@ fish_taxon_depth <-
                         obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
                         obs[ , taxon := NULL]
 
-                          data.table::data.table(sites = list(sites),
+                          obs[ , c("site_id", "samp_id") := .(NULL, site_id)]
+                          sites[ , c("site_id", "samp_id") := .(NULL, site_id)]
+
+                          data.table::data.table(samps = list(sites),
                                             taxa = list(taxa),
                                             obs = list(obs)
                                             )

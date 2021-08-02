@@ -3,6 +3,13 @@
 #' and converts to long form
 #' The final colNames are
 #' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")
+#' New approach:
+#' data.table with list cols
+#' each row contains "trophic", "survey" and "depth_cat" character cols as grouping variables
+#' and samples, obs and taxa list cols.
+#' taxa contains taxon and taxon_id cols
+#' obs contains abund samp_id taxon_id
+#' samps contains lon   lat samp_id depth
 load_phy_long <- function(
                           phy_load_script,
                           phy_data_dir,
@@ -36,14 +43,33 @@ load_phy_long <- function(
   phy_raw[ , `:=`(
     depth = 0, ## all samples are epipelagic
     depth_cat = depth_names[1], ## all samples are epipelagic
-    SampleDateUTC = NULL,
     ProjectNumber = NULL)]
 
-  phy_rows <- phy_raw[,
-                      normalise_bio(.SD, spatial_vars),
-                      by = c("survey", "trophic",  "depth_cat")]
+    obs <- data.table::copy(phy_raw)
+  obs[is.na(abund), abund := 0]
+  samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleDateUTC"), with=FALSE])
+  samps[ , samp_id := seq.int(1, nrow(samps))]
+  obs[samps, samp_id := i.samp_id, on = c(spatial_vars, "depth", "depth_cat", "SampleDateUTC")]
+  obs[, c(spatial_vars, "depth", "SampleDateUTC") := NULL]
 
-  return(phy_rows)
+  taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
+  taxa[ , taxon_id := seq.int(1, nrow(taxa))]
+  obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
+  obs[ , taxon := NULL]
+
+  phy_out <- obs[, {
+    obs_local <- .SD
+    samps_local <- samps[samp_id %in% unique(obs_local$samp_id)]
+    samps_local[, depth_cat := NULL]
+    taxa_local <- taxa[taxon_id %in% unique(obs_local$taxon_id)]
+    data.table::data.table(samps = list(samps_local),
+                    taxa = list(taxa_local),
+                    obs = list(obs_local)
+                    )
+    },
+    by = c("survey", "trophic", "depth_cat")]
+
+  return(phy_out)
 }
 
   ## ##do this for global list
