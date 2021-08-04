@@ -69,6 +69,23 @@ load_phy_long <- function(
     },
     by = c("survey", "trophic", "depth_cat")]
 
+
+  ## Temporary fix for rows that appear duplicated
+  for(.x in phy_long$survey) {
+    print(.x)
+    original <- nrow(phy_out[survey == .x & depth_cat == "epi",]$obs[[1]] )
+    dups <-nrow(phy_out[survey == .x & depth_cat == "epi",]$obs[[1]][, .(abund = mean(abund)), by = c("samp_id", "taxon_id")])
+
+    print(original)
+    print(dups)
+
+    if(original != dups) {
+      print(.x)
+      print("fixing")
+      phy_out[survey == .x & depth_cat == "epi",]$obs <- list(phy_out[survey == .x & depth_cat == "epi",]$obs[[1]][, .(abund = mean(abund)), by = c("samp_id", "taxon_id")])
+    }
+  }
+
   return(phy_out)
 }
 
