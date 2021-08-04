@@ -71,7 +71,7 @@ load_phy_long <- function(
 
 
   ## Temporary fix for rows that appear duplicated
-  for(.x in phy_long$survey) {
+  for(.x in phy_out$survey) {
     print(.x)
     original <- nrow(phy_out[survey == .x & depth_cat == "epi",]$obs[[1]] )
     dups <-nrow(phy_out[survey == .x & depth_cat == "epi",]$obs[[1]][, .(abund = mean(abund)), by = c("samp_id", "taxon_id")])
