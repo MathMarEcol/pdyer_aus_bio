@@ -22,6 +22,8 @@ tar_option_set(
   format = "qs",
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
+    "gfbootstrap",
+    "gradientForest",
     "qs",
     "sf",
     "terra",
@@ -220,5 +222,31 @@ list(
     pattern = cross(env_domain, all_bio_long),
     iteration = "vector"
 
+    ),
+
+  tar_target(
+    gfbootstrap_survey,
+    fit_gfbootstrap(
+      all_bio_env,
+      env_biooracle_names,
+      gf_trees,
+      gf_compact,
+      gf_bins,
+      gf_corr_thres
+      ),
+    pattern = map(all_bio_env)
+    ),
     )
+  tar_target(
+    gf_survey,
+    fit_gf(
+      all_bio_env,
+      env_biooracle_names,
+      gf_trees,
+      gf_compact,
+      gf_bins,
+      gf_corr_thres
+      ),
+    pattern = map(all_bio_env)
+    ),
 )
