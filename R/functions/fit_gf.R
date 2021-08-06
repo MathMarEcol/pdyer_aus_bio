@@ -10,7 +10,7 @@ fit_gf <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(all_env_bio[,.(env_domain, trophic, survey, depth_cat)],
+    return(data.table(all_bio_env[,.(env_domain, trophic, survey, depth_cat)],
                       gf = NA
                       ))
   }
@@ -28,7 +28,7 @@ fit_gf <- function(
     trace = TRUE
   )
 
-  return(data.table(all_env_bio[,.(env_domain, trophic, survey, depth_cat)],
+  return(data.table(all_bio_env[,.(env_domain, trophic, survey, depth_cat)],
                     gf = gf_fit
                     ))
 }
