@@ -248,5 +248,5 @@ list(
       gf_corr_thres
       ),
     pattern = map(all_bio_env)
-    ),
+    )
 )
