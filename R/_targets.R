@@ -235,7 +235,6 @@ list(
       ),
     pattern = map(all_bio_env)
     ),
-    )
   tar_target(
     gf_survey,
     fit_gf(
