@@ -235,6 +235,23 @@ list(
       ),
     pattern = map(all_bio_env)
     ),
+
+  ## Create combined GF models
+  ## One per trophic level
+  ## one for "all" within an env_domain
+  ## Env domains should not be crossed
+  ## depth and trophic can be crossed
+  ## eg. all depths at trophic X, all trophic at depth X
+  tar_target(
+    gfbootstrap_combined,
+    combine_gfbootstrap(
+      gfbootstrap_survey,
+      gf_bins,
+      gf_trees
+      )
+    ## Do NOT map over gfbootstrap_survey
+    ),
+
   tar_target(
     gf_survey,
     fit_gf(
@@ -246,5 +263,21 @@ list(
       gf_corr_thres
       ),
     pattern = map(all_bio_env)
+    ),
+
+
+  tar_target(
+    gfbootstrap_combined,
+    predict_gfbootstrap(
+      gfbootstrap_survey,
+      env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      env_biooracle_names,
+      extrap,
+      env_id_col
+    ),
+    pattern = map(gfbootstrap_combined)
     )
+
+
+
 )
