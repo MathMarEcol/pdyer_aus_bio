@@ -9,13 +9,13 @@ fit_gfbootstrap <- function(all_bio_env,
     ## Propagating
     ##
     return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
-      gfbootstrap = NA
+      gfbootstrap = list(NA)
     ))
   }
   gf_safe <- purrr::possibly(gfbootstrap::bootstrapGradientForest, otherwise = NA, quiet = FALSE)
   gf_fit <- gf_safe(
-    data = all_bio_env$wide_taxa_env[[1]],
-    predictor_vars = env_biooracle_names,
+    x = all_bio_env$wide_taxa_env[[1]],
+    predictor.vars = env_biooracle_names,
     response.vars = unique(all_bio_env$obs_env[[1]]$taxon_id_chr),
     nbootstrap = gf_trees,
     compact = gf_compact,
@@ -27,6 +27,8 @@ fit_gfbootstrap <- function(all_bio_env,
   )
 
   return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
-    gfbootstrap = gf_fit
+    gfbootstrap = gf_fit,
+    is_combined = FALSE,
+    frac_valid = as.numeric(!is.na(gf_fit))
   ))
 }

@@ -43,10 +43,10 @@ merge_bio_env <- function(
   if(nrow(grids_env) == 0 | nrow(obs_env) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
                       env_domain = env_domain$domain,
-                      wide_taxa_env = NA,
-                      taxa = NA,
-                      obs_env = NA,
-                      sites_env = NA
+                      wide_taxa_env = list(NA),
+                      taxa = list(NA),
+                      obs_env = list(NA),
+                      grids_env = list(NA)
                       ))
   }
 
@@ -89,8 +89,8 @@ merge_bio_env <- function(
   grid_taxa_cross <- data.table::CJ(grids_env[[env_id_col]], taxa$taxon_id)
   names(grid_taxa_cross) <- c(env_id_col, "taxon_id")
   grid_taxa_cross[grids_env, c("n_samps")  := .(i.n_samps), on = env_id_col]
-  setkeyv(obs_env, c("taxon_id", env_id_col))
-  setkeyv(grid_taxa_cross, c("taxon_id", env_id_col))
+  data.table::setkeyv(obs_env, c("taxon_id", env_id_col))
+  data.table::setkeyv(grid_taxa_cross, c("taxon_id", env_id_col))
   ## Trying a new approach
   obs_env_total <- obs_env[grid_taxa_cross, nomatch = NULL]
   obs_env_agg <- obs_env_total[, .(abund = agg_fun(
@@ -101,7 +101,7 @@ merge_bio_env <- function(
                   by = c("taxon_id",env_id_col)]
   grid_env_bio <- obs_env_agg[grid_taxa_cross, on= c("taxon_id",env_id_col), nomatch=NA]
   grid_env_bio[, c("n_samps") := NULL]
-  grid_env_bio[, abund := fifelse(is.na(abund), 0, abund)]
+  grid_env_bio[, abund := data.table::fifelse(is.na(abund), 0, abund)]
 
   ## grid_env <- grid_taxa_cross[,
   ##                 {
@@ -168,10 +168,10 @@ merge_bio_env <- function(
   if (nrow(grid_env_bio) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
                                   env_domain = env_domain$domain,
-                      wide_taxa_env = NA,
-                      taxa = NA,
-                      obs_env = NA,
-                      grids_env = NA
+                      wide_taxa_env = list(NA),
+                      taxa = list(NA),
+                      obs_env = list(NA),
+                      grids_env = list(NA)
                       ))
     }
 
