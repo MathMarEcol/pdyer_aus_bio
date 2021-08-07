@@ -77,7 +77,7 @@ load_zoo_long <- function(
 
 
   ## Temporary fix for rows that appear duplicated in McKinnon Survey
-  zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs <- list(zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs[[1]][, .(abund = mean(abund)), by = c("samp_id", "taxon_id")])
+  zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs <- list(zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs[[1]][, .(abund = sum(abund)), by = c("samp_id", "taxon_id")])
 
 
 ## SampleDateUTC = NULL,
