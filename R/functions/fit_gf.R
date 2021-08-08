@@ -29,7 +29,7 @@ fit_gf <- function(
   )
 
   return(data.table(all_bio_env[,.(env_domain, trophic, survey, depth_cat)],
-                    gf = gf_fit,
+                    gf = list(gf_fit),
                     is_combined = FALSE,
     frac_valid = as.numeric(!is.na(gf_fit))
                     ))

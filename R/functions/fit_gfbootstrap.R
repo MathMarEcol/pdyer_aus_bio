@@ -27,7 +27,7 @@ fit_gfbootstrap <- function(all_bio_env,
   )
 
   return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
-    gfbootstrap = gf_fit,
+    gfbootstrap = list(gf_fit),
     is_combined = FALSE,
     frac_valid = as.numeric(!is.na(gf_fit))
   ))
