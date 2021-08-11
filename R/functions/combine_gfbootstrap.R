@@ -46,75 +46,39 @@ gfboot_surv <- data.table::copy(gfbootstrap_survey)
 
   gfboot_combined <- rbind(
     gfboot_surv[,
-                .(gfbootstrap = {
-                  if(length(gfbootstrap) == 0) {
-                    out <- NA
-                  } else {
-                    out <- do.call(gfbootstrap::combinedBootstrapGF,
-                                   c(nbin = gf_bins, n_samp = gf_trees,
-                                     stats::setNames(list(gfbootstrap[!is.na(gfbootstrap)]),
-                                                     nm = surv_full_name
-                                                     )
-                                     )
-                                   )
-                  }
-                },
+                .(gfbootstrap = bootstrap_with_names(gf_bins,
+                                 gf_trees,
+                                 surv_full_name,
+                                 gfbootstrap) ,
                 survey = "all",
                 is_combined = TRUE),
                 by = c("env_domain", "trophic", "depth_cat")],
 
     gfboot_surv[,
-                .(gfbootstrap = {
-                  if(length(gfbootstrap) == 0) {
-                    out <- NA
-                  } else {
-                    out <- do.call(gfbootstrap::combinedBootstrapGF,
-                                   c(nbin = gf_bins, n_samp = gf_trees,
-                                     stats::setNames(list(gfbootstrap[!is.na(gfbootstrap)]),
-                                                     nm = surv_full_name
-                                                     )
-                                     )
-                                   )
-                  }
-                },
+                .(gfbootstrap = bootstrap_with_names(gf_bins,
+                                 gf_trees,
+                                 surv_full_name,
+                                 gfbootstrap) ,
                 survey = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
                 by = c("env_domain", "trophic")],
 
     gfboot_surv[,
-                .(gfbootstrap = {
-                  if(length(gfbootstrap) == 0) {
-                    out <- NA
-                  } else {
-                    out <- do.call(gfbootstrap::combinedBootstrapGF,
-                                   c(nbin = gf_bins, n_samp = gf_trees,
-                                     stats::setNames(list(gfbootstrap[!is.na(gfbootstrap)]),
-                                                     nm = surv_full_name
-                                                     )
-                                     )
-                                   )
-                  }
-                },
+                .(gfbootstrap = bootstrap_with_names(gf_bins,
+                                 gf_trees,
+                                 surv_full_name,
+                                 gfbootstrap) ,
                 survey = "all",
                 trophic = "all" ,
                 is_combined = TRUE),
                 by = c("env_domain", "depth_cat")],
 
     gfboot_surv[,
-                .(gfbootstrap = {
-                  if(length(gfbootstrap) == 0) {
-                    out <- NA
-                  } else {
-                    out <- do.call(gfbootstrap::combinedBootstrapGF,
-                                   c(nbin = gf_bins, n_samp = gf_trees,
-                                     stats::setNames(list(gfbootstrap[!is.na(gfbootstrap)]),
-                                                     nm = surv_full_name
-                                                     )
-                                     )
-                                   )
-                  }
-                },
+                .(gfbootstrap = bootstrap_with_names(gf_bins,
+                                 gf_trees,
+                                 surv_full_name,
+                                 gfbootstrap) ,
                 survey = "all",
                 trophic = "all",
                 depth_cat = "all",
@@ -123,5 +87,14 @@ gfboot_surv <- data.table::copy(gfbootstrap_survey)
   )
   out <- gfboot_combined[fraction_valid, on = c(surv_cols, "is_combined")]
   out <- rbind(out, gfbootstrap_survey)
+  return(out)
+}
+bootstrap_with_names <- function(gf_bins,
+                                 gf_trees,
+                                 surv_full_name,
+                                 gfbootstrap_ob) {
+names(gfbootstrap_ob) <- surv_full_name
+combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfbootstrap_ob )
+out <- list(do.call(gfbootstrap::combinedBootstrapGF, combine_args))
   return(out)
 }
