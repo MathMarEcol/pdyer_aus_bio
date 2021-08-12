@@ -95,8 +95,12 @@ bootstrap_with_names <- function(gf_bins,
                                  gf_trees,
                                  surv_full_name,
                                  gfbootstrap_ob) {
-names(gfbootstrap_ob) <- surv_full_name
-combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfbootstrap_ob )
-out <- list(do.call(gfbootstrap::combinedBootstrapGF, combine_args))
-  return(out)
+  if (length(surv_full_name) > 1) {
+    names(gfbootstrap_ob) <- surv_full_name
+    combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfbootstrap_ob )
+    out <- list(do.call(gfbootstrap::combinedBootstrapGF, combine_args))
+    return(out)
+  } else {
+    return(list(NA))
+  }
 }
