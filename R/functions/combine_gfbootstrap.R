@@ -86,9 +86,11 @@ gfboot_surv <- data.table::copy(gfbootstrap_survey)
                 by = c("env_domain")]
   )
   out <- gfboot_combined[fraction_valid, on = c(surv_cols, "is_combined")]
+  out[sapply(out$gfbootstrap, is.null), gfbootstrap := NA]
   out <- rbind(out, gfbootstrap_survey)
   return(out)
 }
+
 bootstrap_with_names <- function(gf_bins,
                                  gf_trees,
                                  surv_full_name,
