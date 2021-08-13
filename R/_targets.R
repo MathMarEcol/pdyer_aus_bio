@@ -243,13 +243,20 @@ list(
   ## depth and trophic can be crossed
   ## eg. all depths at trophic X, all trophic at depth X
   tar_target(
-    gfbootstrap_combined,
-    combine_gfbootstrap(
-      gfbootstrap_survey,
-      gf_bins,
-      gf_trees
+    gfbootstrap_combined_tmp,
+    combine_gfbootstrap_p1(
+      gfbootstrap_survey
       )
     ## Do NOT map over gfbootstrap_survey
+    ),
+  tar_target(
+    gfbootstrap_combined,
+    combine_gfbootstrap_p2(
+      gfbootstrap_combined_tmp,
+      gf_bins,
+      gf_trees
+      ),
+    pattern = map(gfbootstrap_combined_tmp)
     ),
 
   tar_target(

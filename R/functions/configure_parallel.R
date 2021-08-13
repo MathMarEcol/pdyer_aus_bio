@@ -1,6 +1,9 @@
 configure_parallel <- function(default_clustermq = TRUE, future_plan = future.callr::callr){
   ## Needed by targets::tar_make_future()
-  future::plan(future_plan)
+  ## Update, must ONLY be used by tar_make_future()
+  ## Need to know if there is a flag or check,
+  ## will add if there is.
+  ## future::plan(future_plan)
 
   scheduler <- Sys.getenv("SCHEDULER")
   if (scheduler != "") {
