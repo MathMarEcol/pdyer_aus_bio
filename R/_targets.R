@@ -246,7 +246,12 @@ list(
     gfbootstrap_combined_tmp,
     combine_gfbootstrap_p1(
       gfbootstrap_survey
-      )
+      ),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
     ## Do NOT map over gfbootstrap_survey
     ),
   tar_target(
@@ -256,6 +261,11 @@ list(
       gf_bins,
       gf_trees
       ),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient",
     pattern = map(gfbootstrap_combined_tmp)
     ),
 
