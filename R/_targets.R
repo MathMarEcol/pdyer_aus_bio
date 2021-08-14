@@ -28,6 +28,7 @@ tar_option_set(
     "terra",
     "raster",
     "stars",
+    "fpc",
     "semver",
     "processx",
     "wdpar",
