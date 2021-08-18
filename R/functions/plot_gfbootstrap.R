@@ -56,7 +56,7 @@ plot_clust_poly <- function(sites,
 
   target_grid <- terra::rast(x = env_poly,
                                      resolution = regrid_res,
-                             extent =
+#                             extent =
                                      crs = "+proj=longlat +datum=WGS84")
 
   clust_raster <- terra::rast(
