@@ -11,7 +11,7 @@ fit_gfbootstrap <- function(all_bio_env,
     ## Propagating
     ##
     return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
-      gfbootstrap = list(NA)
+      gfbootstrap = list(NA),
     is_combined = FALSE,
     surv_full_name = surv_full_names,
     frac_valid = 0
