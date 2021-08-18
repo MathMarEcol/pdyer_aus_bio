@@ -297,3 +297,11 @@ clara_trace = 0
 clara_rngR = TRUE
 clara_pamLike = TRUE
 clara_correct.d = TRUE
+
+# Limiting importance
+# If an integer >= 1, then uses that number of predictors, sorted so that more
+# important predictors are used first, in for clustering.
+# If in range (0,1) then take as many predictors as needed to include that
+# fraction of the importance. eg 0.8 maens keep 80% of importance.
+# To include all predictors, set to Inf
+pred_importance_top = 0.8

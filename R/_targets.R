@@ -294,8 +294,32 @@ list(
       env_id_col
     ),
     pattern = map(gfbootstrap_combined)
-    )
+    ),
 
+  tar_target(
+    gfbootstrap_caster,
+    cluster_gfbootstrap(
+      gfbootstrap_predicted
+    ),
+    pattern = map(gfbootstrap_predicted),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
+    )
+  ##   ),
+
+  ## tar_target(
+  ##   gfbootstrap_plotted,
+  ##   plot_gfbootstrap(
+  ##     gfbootstrap_caster,
+  ##     env_poly,
+  ##     spatial_vars,
+  ##     regrid_resolution
+  ##   ),
+  ##   pattern = map(gfbootstrap_caster)
+  ##   )
 
 
 )
