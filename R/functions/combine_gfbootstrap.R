@@ -6,7 +6,6 @@ combine_gfbootstrap_p1 <- function(
 
   gfboot_surv <- data.table::copy(gfbootstrap_survey)
 
-  gfboot_surv[,surv_full_name := apply(.SD, 1, function(x){paste0(x, collapse = "__")}), .SDcols = surv_cols]
 
   fraction_valid <-  rbind(
     gfboot_surv[,
@@ -92,6 +91,7 @@ combine_gfbootstrap_p1 <- function(
   )
   out <- gfboot_combined[fraction_valid, on = c(surv_cols, "is_combined")]
   out[sapply(out$gfbootstrap_list, is.null), gfbootstrap_list := NA]
+  out[, surv_full_name := apply(.SD, 1, function(x){paste0(x, collapse = "__")}), .SDcols = surv_cols]
   return(out)
 }
 
@@ -107,13 +107,13 @@ combine_gfbootstrap_p2 <- function(
   gfb <- gfbootstrap_combined_p1$gfbootstrap_list[[1]]
   print(names(gfb))
   if(is.na(gfb) | length(gfb) < 2) {
-    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid)],
+    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(NA))
            )
   } else {
-    combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfb )
+    combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfb)
     out <- do.call(gfbootstrap::combinedBootstrapGF, combine_args)
-    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid)],
+    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(out))
            )
   }

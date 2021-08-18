@@ -92,6 +92,17 @@ merge_bio_env <- function(
   data.table::setkeyv(obs_env, c("taxon_id", env_id_col))
   data.table::setkeyv(grid_taxa_cross, c("taxon_id", env_id_col))
   ## Trying a new approach
+  ## Previous approach was to get a group inside DT `[`
+  ## then use that group to look up rows in another DT.
+  ## If the group existed, then do a DT `[` within the
+  ## outer DT `[`, extracting the relevant rows and aggregating.
+  ## Empty groups returned 0.
+  ## However, DT `[` operations are very powerful, but expensive to set up.
+  ## In other places, I've found they take as much time as inverting a 28x28 matrix.
+  ## Previous approach called DT `[` twice for every group, and one of those times
+  ## was just a check for a non-empty set.
+  ## New approach is merge, to eliminate empty groups, then a single, simple DT `[`
+  ## to apply an aggregating function to one col of each non-empty group.
   obs_env_total <- obs_env[grid_taxa_cross, nomatch = NULL]
   obs_env_agg <- obs_env_total[, .(abund = agg_fun(
                             c(.SD$abund,

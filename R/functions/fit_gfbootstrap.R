@@ -4,12 +4,17 @@ fit_gfbootstrap <- function(all_bio_env,
                             gf_compact,
                             gf_bins,
                             gf_corr_thres) {
+  surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+  surv_full_names <- apply(all_bio_env[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
   if (is.na(all_bio_env$wide_taxa_env)) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
     return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
       gfbootstrap = list(NA)
+    is_combined = FALSE,
+    surv_full_name = surv_full_names,
+    frac_valid = 0
     ))
   }
   gf_safe <- purrr::possibly(gfbootstrap::bootstrapGradientForest, otherwise = NA, quiet = FALSE)
@@ -29,6 +34,7 @@ fit_gfbootstrap <- function(all_bio_env,
   return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
     gfbootstrap = list(gf_fit),
     is_combined = FALSE,
+    surv_full_name = surv_full_names,
     frac_valid = as.numeric(!is.na(gf_fit))
   ))
 }
