@@ -1,5 +1,5 @@
 predict_gfbootstrap <- function(
-                                gfbootstrap_survey,
+                                gfbootstrap_combined,
                                 env_domain,
       env_biooracle_names,
       extrap,
@@ -7,20 +7,20 @@ predict_gfbootstrap <- function(
       env_id_col
                                 ) {
 
- if (any(is.na(gfbootstrap_survey$gfbootstrap[[1]]))) {
+ if (any(is.na(gfbootstrap_combined$gfbootstrap[[1]]))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gfbootstrap_survey[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+    return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
       env_pred_stats = list(NA),
       env_pred_raw = list(NA),
       imp_preds = list(NA),
       sim_mat = list(NA)
     ))
   }
-  env_dom <- env_domain[domain ==  gfbootstrap_survey$env_domain, data][[1]]
+  env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
 
-    predicted <- predict(object = gfbootstrap_survey$gfbootstrap[[1]],
+    predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
                                     newdata = env_dom[,..env_biooracle_names],
                          ## Just take points, and calculate full coefficient matrix from points
                                     type = c("points"),
@@ -30,7 +30,7 @@ predict_gfbootstrap <- function(
   ## With only 20 trees, and therefore 20 samples, for fitting 28 dimensions, covariance matrices are coming out
   ## singular. Test by dropping most predictors.
   ## May even automatically add a top 80% of variance method
-  imp <- importance(gfbootstrap_survey$gfbootstrap[[1]], sort = TRUE)
+  imp <- importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
   if (pred_importance_top >= 1) {
     imp_preds <- names(imp)[seq.int(1,min(length(imp), pred_importance_top))]
   } else {
@@ -277,7 +277,7 @@ Rprof(NULL)
   sim_mat[upper.tri(sim_mat)] <- t(sim_mat)[upper.tri(sim_mat)]
   diag(sim_mat) <- 1
 
-    return(data.table::data.table(gfbootstrap_survey[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+    return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
       imp_preds = list(imp_preds),
