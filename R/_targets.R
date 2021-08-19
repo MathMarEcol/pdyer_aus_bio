@@ -291,6 +291,7 @@ list(
       env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
       env_biooracle_names,
       extrap,
+      pred_importance_top,
       env_id_col
     ),
     pattern = map(gfbootstrap_combined)
