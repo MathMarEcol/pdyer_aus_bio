@@ -78,7 +78,7 @@ predict_gfbootstrap <- function(
   row_pairs <- data.table::CJ(i = predicted_stats$x_row, j = predicted_stats$x_row)
 
   ## Benchmarking tests
-  is_benchmark <- TRUE
+  is_benchmark <- FALSE
   if (is_benchmark) {
 
     microbenchmark::microbenchmark(
