@@ -301,7 +301,9 @@ list(
   tar_target(
     gfbootstrap_caster,
     cluster_gfbootstrap(
-      gfbootstrap_predicted
+      gfbootstrap_predicted,
+      env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      spatial_vars
     ),
     pattern = map(gfbootstrap_predicted),
     deployment = "worker",

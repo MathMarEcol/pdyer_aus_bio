@@ -9,7 +9,7 @@ cluster_gfbootstrap <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gfbootstrap_survey[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+    return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
       caster_clust = list(NA),
       clust_ind = list(NA)
     ))
@@ -37,9 +37,10 @@ cluster_gfbootstrap <- function(
 
   clust_ind[, cl_factor := as.factor(cl)]
 
-  return(data.table(gfbootstrap_survey[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+  return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
                     caster_clust = list(caster_clust),
-                    clust_ind = list(clust_ind),
+                    best_clust = best_clust,
+                    clust_ind = list(clust_ind)
                     ))
 
 }

@@ -1,5 +1,6 @@
 plot_gfbootstrap <- function(
                              gfbootstrap_caster,
+                             gfbootstrap_predicted,
                              env_poly,
                             spatial_vars,
                             regrid_resolution
@@ -9,7 +10,7 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus with samples
   ## Sim Mat
 
-  pl_file_base <- file.path("..","..", "outputs", gfbootstrap_clusterd$surv_full_name[1])
+  pl_file_base <- file.path("..","..", "outputs", gfbootstrap_cluster$surv_full_name[1])
 
   plot_clust_poly(env_round[env_round$lon %% env_subset_val == 0 & env_round$lat %% env_subset_val == 0, spatial_vars],
                   zooplank_cast_sub_clust_ind$cl,
@@ -18,7 +19,7 @@ plot_gfbootstrap <- function(
                   env_poly,
                   regrid_res = env_subset_val)
 
-  gfbootstrap::gg_sim_mat(p_mat_diag_cov_sub, cast_ob = zooplank_cast_sub$cast_ob[[which.max(zooplank_cast_sub$gamma)]], highlight = TRUE)
+  gfbootstrap::gg_sim_mat(gfbootstrap_predicted$sim_mat[[1]], cast_ob = gfbootstrap_caster$caster_clust[[1]]$cast_ob[[gfbootstrap_caster$best_clust]], highlight = TRUE)
   pl <- ggplot2::ggplot(mapping = ggplot2::aes(x = clust_ind$lon, y = clust_ind$lat, fill = as.factor(clust_ind$cl))) +
     ggplot2::geom_raster() +
     ggplot2::scale_fill_manual( values = rainbow(length(unique(clust_ind$cl))))
