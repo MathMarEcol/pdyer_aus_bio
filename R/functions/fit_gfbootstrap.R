@@ -30,6 +30,9 @@ fit_gfbootstrap <- function(all_bio_env,
     maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$taxon_id_chr)) * 0.368 / 2)),
     trace = TRUE
   )
+  for (i in seq.along(gf_fit$gf_list)) {
+    gf_fit$gf_list[[i]]$call <- NULL
+  }
 
   return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
     gfbootstrap = list(gf_fit),

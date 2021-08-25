@@ -113,6 +113,9 @@ combine_gfbootstrap_p2 <- function(
   } else {
     combine_args <- c(nbin = gf_bins, n_samp = gf_trees, gfb)
     out <- do.call(gfbootstrap::combinedBootstrapGF, combine_args)
+    for (i in seq_along(out$gf_list) {
+      out$gf_list[[i]]$call <- NULL
+    }
     return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(out))
            )
