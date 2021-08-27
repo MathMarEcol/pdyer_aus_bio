@@ -14,7 +14,8 @@ rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/targets_cache.* $ROOT_STORE_D
 #Store the outputs
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  ./outputs
-rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
+rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
+cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z
 
 #The downloaded variables from bioORACLE are also worth saving
 export TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data

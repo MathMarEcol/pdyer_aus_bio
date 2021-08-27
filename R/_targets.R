@@ -295,7 +295,12 @@ list(
       pred_importance_top,
       env_id_col
     ),
-    pattern = map(gfbootstrap_combined)
+    pattern = map(gfbootstrap_combined),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
     ),
 
   tar_target(
@@ -318,11 +323,19 @@ list(
   ##   gfbootstrap_plotted,
   ##   plot_gfbootstrap(
   ##     gfbootstrap_caster,
+  ##     all_bio_env,
+  ##     all_bio_long,
   ##     env_poly,
   ##     spatial_vars,
-  ##     regrid_resolution
+  ##     regrid_resolution,
+  ##     output_folder
   ##   ),
-  ##   pattern = map(gfbootstrap_caster)
+  ##   pattern = map(gfbootstrap_caster),
+    ## deployment = "worker",
+    ## storage = "worker",
+    ## retrieval = "worker",
+    ## garbage_collection = TRUE,
+    ## memory = "transient"
   ##   )
 
 
