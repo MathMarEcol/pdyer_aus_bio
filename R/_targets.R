@@ -294,7 +294,12 @@ list(
       pred_importance_top,
       env_id_col
     ),
-    pattern = map(gfbootstrap_combined)
+    pattern = map(gfbootstrap_combined),
+    deployment = "worker",
+    storage = "worker",
+    retrieval = "worker",
+    garbage_collection = TRUE,
+    memory = "transient"
     ),
 
   tar_target(
