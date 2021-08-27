@@ -54,8 +54,13 @@ rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Ann
 rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/TaxonomicData.rds $TMP_DATA_DIR/Watson_Fisheries_Catch_Data/Version5/Output
 
 #Set up the output directory
-#I put in current outputs, in order to avoid replotting. Update, I want to replot
-mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs
+#I put in current outputs, in order to avoid replotting. Update, I want to replot. Update, I don't want to replot
+mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
+if [[ -f "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z" ]]; then
+   7za -x $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z -o$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/
+else
+   mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs
+fi
 
 if [[ -f  "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.7z" ]]
 then
@@ -120,7 +125,8 @@ rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/targets_cache.* $ROOT_STORE_D
 #Store the outputs
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  ./outputs
-rsync -irc ""$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
+rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
+cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z
 
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/Q1215/
