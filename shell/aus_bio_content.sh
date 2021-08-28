@@ -57,7 +57,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Tax
 #I put in current outputs, in order to avoid replotting. Update, I want to replot. Update, I don't want to replot
 mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 if [[ -f "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z" ]]; then
-   7za -x $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z -o$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/
+   7za x $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z -o$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/
 else
    mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs
 fi
