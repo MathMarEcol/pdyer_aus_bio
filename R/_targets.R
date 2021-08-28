@@ -329,7 +329,7 @@ list(
       regrid_resolution,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster, gfbootstrap_predicted, all_bio_env, all_bio_long),
+    pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
     deployment = "worker",
     storage = "worker",
     retrieval = "worker",
