@@ -322,6 +322,7 @@ list(
     gfbootstrap_plotted,
     plot_gfbootstrap(
       gfbootstrap_caster,
+      gfbootstrap_predicted,
       all_bio_env,
       all_bio_long,
       env_poly,
@@ -329,7 +330,7 @@ list(
       regrid_resolution,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster),
+    pattern = map(gfbootstrap_caster, gfbootstrap_predicted, all_bio_env, all_bio_long),
     deployment = "worker",
     storage = "worker",
     retrieval = "worker",
