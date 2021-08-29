@@ -16,7 +16,7 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus with samples
   ## Sim Mat
   ## Sim Mat histogram
-  pl_file_base <- file.path(output_folder, gfbootstrap_cluster$surv_full_name[1])
+  pl_file_base <- file.path(output_folder, gfbootstrap_caster$surv_full_name[1])
   pl_file <- c(
     no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
     ## samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
@@ -27,7 +27,7 @@ plot_gfbootstrap <- function(
   if (is.na(gfbootstrap_caster$best_clust)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
-      ggplot2::ggtitle(paste0(gfbootstrap_cluster$surv_full_name[1], " has not successfully clustered"))
+      ggplot2::ggtitle(paste0(gfbootstrap_caster$surv_full_name[1], " has not successfully clustered"))
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
     ## ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
     ## ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
