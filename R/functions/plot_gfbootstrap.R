@@ -15,11 +15,12 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus
   ## Clusters around Aus with samples
   ## Sim Mat
+  ## Sim Mat histogram
   pl_file_base <- file.path(output_folder, gfbootstrap_cluster$surv_full_name[1])
   pl_file <- c(
     no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
-    samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
-    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png"),
+    ## samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
+    ## samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png"),
     sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png")
   )
   if (is.na(gfbootstrap_caster$best_clust)) {
@@ -27,8 +28,8 @@ plot_gfbootstrap <- function(
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(gfbootstrap_cluster$surv_full_name[1], " has not successfully clustered"))
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
-    ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
-    ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
+    ## ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
+    ## ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
     return(pl_file)
   }
@@ -47,32 +48,32 @@ plot_gfbootstrap <- function(
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  pl_samp_clipped <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
-                  gfbootstrap_caster$clust_ind[[1]]$cl,
-                  spatial_vars,
-                  marine_map,
-                  env_poly,
-                  regrid_res = regrid_resolution,
-                  samples = all_bio_long$samps[[1]][,..spatial_vars],
-                  grids = all_bio_env$wide_taxa_env[[1]][,..spatial_vars]) +
-    ggplot2::ggtitle(glue::glue("{depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters and showing samples in domain"))
+  ## pl_samp_clipped <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
+  ##                 gfbootstrap_caster$clust_ind[[1]]$cl,
+  ##                 spatial_vars,
+  ##                 marine_map,
+  ##                 env_poly,
+  ##                 regrid_res = regrid_resolution,
+  ##                 samples = all_bio_long$samps[[1]][,..spatial_vars],
+  ##                 grids = all_bio_env$wide_taxa_env[[1]][,..spatial_vars]) +
+  ##   ggplot2::ggtitle(glue::glue("{depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters and showing samples in domain"))
 
-  ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
+  ## ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
 
 
 
-  pl_samp <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
-                  gfbootstrap_caster$clust_ind[[1]]$cl,
-                  spatial_vars,
-                  marine_map,
-                  env_poly,
-                  regrid_res = regrid_resolution,
-                  samples = all_bio_long$samps[[1]][,..spatial_vars],
-                  grids = all_bio_env$wide_taxa_env[[1]][,..spatial_vars],
-                  clip_samples = FALSE) +
-    ggplot2::ggtitle(glue::glue("{depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters and showing all samples, including unused"))
+  ## pl_samp <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
+  ##                 gfbootstrap_caster$clust_ind[[1]]$cl,
+  ##                 spatial_vars,
+  ##                 marine_map,
+  ##                 env_poly,
+  ##                 regrid_res = regrid_resolution,
+  ##                 samples = all_bio_long$samps[[1]][,..spatial_vars],
+  ##                 grids = all_bio_env$wide_taxa_env[[1]][,..spatial_vars],
+  ##                 clip_samples = FALSE) +
+  ##   ggplot2::ggtitle(glue::glue("{depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters and showing all samples, including unused"))
 
-  ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
+  ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
 
   pl_sim_mat <-gfbootstrap::gg_sim_mat(gfbootstrap_predicted$sim_mat[[1]],
                                        cast_ob = gfbootstrap_caster$caster_clust[[1]]$cast_ob[[gfbootstrap_caster$best_clust]],
