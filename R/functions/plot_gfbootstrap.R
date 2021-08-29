@@ -16,21 +16,23 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus with samples
   ## Sim Mat
   ## Sim Mat histogram
-  pl_file_base <- file.path(output_folder, gfbootstrap_cluster$surv_full_name[1])
+  pl_file_base <- file.path(output_folder, gfbootstrap_caster$surv_full_name[1])
   pl_file <- c(
     no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
     ## samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
     ## samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png"),
-    sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png")
+    sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
+    sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
   )
   if (is.na(gfbootstrap_caster$best_clust)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
-      ggplot2::ggtitle(paste0(gfbootstrap_cluster$surv_full_name[1], " has not successfully clustered"))
+      ggplot2::ggtitle(paste0(gfbootstrap_caster$surv_full_name[1], " has not successfully clustered"))
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
     ## ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
     ## ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
+    ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
     return(pl_file)
   }
 
@@ -83,7 +85,18 @@ plot_gfbootstrap <- function(
   ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
 
+  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(gfbootstrap_predicted$sim_mat[[1]]))),
+                                     ggplot2::aes(x = x)) +
+    geom_histogram(na.rm = TRUE) +
+    ggplot2::ggtitle(glue::glue("Histograpm of similarities for {depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters"))
+
+  ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
   return(pl_file)
+}
+
+strip_diag <- function(x) {
+  diag(x) <- NA
+  return(x)
 }
 
 plot_clust_poly <- function(sites,
