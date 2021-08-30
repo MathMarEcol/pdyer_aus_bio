@@ -211,7 +211,7 @@ list(
       env_domain,
       all_bio_long,
       spatial_vars,
-      regrid_res,
+      regrid_res = regrid_resolution,
       env_offset,
       agg_fun,
       env_id_col,
