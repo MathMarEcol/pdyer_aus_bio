@@ -13,6 +13,30 @@ merge_bio_env <- function(
 
                           ) {
 
+  all_bio_long <- all_bio_long[, {
+  ## Aggregate biological samples into grid cells
+    copy_SD <- data.table::copy(.SD)
+    samps_round <- data.table::data.table(
+                                 round(
+                                   (
+                                     copy_SD$samps[[1]][,
+                                                     c(spatial_vars),
+                                                     with=FALSE]-
+                                  env_offset
+                                   ) / regrid_res
+                                 ) *
+                                 regrid_res +  env_offset)
+    samps_round[, `:=`(samp_id = copy_SD$samps[[1]]$samp_id,
+                       depth = copy_SD$samps[[1]]$depth)]
+    ## Convert all longitudes to range [0, 360]
+    samps_round[, c(spatial_vars[1]) := .(.SD[[spatial_vars[1]]] %% 360)]
+  ## Clean up names
+    taxa_clean <- data.table::data.table(taxon = clean_sp_names(.SD$taxa[[1]]$taxon), taxon_id = .SD$taxa[[1]]$taxon_id)
+
+    out <- data.table(samps = list(samps_round), obs = list(.SD$obs[[1]]), taxa = list(taxa_clean))
+
+    },
+    by = c("trophic", "survey", "depth_cat")]
   ## Operates over each row of all_bio_long
   obs <- data.table::copy(all_bio_long$obs[[1]])
   samps <- data.table::copy(all_bio_long$samps[[1]])

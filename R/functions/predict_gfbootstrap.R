@@ -40,6 +40,31 @@ predict_gfbootstrap <- function(
     imp_preds <- names(imp)[seq.int(1,n_preds)]
   }
 
+## + Unit: seconds
+##     expr      min       lq     mean   median       uq      max neval
+##  add_inv 21.55870 24.93766 26.92430 28.31663 29.60709 30.89756     3
+##   no_inv 16.73048 19.00912 22.24745 21.28777 25.00593 28.72409     3
+## Inverting adds about 30% to this step,
+  ## microbenchmark::microbenchmark(add_inv = {
+  ## predicted_stats <- pred_points[pred %in% imp_preds,
+  ## #predicted_stats <- pred_points[,
+  ##                              {
+  ##                                wide_boot <- data.table::dcast(
+  ##                                                           .SD[, .(pred, y, gf)],
+  ##                                                           gf ~ pred,
+  ##                                                           value.var = "y")
+  ##                                wide_boot[, gf := NULL]
+  ##                             site_mean <- colMeans(wide_boot)
+  ##                             site_sigma <- cov(wide_boot)
+  ##                                site_sigma_inv <- chol2inv(chol(site_sigma ))
+  ##                                out <- data.table::data.table(site_mean = list(site_mean),
+  ##                                                  site_sigma = list(site_sigma),
+  ##                                                  site_sigma_det = determinant(site_sigma, logarithm=FALSE)$modulus,
+  ##                                                  site_sigma_inv = list(site_sigma_inv))
+  ##                                },
+  ##                              by = c("x_row")]
+  ## },
+  ## no_inv = {
   predicted_stats <- pred_points[pred %in% imp_preds,
   #predicted_stats <- pred_points[,
                                {
@@ -55,6 +80,9 @@ predict_gfbootstrap <- function(
                                                    site_sigma_det = determinant(site_sigma, logarithm=FALSE)$modulus)
                                  },
                                by = c("x_row")]
+
+  ## }, times = 3)
+
 
 
   if(FALSE){
@@ -184,8 +212,69 @@ predict_gfbootstrap <- function(
                       times = 1000)
 
   .x <- 1
-  .y <- 100
+ .y <- 2303
+    Rprof(interval = 0.005)
+  for(i in 1:1000) {
+                if(.x < .y) {
+                    b_dist <- my_bhattacharyya_dist(
+                                   predicted_stats$site_mean[[.x]],
+                                   predicted_stats$site_sigma[[.x]],
+                                   predicted_stats$site_sigma_inv[[.x]],
+                                   predicted_stats$site_sigma_det[[.x]],
+                                   predicted_stats$site_mean[[.y]],
+                                   predicted_stats$site_sigma[[.y]],
+                                   predicted_stats$site_sigma_inv[[.y]],
+                                   predicted_stats$site_sigma_det[[.y]]
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }
+                }
+    Rprof(NULL)
+    print(b_coeff_sim)
 
+     pd <- readProfileData("./Rprof.out")
+     flameGraph(pd)
+     calleeTreeMap(pd)
+    #with tryCatch in my_bhattacharyya_dist
+    #microseconds
+ ##    min    lq     mean  median      uq      max neval
+ ## 75.186 75.95 160.5937 76.9795 90.3165 7228.309   100
+    microbenchmark::microbenchmark(
+                if(.x < .y) {
+                    b_dist <- my_bhattacharyya_dist(
+                                   predicted_stats$site_mean[[.x]],
+                                   predicted_stats$site_sigma[[.x]],
+                                   predicted_stats$site_sigma_det[[.x]],
+                                   predicted_stats$site_mean[[.y]],
+                                   predicted_stats$site_sigma[[.y]],
+                                   predicted_stats$site_sigma_det[[.y]]
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }, times = 100)
+    #without tryCatch in my_bhattacharyya_dist. No real difference
+    #milliseconds
+ ##      min       lq     mean   median      uq      max neval
+ ## 104.2186 106.8602 146.7887 142.4666 173.647 221.1263    10
+    microbenchmark::microbenchmark(
+  for(i in 1:1000) {
+                if(.x < .y) {
+                    b_dist <- my_bhattacharyya_dist(
+                                   predicted_stats$site_mean[[.x]],
+                                   predicted_stats$site_sigma[[.x]],
+                                   predicted_stats$site_sigma_det[[.x]],
+                                   predicted_stats$site_mean[[.y]],
+                                   predicted_stats$site_sigma[[.y]],
+                                   predicted_stats$site_sigma_det[[.y]]
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }
+                }, times = 10)
 
 
 profvis(expr = {
@@ -255,7 +344,89 @@ Rprof(NULL)
 
   rm(".x")
   rm(".y")
+
+##test bailing if mahalanobis dist is large
+microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x]] %*%joint_m,
+   sum( (t(joint_m) %*% predicted_stats$site_sigma_inv[[.x]]) *joint_m))
+
+## + Unit: microseconds
+##       expr     min       lq      mean   median       uq       max neval
+##       full 106.091 109.1335 196.37912 111.6205 138.4795 61287.392  1000
+##  dont_test  81.060  83.0490 100.89978  84.7335  97.0435  1876.080  1000
+##  fail_fast  40.682  42.3140  48.72435  43.1915  45.8340   607.417  1000
+## dont_compute 9.211 9.6455 12.73440 12.498 12.9545   241.717  1000
+##  Testing mahalanobis and bailing is faster, 1/3 of the runtime, if you can bail
+ ##      however, testing itself is a cost, and is almost as expensive as
+    ## as just caclulating the bhattacharrya dist.
+    ## overheads: 10us
+    ## test: 30us
+    ## b_dist : 70us
+    ## Break even point is 30(1-p) + (30+70)*(p) = 70, p=40/70, ~ half the sites can bail.
+    ## Not reliable
+  .x <- 1
+ .y <- 2303
+    microbenchmark::microbenchmark(
+                      dont_test = {
+                if(.x < .y) {
+                  b_dist <- my_bhattacharyya_dist(
+                    predicted_stats$site_mean[[.x]],
+                    predicted_stats$site_sigma[[.x]],
+                    predicted_stats$site_sigma_inv[[.x]],
+                    predicted_stats$site_sigma_det[[.x]],
+                    predicted_stats$site_mean[[.y]],
+                    predicted_stats$site_sigma[[.y]],
+                    predicted_stats$site_sigma_inv[[.y]],
+                    predicted_stats$site_sigma_det[[.y]],
+                    NA
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }
+                },
+                      fail_fast = {
+                if(.x < .y) {
+                  b_dist <- my_bhattacharyya_dist(
+                    predicted_stats$site_mean[[.x]],
+                    predicted_stats$site_sigma[[.x]],
+                    predicted_stats$site_sigma_inv[[.x]],
+                    predicted_stats$site_sigma_det[[.x]],
+                    predicted_stats$site_mean[[.y]],
+                    predicted_stats$site_sigma[[.y]],
+                    predicted_stats$site_sigma_inv[[.y]],
+                    predicted_stats$site_sigma_det[[.y]],
+                    5
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }
+                },
+
+                      full= {
+                if(.x < .y) {
+                  b_dist <- my_bhattacharyya_dist(
+                    predicted_stats$site_mean[[.x]],
+                    predicted_stats$site_sigma[[.x]],
+                    predicted_stats$site_sigma_inv[[.x]],
+                    predicted_stats$site_sigma_det[[.x]],
+                    predicted_stats$site_mean[[.y]],
+                    predicted_stats$site_sigma[[.y]],
+                    predicted_stats$site_sigma_inv[[.y]],
+                    predicted_stats$site_sigma_det[[.y]],
+                    500
+                                 )
+                    b_coeff_sim <- exp(-b_dist) ## Do this later, vectorise
+                } else {
+                  b_coeff_sim <- NA
+                }
+                }, times = 1000)
+
+
   }
+
+
+
   dist_long <- purrr::map2_dbl(row_pairs$i, row_pairs$j,
               ~ {
                 if(.x < .y) {
@@ -281,7 +452,7 @@ Rprof(NULL)
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
       imp_preds = list(imp_preds),
-      sim_mat = list(sim_mat)
+      sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
     ))
 
 }
@@ -298,7 +469,15 @@ Rprof(NULL)
     if (x_det == 0 | y_det == 0) {
       return(Inf)
     }
-
+    joint_mean <- x_mean-y_mean
+    ## if(!is.na(thres)){
+    ##     m1 <- t(joint_mean) %*% y_sigma_inv %*% joint_mean
+    ##     m2 <- t(joint_mean) %*% x_sigma_inv %*% joint_mean
+    ##     #print(c(m1,m2))
+    ##     if(min(m1,m2) > thres){
+    ##     return(Inf)
+    ##     }
+    ## }
     joint_cov <- (x_sigma + y_sigma)/2
     joint_det <- determinant(joint_cov, logarithm = FALSE)$modulus
     joint_cov_inv <- tryCatch(
@@ -308,9 +487,10 @@ Rprof(NULL)
       }
     )
 
-    joint_mean <- x_mean-y_mean
 
-    bhattacharyya_dist <- 0.125 * sum((t(joint_mean) %*% joint_cov_inv) * joint_mean) +
+    #joint_mean <- x_mean-y_mean
+
+    bhattacharyya_dist <- 0.125 * ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
       0.5 * log(joint_det / sqrt(x_det * y_det))
     return(bhattacharyya_dist)
     }
