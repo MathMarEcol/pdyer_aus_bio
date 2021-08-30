@@ -24,7 +24,7 @@ cluster_gfbootstrap <- function(
 
     ## ))
 
- caster_clust <-  data.table::setDT(castcluster::cast_optimal(gfbootstrap_predicted$sim_mat[[1]]))
+ caster_clust <-  data.table::setDT(castcluster::cast_optimal(gfbootstrap_predicted$sim_mat[[1]][[1]]))
 
 
   best_clust <- which.max(caster_clust$gamma)

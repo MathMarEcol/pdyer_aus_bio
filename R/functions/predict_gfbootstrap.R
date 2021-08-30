@@ -281,7 +281,7 @@ Rprof(NULL)
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
       imp_preds = list(imp_preds),
-      sim_mat = list(sim_mat)
+      sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
     ))
 
 }

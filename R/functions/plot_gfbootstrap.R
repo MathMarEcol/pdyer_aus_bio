@@ -77,7 +77,7 @@ plot_gfbootstrap <- function(
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
 
-  pl_sim_mat <-gfbootstrap::gg_sim_mat(gfbootstrap_predicted$sim_mat[[1]],
+  pl_sim_mat <-gfbootstrap::gg_sim_mat(gfbootstrap_predicted$sim_mat[[1]][[1]],
                                        cast_ob = gfbootstrap_caster$caster_clust[[1]]$cast_ob[[gfbootstrap_caster$best_clust]],
                                        highlight = TRUE) +
     ggplot2::ggtitle(glue::glue("Similarity matrix for {depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters"))
@@ -85,7 +85,7 @@ plot_gfbootstrap <- function(
   ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
 
-  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(gfbootstrap_predicted$sim_mat[[1]]))),
+  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(gfbootstrap_predicted$sim_mat[[1]][[1]]))),
                                      ggplot2::aes(x = x)) +
     geom_histogram(na.rm = TRUE) +
     ggplot2::ggtitle(glue::glue("Histograpm of similarities for {depth} depth of {survey} survey studying {trophic}, domain is {domain} with {k} clusters"))
