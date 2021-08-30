@@ -327,6 +327,8 @@ list(
       env_poly,
       spatial_vars,
       regrid_resolution,
+      marine_map,
+      plot_clust_labels,
       output_folder
     ),
     pattern = map(gfbootstrap_caster, gfbootstrap_predicted),

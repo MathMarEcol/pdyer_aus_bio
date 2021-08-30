@@ -311,4 +311,5 @@ is_targets_project <- rprojroot::root_criterion(function(path){
   file.exists(testfile)
 }, "Find the _targets.R file")
 
+plot_clust_labels <- FALSE
 output_folder <- file.path(rprojroot::find_root(is_targets_project), "..", "..", "outputs")
