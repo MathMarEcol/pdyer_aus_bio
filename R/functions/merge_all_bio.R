@@ -13,30 +13,30 @@ merge_all_bio <- function(
                  use.names = TRUE
                 ) -> all_bio_long
 
-  all_bio_round <- all_bio_long[, {
-  ## Aggregate biological samples into grid cells
-    copy_SD <- data.table::copy(.SD)
-    samps_round <- data.table::data.table(
-                                 round(
-                                   (
-                                     copy_SD$samps[[1]][,
-                                                     c(spatial_vars),
-                                                     with=FALSE]-
-                                  env_offset
-                                   ) / regrid_res
-                                 ) *
-                                 regrid_res +  env_offset)
-    samps_round[, `:=`(samp_id = copy_SD$samps[[1]]$samp_id,
-                       depth = copy_SD$samps[[1]]$depth)]
-    ## Convert all longitudes to range [0, 360]
-    samps_round[, c(spatial_vars[1]) := .(.SD[[spatial_vars[1]]] %% 360)]
-  ## Clean up names
-    taxa_clean <- data.table::data.table(taxon = clean_sp_names(.SD$taxa[[1]]$taxon), taxon_id = .SD$taxa[[1]]$taxon_id)
+  ## all_bio_round <- all_bio_long[, {
+  ## ## Aggregate biological samples into grid cells
+  ##   copy_SD <- data.table::copy(.SD)
+  ##   samps_round <- data.table::data.table(
+  ##                                round(
+  ##                                  (
+  ##                                    copy_SD$samps[[1]][,
+  ##                                                    c(spatial_vars),
+  ##                                                    with=FALSE]-
+  ##                                 env_offset
+  ##                                  ) / regrid_res
+  ##                                ) *
+  ##                                regrid_res +  env_offset)
+  ##   samps_round[, `:=`(samp_id = copy_SD$samps[[1]]$samp_id,
+  ##                      depth = copy_SD$samps[[1]]$depth)]
+  ##   ## Convert all longitudes to range [0, 360]
+  ##   samps_round[, c(spatial_vars[1]) := .(.SD[[spatial_vars[1]]] %% 360)]
+  ## ## Clean up names
+  ##   taxa_clean <- data.table::data.table(taxon = clean_sp_names(.SD$taxa[[1]]$taxon), taxon_id = .SD$taxa[[1]]$taxon_id)
 
-    out <- data.table(samps = list(samps_round), obs = list(.SD$obs[[1]]), taxa = list(taxa_clean))
+  ##   out <- data.table(samps = list(samps_round), obs = list(.SD$obs[[1]]), taxa = list(taxa_clean))
 
-    },
-    by = c("trophic", "survey", "depth_cat")]
+  ##   },
+  ##   by = c("trophic", "survey", "depth_cat")]
 
   ## Aggregate biological samples into grid cells
   #spatial_vars_raw <- paste0(spatial_vars, "_raw")
@@ -70,7 +70,7 @@ merge_all_bio <- function(
   ##                 tar_group := .GRP,
   ##                 by = c("survey",  "trophic")]
 
-  return(all_bio_round)
+  return(all_bio_long)
 
 }
 
