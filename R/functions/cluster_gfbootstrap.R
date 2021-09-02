@@ -11,7 +11,6 @@ cluster_gfbootstrap <- function(
     ##
     return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
       caster_clust = list(NA),
-      best_clust =  NA,
       clust_ind = list(NA)
     ))
 

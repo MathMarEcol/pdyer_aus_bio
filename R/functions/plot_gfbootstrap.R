@@ -26,7 +26,7 @@ plot_gfbootstrap <- function(
     sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
     sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
   )
-  if (is.na(gfbootstrap_caster$best_clust)) {
+  if (all(is.na(gfbootstrap_caster$clust_ind))) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(gfbootstrap_caster$surv_full_name[1], " has not successfully clustered"))
