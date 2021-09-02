@@ -74,8 +74,16 @@ plot_gfbootstrap <- function(
   fit_grids <- unique(data.table::rbindlist(
                               lapply(bio_env_merge$wide_taxa_env,
                                     function(x, spatial_vars){
-                                      x[,..spatial_vars]
-                                    }, spatial_vars=spatial_vars
+                                      if(all(class(x) == c("data.table",  "data.frame"))) {
+                                        return(x[,..spatial_vars])
+                                      } else {
+                                        if(length(x) == 1 & is.na(x)) {
+                                          return(NULL)
+                                        } else {
+                                          stop("Unexpected object while getting grid locations")
+                                        }
+                                      }
+                                    }, spatial_vars = spatial_vars
                                     )
                             ))
   fit_grids <- fit_grids[complete.cases(fit_grids)]
@@ -87,8 +95,17 @@ plot_gfbootstrap <- function(
   fit_samples <- unique(data.table::rbindlist(
                               lapply(bio_merge$samps,
                                     function(x, spatial_vars){
-                                      x[,..spatial_vars]
-                                    }, spatial_vars=spatial_vars
+                                      if(all(class(x) == c("data.table",  "data.frame"))) {
+                                        return(x[,..spatial_vars])
+                                      } else {
+                                        if(length(x) == 1 & is.na(x)) {
+                                          return(NULL)
+                                        } else {
+                                          stop("Unexpected object while getting sample locations")
+                                        }
+                                        return(NULL)
+                                      }
+                                    }, spatial_vars = spatial_vars
                                     )
                             ))
   fit_samples <- fit_samples[complete.cases(fit_samples)]
