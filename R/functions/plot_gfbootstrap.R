@@ -203,7 +203,7 @@ plot_clust_poly <- function(sites,
 
 pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
     tm_polygons(col = "clustering",
-                ## style="cat",
+                style="cont",
                 palette = rainbow(max(clustering))) +
   tm_layout(legend.show = FALSE)
 
