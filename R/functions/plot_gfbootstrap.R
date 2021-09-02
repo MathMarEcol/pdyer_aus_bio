@@ -161,8 +161,12 @@ plot_clust_poly <- function(sites,
                             clip_samples = TRUE){
 
   sites<- as.data.table(sites)
-  samples<- as.data.table(samples)
-  grids <- as.data.table(grids)
+  if(!is.null(samples)){
+    samples <- as.data.table(samples)
+  }
+  if(!is.null(grids)){
+    grids <- as.data.table(grids)
+  }
   if (clip_samples | is.null(samples)){
     env_bbox <-  sf::st_bbox(env_poly,
                              crs = "+proj=longlat +datum=WGS84")
