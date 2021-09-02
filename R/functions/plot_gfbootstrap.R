@@ -42,8 +42,8 @@ plot_gfbootstrap <- function(
   imp_preds <- gfbootstrap_predicted$imp_preds[[1]]
   pred_string <- paste(
       sapply(
-        split(x, rep(seq.int(1,length(x)), each = 5, length.out = length(x))),
-        function(y){paste(y, collapse = ", ")}
+        split(imp_preds, rep(seq.int(1,length(imp_preds)), each = 5, length.out = length(imp_preds))),
+        function(x){paste(x, collapse = ", ")}
       ),
       collapse = "\n"
   )
