@@ -199,12 +199,16 @@ plot_clust_poly <- function(sites,
   ## Since I am manually setting colours, I don't need to
   ## use a factor.
   ## clust_poly_sf$clustering <- as.factor(  clust_poly_sf$clustering)
-
+  nclust <- max(clust_poly_sf$clustering)
+  green_cut <- c(seq(1/nclust, 0.4-1/nclust,  1/nclust), seq(0.6, 1, 1/nclust ))
+  green_cut <- green_cut * nclust
+  rainbow_cut <- rainbow(nclust)[green_cut]
 
 pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
     tm_polygons(col = "clustering",
                 style="cont",
-                palette = rainbow(max(clustering))) +
+                palette = rainbow_cut,
+                breaks =  seq.int(1, max(clustering))) +
   tm_layout(legend.show = FALSE)
 
 
