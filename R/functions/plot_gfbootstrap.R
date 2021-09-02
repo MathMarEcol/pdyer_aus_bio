@@ -39,6 +39,14 @@ plot_gfbootstrap <- function(
   }
 
   k <- gfbootstrap_caster$caster_clust[[1]]$k[gfbootstrap_caster$best_clust]
+  imp_preds <- gfbootstrap_predicted$imp_preds[[1]]
+  pred_string <- paste(
+      sapply(
+        split(x, rep(seq.int(1,length(x)), each = 5, length.out = length(x))),
+        function(y){paste(y, collapse = ", ")}
+      ),
+      collapse = "\n"
+  )
 
   pl_no_samp <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
                   gfbootstrap_caster$clust_ind[[1]]$cl,
@@ -50,7 +58,8 @@ plot_gfbootstrap <- function(
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
                                                  "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
                                                  "studying trophic level [{trophic}], domain is {env_domain}\n",
-                                                 "with {k} clusters"),
+                                                 "with {k} clusters and predictors:\n{pred_string}"
+                                                 ),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
@@ -99,7 +108,8 @@ plot_gfbootstrap <- function(
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
                                                  "Clustering showing samples in domain for depth [{depth_cat}]\n",
                                                  "n survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} with {k} clusters"),
+                                                 "domain is {env_domain} with {k} clusters and predictors\n",
+                                                 "{pred_string}"),
                     main.title.size = 0.5)
 
   ##ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
@@ -120,7 +130,8 @@ plot_gfbootstrap <- function(
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
                                                  "Clustering showing all samples, including unused, for depth [{depth_cat}]\n",
                                                  "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} with {k} clusters "),
+                                                 "domain is {env_domain} with {k} clusters and predictors\n",
+                                                 "{pred_string}"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
@@ -161,8 +172,12 @@ plot_clust_poly <- function(sites,
                             clip_samples = TRUE){
 
   sites<- as.data.table(sites)
-  samples<- as.data.table(samples)
-  grids <- as.data.table(grids)
+  if(!is.null(samples)){
+    samples <- as.data.table(samples)
+  }
+  if(!is.null(grids)){
+    grids <- as.data.table(grids)
+  }
   if (clip_samples | is.null(samples)){
     env_bbox <-  sf::st_bbox(env_poly,
                              crs = "+proj=longlat +datum=WGS84")
@@ -195,12 +210,16 @@ plot_clust_poly <- function(sites,
   ## Since I am manually setting colours, I don't need to
   ## use a factor.
   ## clust_poly_sf$clustering <- as.factor(  clust_poly_sf$clustering)
-
+  nclust <- max(clust_poly_sf$clustering)
+  green_cut <- c(seq(1/nclust, 0.4-1/nclust,  1/nclust), seq(0.6, 1, 1/nclust ))
+  green_cut <- green_cut * nclust
+  rainbow_cut <- rainbow(nclust)[green_cut]
 
 pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
     tm_polygons(col = "clustering",
-                ## style="cat",
-                palette = rainbow(max(clustering))) +
+                style="cont",
+                palette = rainbow_cut,
+                breaks =  seq.int(1, max(clustering))) +
   tm_layout(legend.show = FALSE)
 
 
