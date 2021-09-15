@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH ntasks=1
 #SBATCH cpus-per-task=1
-#SBATCH --mem-per-cpu=4GB
+#SBATCH --mem-per-cpu=20GB  # on getafix, singularity will only be available if >16GB is requested
 #SBATCH --time=7-00:00
 #SBATCH -o slurm.%N.%j.%a.out  # STDOUT
 #SBATCH -e slurm.%N.%j.%a.err  # STDERR
