@@ -111,11 +111,11 @@ cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
 fi
 fi
 
-echo "d"
 #Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
 export TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
 cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/R
 
+echo "d"
 Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
 
 echo "f"
