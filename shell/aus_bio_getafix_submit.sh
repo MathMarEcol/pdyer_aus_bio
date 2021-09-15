@@ -19,7 +19,7 @@ echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 
 ## Needed for compute nodes on Getafix
-if [ ${SLURM_CLUSTER_NAME} == faculty-cluster]
+if [ ${SLURM_CLUSTER_NAME} == faculty-cluster ]
 then
     export https_proxy="http://its-ri-proxy01.hpc.dc.uq.edu.au:3128"
 fi
