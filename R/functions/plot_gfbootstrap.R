@@ -91,7 +91,11 @@ plot_gfbootstrap <- function(
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
   use_vars <- use_vars[use_vars != "env_domain"]
-  bio_merge <- all_bio_long[gfbootstrap_caster, on = use_vars]
+  if(length(use_vars) == 0) {
+    bio_merge <- all_bio_long
+  } else {
+    bio_merge <- all_bio_long[gfbootstrap_caster, on = use_vars]
+  }
   fit_samples <- unique(data.table::rbindlist(
                               lapply(bio_merge$samps,
                                     function(x, spatial_vars){
@@ -228,8 +232,9 @@ plot_clust_poly <- function(sites,
   ## use a factor.
   ## clust_poly_sf$clustering <- as.factor(  clust_poly_sf$clustering)
   nclust <- max(clust_poly_sf$clustering)
-  green_cut <- c(seq(1/nclust, 0.4-1/nclust,  1/nclust), seq(0.6, 1, 1/nclust ))
-  green_cut <- green_cut * nclust
+  ## remove any values between 35% and 60% of the rainbow spectrum
+  green_cut <- seq(0,  1,  1/(nclust-1))
+  green_cut <- green_cut < 0.3 | green_cut > 0.45
   rainbow_cut <- rainbow(nclust)[green_cut]
 
 pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
