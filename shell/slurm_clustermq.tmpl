@@ -9,5 +9,5 @@
 cd {{ workdir | "$SLURM_SUBMIT_DIR" }}
 module load use.own
 module load aus_bio_module
-ulimit -v $(( 1024 * {{ memory | 18000 }} ))
+#ulimit -v $(( 1024 * {{ memory | 18000 }} ))
 CMQ_AUTH={{ auth }} R --no-save --no-restore -e 'clustermq:::worker("{{ master }}")'
