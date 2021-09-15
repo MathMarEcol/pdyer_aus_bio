@@ -91,7 +91,11 @@ plot_gfbootstrap <- function(
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
   use_vars <- use_vars[use_vars != "env_domain"]
-  bio_merge <- all_bio_long[gfbootstrap_caster, on = use_vars]
+  if(length(use_vars) == 0) {
+    bio_merge <- all_bio_long
+  } else {
+    bio_merge <- all_bio_long[gfbootstrap_caster, on = use_vars]
+  }
   fit_samples <- unique(data.table::rbindlist(
                               lapply(bio_merge$samps,
                                     function(x, spatial_vars){
