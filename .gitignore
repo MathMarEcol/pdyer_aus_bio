@@ -1,3 +1,4 @@
 *.sif
 .Rhistory
 /R/_targets/
+/.direnv/

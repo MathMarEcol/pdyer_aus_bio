@@ -1,10 +1,11 @@
 predict_gfbootstrap <- function(
                                 gfbootstrap_combined,
                                 env_domain,
-      env_biooracle_names,
-      extrap,
-      pred_importance_top,
-      env_id_col
+                                env_biooracle_names,
+                                extrap,
+                                pred_importance_top,
+                                env_id_col,
+                                depth_range
                                 ) {
 
  if (any(is.na(gfbootstrap_combined$gfbootstrap[[1]]))) {
@@ -20,11 +21,15 @@ predict_gfbootstrap <- function(
   }
   env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
 
-    predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
-                                    newdata = env_dom[,..env_biooracle_names],
-                         ## Just take points, and calculate full coefficient matrix from points
-                                    type = c("points"),
-                                    extrap = extrap)
+  if (gfbootstrap_combined$depth_cat !=  "all" ) {
+    env_dom <- env_dom[MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
+  }
+
+  predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
+                       newdata = env_dom[,..env_biooracle_names],
+                       ## Just take points, and calculate full coefficient matrix from points
+                       type = c("points"),
+                       extrap = extrap)
   pred_points <- predicted$points
   data.table::setDT(pred_points)
   ## With only 20 trees, and therefore 20 samples, for fitting 28 dimensions, covariance matrices are coming out

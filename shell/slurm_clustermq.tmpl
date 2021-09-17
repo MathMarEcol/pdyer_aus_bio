@@ -6,8 +6,8 @@
 #SBATCH --array=1-{{ n_jobs }}
 #SBATCH --cpus-per-task={{ cores | 1 }}
 
-cd {{ workdir | "$SLURM_SUBMIT_DIR" }}
+#cd {{ workdir | "$SLURM_SUBMIT_DIR" }}
 module load use.own
-module load aus_bio_module
+module load aus_bio_module.tcl
 #ulimit -v $(( 1024 * {{ memory | 18000 }} ))
 CMQ_AUTH={{ auth }} R --no-save --no-restore -e 'clustermq:::worker("{{ master }}")'

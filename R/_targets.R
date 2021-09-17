@@ -51,7 +51,7 @@ tar_option_set(
   ),
   ## Debug breaking functions. Otherwise, comment
   ## debug = "zoo_long",
-  error = "workspace",
+  workspace_on_error = TRUE,
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
   imports = c(
     "gfbootstrap",
@@ -293,7 +293,8 @@ list(
       env_biooracle_names,
       extrap,
       pred_importance_top,
-      env_id_col
+      env_id_col,
+      depth_range
     ),
     pattern = map(gfbootstrap_combined),
     deployment = "worker",
