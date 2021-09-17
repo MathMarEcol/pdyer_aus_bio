@@ -292,7 +292,8 @@ list(
       env_biooracle_names,
       extrap,
       pred_importance_top,
-      env_id_col
+      env_id_col,
+      depth_range
     ),
     pattern = map(gfbootstrap_combined),
     deployment = "worker",
