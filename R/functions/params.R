@@ -304,7 +304,7 @@ clara_correct.d = TRUE
 # If in range (0,1) then take as many predictors as needed to include that
 # fraction of the importance. eg 0.8 maens keep 80% of importance.
 # To include all predictors, set to Inf
-pred_importance_top = 4
+pred_importance_top = 0.8
 
 is_targets_project <- rprojroot::root_criterion(function(path){
   testfile <- file.path(path,"_targets.R")
