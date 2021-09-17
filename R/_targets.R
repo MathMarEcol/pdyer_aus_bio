@@ -50,7 +50,7 @@ tar_option_set(
   ),
   ## Debug breaking functions. Otherwise, comment
   ## debug = "zoo_long",
-  error = "workspace",
+  workspace_on_error = TRUE,
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
   imports = c(
     "gfbootstrap",
