@@ -41,6 +41,8 @@ fish_taxon_depth <-
     ),
     key = "Species"
   )
+  fish_taxon_depth[, DepthRangeShallow :=  as.numeric(DepthRangeShallow)]
+  fish_taxon_depth[, DepthRangeDeep :=  as.numeric(DepthRangeDeep)]
 
  fish_taxon_depth[is.na(DepthRangeShallow), "DepthRangeShallow" := -Inf]
  fish_taxon_depth[is.na(DepthRangeDeep), "DepthRangeDeep" := -Inf]
@@ -53,6 +55,8 @@ fish_taxon_depth <-
      ),
      key = "Species"
    )
+  fish_taxon_depth_sealife[, DepthRangeShallow :=  as.numeric(DepthRangeShallow)]
+  fish_taxon_depth_sealife[, DepthRangeDeep :=  as.numeric(DepthRangeDeep)]
  fish_taxon_depth_sealife[is.na(DepthRangeShallow), "DepthRangeShallow" := -Inf]
  fish_taxon_depth_sealife[is.na(DepthRangeDeep), "DepthRangeDeep" := -Inf]
 
@@ -144,16 +148,15 @@ fish_taxon_depth <-
                                            rasterstack = FALSE))[[1]])
   bathy_sites <- lapply(depth_names, function(d, bathy_raster, depth_range, fish_long, spatial_vars){
 
-  fish_sites <- data.table::CJ(lat = seq(-89.75, 89.75, 0.5), lon = seq(-179.75, 179.75, 0.5))
-  fish_sites_sf <- sf::st_as_sf(fish_sites, coords = spatial_vars, crs = "+proj=longlat +datum=WGS84 +no_defs")
-
-    depth_raster <- bathy_raster <= -depth_range[[d]][1]
-    depth_raster <- terra::subst(depth_raster, 0, NA)
-    depth_poly <- sf::st_as_sf(terra::as.polygons(depth_raster))
-    depth_sites <- fish_sites[!lengths(sf::st_intersects(fish_sites_sf, depth_poly)) > 0, ]
-    depth_sites <- unique(rbind(fish_long[, ..spatial_vars], depth_sites[, ..spatial_vars]))
+    fish_sites <- data.table::CJ(lat = seq(-89.75, 89.75, 0.5), lon = seq(-179.75, 179.75, 0.5))
+    fish_sites_vec <- terra::vect(fish_sites, geom =  spatial_vars, crs =  "+proj=longlat +datum=WGS84 +no_defs")
+    depth_sites <- terra::extract(bathy_raster,  fish_sites_vec, xy =  TRUE)
+    data.table::setDT(depth_sites )
+    depth_sites <- depth_sites[!is.nan(MS_bathy_5m_lonlat) &
+                               MS_bathy_5m_lonlat <= -depth_range[[d]][1] ]
+    depth_sites[, c("ID",  "MS_bathy_5m_lonlat") := NULL]
+    names(depth_sites) <- spatial_vars
     depth_sites[, site_id := seq.int(1,nrow(depth_sites))]
-
 ## tmap::qtm(sf::st_as_sf(depth_poly), fill = "blue")
 }, bathy_raster = bathy_raster, depth_range=depth_range, fish_long=fish_long, spatial_vars=spatial_vars)
   names(bathy_sites) <- depth_names

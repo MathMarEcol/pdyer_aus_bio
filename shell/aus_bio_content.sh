@@ -83,38 +83,38 @@ then
 mkdir -p ~/privatemodules
 #Also make sure I have a wrapped version of qsub and qstat for the containers
 mkdir -p ~/bin
-if [ $SCHEDULER == "pbs" ]
-then
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_pbs.lua \
-      ~/privatemodules/aus_bio_module.lua
-module load use.own
-module load aus_bio_module.lua
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qsub_wrap.sh \
-   ~/bin/qsub
-chmod u+x ~/bin/qsub
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qdel_wrap.sh \
-~/bin/qdel
-chmod u+x ~/bin/qdel
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qstat_wrap.sh \
-   ~/bin/qstat
-chmod u+x ~/bin/qstat
-fi
-if [ $SCHEDULER == "slurm" ]
-then
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_slurm.tcl \
-      ~/privatemodules/aus_bio_module.tcl
-module load use.own
-module load aus_bio_module.tcl
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/sbatch_wrap.sh \
-   ~/bin/sbatch
-chmod u+x ~/bin/sbatch
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/scancel_wrap.sh \
-~/bin/scancel
-chmod u+x ~/bin/scancel
-cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
-   ~/bin/squeue
-chmod u+x ~/bin/squeue
-fi
+   if [ $SCHEDULER == "pbs" ]
+   then
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_pbs.lua \
+         ~/privatemodules/aus_bio_module.lua
+   module load use.own
+   module load aus_bio_module.lua
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qsub_wrap.sh \
+      ~/bin/qsub
+   chmod u+x ~/bin/qsub
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qdel_wrap.sh \
+   ~/bin/qdel
+   chmod u+x ~/bin/qdel
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qstat_wrap.sh \
+      ~/bin/qstat
+   chmod u+x ~/bin/qstat
+   fi
+   if [ $SCHEDULER == "slurm" ]
+   then
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_slurm.tcl \
+         ~/privatemodules/aus_bio_module.tcl
+   module load use.own
+   module load aus_bio_module.tcl
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/sbatch_wrap.sh \
+      ~/bin/sbatch
+   chmod u+x ~/bin/sbatch
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/scancel_wrap.sh \
+   ~/bin/scancel
+   chmod u+x ~/bin/scancel
+   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
+      ~/bin/squeue
+   chmod u+x ~/bin/squeue
+   fi
 fi
 
 #Because this is a singularity, it can only see directories specified in aus_bio_module's "SINGULARITY_BIND" env var.
