@@ -103,8 +103,6 @@ mkdir -p ~/bin
    then
    cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_slurm.tcl \
          ~/privatemodules/aus_bio_module.tcl
-   module load use.own
-   module load aus_bio_module.tcl
    cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/sbatch_wrap.sh \
       ~/bin/sbatch
    chmod u+x ~/bin/sbatch
@@ -121,8 +119,17 @@ fi
 export TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
 cd $TMPDIR_REAL/Q1216/pdyer/pdyer_aus_bio/code/R
 
-echo "d"
-Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
+if [ $SCHEDULER == "slurm" ]
+then
+   export aus_bio_sif="/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img"
+   export bindpath=${TMPDIR:-""}
+   export bindpath=${bindpath},/data
+   export SINGULARITY_BIND=$bindpath
+   export SINGULARITYENV_APPEND_PATH="/home/${USER}/bin"
+   singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
+else
+   Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
+fi
 
 echo "f"
 #Store the drake cache
