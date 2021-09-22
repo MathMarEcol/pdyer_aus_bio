@@ -11,5 +11,5 @@ export aus_bio_sif="/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.im
 export bindpath=${TMPDIR:-""}
 export bindpath=${bindpath},/data
 export SINGULARITY_BIND=$bindpath
-export SINGULARITYENV_APPEND_PATH="/home/$env(USER)/bin"
+export SINGULARITYENV_APPEND_PATH="/home/${USER}/bin"
 singularity exec --env CMQ_AUTH={{auth}} $aus_bio_sif  Rscript --vanilla -e 'clustermq:::worker("{{ master }}") '
