@@ -19,13 +19,14 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
   if(scheduler == "pbs") {
       options(
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = here::here("code", "shell", "pbs_clustermq.tmpl")
+        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl")
       )
   }
+
   if (scheduler == "slurm") {
       options(
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = here::here("code", "shell", "slurm_clustermq.tmpl")
+        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl")
       )
   }
 }
