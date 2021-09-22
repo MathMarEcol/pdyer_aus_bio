@@ -20,6 +20,15 @@ print(options())
 tar_option_set(
   ##qs format is smaller and reads/writes faster than RDS. needs qs package.
   format = "qs",
+  ## By default, don't load anything into the master
+  ## The workers have access to the same FS, and
+  ## can read from the cache just as easily as
+  ## master, but then we don't have to store
+  ## all the info in memory twice.
+  storage = "worker",
+  retrieval = "worker",
+  garbage_collection = TRUE,
+  memory = "transient",
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
     "gfbootstrap",
