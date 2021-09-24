@@ -3,8 +3,11 @@
 #SBATCH --output={{ log_file | /dev/null }} # you can add .%a for array index
 #SBATCH --error={{ log_file | /dev/null }}
 #SBATCH --mem={{ memory | 18000 }} # on getafix, singularity will only be available if >16GB is requested
+#SBATCH --time={{ runtime | 1:00:00 }}
 #SBATCH --array=1-{{ n_jobs }}
 #SBATCH --cpus-per-task={{ cores | 1 }}
+
+cd {{ work_dir | . }}
 
 export aus_bio_sif="/data/uqpdyer/resources/hpc_scratch/r-singularity-aus-bio.img"
 
