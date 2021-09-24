@@ -3,7 +3,7 @@ library(targets)
 
 ## Load functions and globals
 ## Load all files in the functions folder
-source_files = list.files("./functions", full.names = TRUE )
+source_files <- list.files("./functions", full.names = TRUE)
 sapply(source_files, source)
 
 ## Load global objects
@@ -13,7 +13,6 @@ source("./functions/params.R") ##might be redundant, probably sourced above
 ## Set global R options, mostly clustermq
 configure_parallel(default_clustermq = TRUE,
                    future_plan = future.callr::callr)
-# options()
 print(options())
 
 ## Set targets options
@@ -27,8 +26,18 @@ tar_option_set(
   ## all the info in memory twice.
   storage = "worker",
   retrieval = "worker",
+  deployment =  "worker",
   garbage_collection = TRUE,
   memory = "transient",
+  error =  "continue",
+  resources = tar_resources(
+    clustermq = tar_resources_clustermq(template = list(work_dir =  getwd(),
+                                                        memory =  "20GB",
+                                                        cores = 1,
+                                                        log_file = "cmq_worker_%j_%a.log",
+                                                        runtime =  "7-00:00:00")
+                                        )
+  ),
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
     "gfbootstrap",
@@ -157,12 +166,7 @@ list(
       spatial_vars,
       depth_names,
       depth_range
-    ),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient"
+    )
   ),
 
   tar_target(
@@ -197,11 +201,6 @@ list(
       agg_fun = mean,
       spatial_vars = spatial_vars
     ),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient",
     iteration = "vector"
   ),
   ##
@@ -228,11 +227,10 @@ list(
       cov_min,
       min_occurrence,
       max_taxa
-      ),
+    ),
     pattern = cross(env_domain, all_bio_long),
     iteration = "vector"
-
-    ),
+  ),
 
   tar_target(
     gfbootstrap_survey,
@@ -243,9 +241,9 @@ list(
       gf_compact,
       gf_bins,
       gf_corr_thres
-      ),
-    pattern = map(all_bio_env)
     ),
+    pattern = map(all_bio_env)
+  ),
 
   ## Create combined GF models
   ## One per trophic level
@@ -257,14 +255,9 @@ list(
     gfbootstrap_combined_tmp,
     combine_gfbootstrap_p1(
       gfbootstrap_survey
-      ),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient"
+    )
     ## Do NOT map over gfbootstrap_survey
-    ),
+  ),
   tar_target(
     gfbootstrap_combined,
     combine_gfbootstrap_p2(
@@ -272,13 +265,8 @@ list(
       gf_bins,
       gf_trees
       ),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient",
     pattern = map(gfbootstrap_combined_tmp)
-    ),
+  ),
 
   tar_target(
     gf_survey,
@@ -291,7 +279,7 @@ list(
       gf_corr_thres
       ),
     pattern = map(all_bio_env)
-    ),
+  ),
 
 
   tar_target(
@@ -305,13 +293,8 @@ list(
       env_id_col,
       depth_range
     ),
-    pattern = map(gfbootstrap_combined),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient"
-    ),
+    pattern = map(gfbootstrap_combined)
+  ),
 
   tar_target(
     gfbootstrap_caster,
@@ -320,13 +303,8 @@ list(
       env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
       spatial_vars
     ),
-    pattern = map(gfbootstrap_predicted),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient"
-    ),
+    pattern = map(gfbootstrap_predicted)
+  ),
 
   tar_target(
     gfbootstrap_plotted,
@@ -342,13 +320,8 @@ list(
       plot_clust_labels,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
-    deployment = "worker",
-    storage = "worker",
-    retrieval = "worker",
-    garbage_collection = TRUE,
-    memory = "transient"
-    )
+    pattern = map(gfbootstrap_caster, gfbootstrap_predicted)
+  )
 
 
 )
