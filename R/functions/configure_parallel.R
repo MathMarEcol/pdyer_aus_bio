@@ -16,17 +16,37 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
       )
   }
 
-  if(scheduler == "pbs") {
-      options(
-        ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl")
-      )
-  }
 
-  if (scheduler == "slurm") {
+  switch(scheduler,
+ "multiprocess" = {
+      options(
+        clustermq.defaults = list(log_file = "cmq_worker_%i.log")
+      )
+   },
+  "pbs" = {
       options(
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl")
+        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl"),
+        clustermq.defaults = list(work_dir =  getwd(),
+                                                        memory =  "20GB",
+                                                        cores = 1,
+                                                        log_file = "cmq_worker_${PBS_JOBID}_${PBS_ARRAY_INDEX}.log",
+                                                        runtime =  "7-00:00:00")
       )
-  }
+  },
+
+  "slurm" = {
+      options(
+        ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
+        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl"),
+        clustermq.defaults = list(work_dir =  getwd(),
+                                                        memory =  "20GB",
+                                                        cores = 1,
+                                                        log_file = "cmq_worker_%j_%a.log",
+                                                        runtime =  "7-00:00:00")
+      )
+  },
+ NA
+ )
+
 }

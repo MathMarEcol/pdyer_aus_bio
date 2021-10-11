@@ -30,14 +30,6 @@ tar_option_set(
   garbage_collection = TRUE,
   memory = "transient",
   error =  "continue",
-  resources = tar_resources(
-    clustermq = tar_resources_clustermq(template = list(work_dir =  getwd(),
-                                                        memory =  "20GB",
-                                                        cores = 1,
-                                                        log_file = "cmq_worker_%j_%a.log",
-                                                        runtime =  "7-00:00:00")
-                                        )
-  ),
   ## Load libraries here. Faster than library(..) at top of this file.
   packages = c(
     "gfbootstrap",
