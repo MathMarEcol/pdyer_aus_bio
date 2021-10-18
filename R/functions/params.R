@@ -142,7 +142,7 @@ env_bounds = list(
 )
 
 #' BioORACLE params
-bio_oracle_str_template = "BO2_%s%s_ss"
+bio_oracle_str_template = "BO22_%s%s_ss"
 env_vars = c(
   "depth",
   "temp",
