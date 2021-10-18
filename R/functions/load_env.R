@@ -8,17 +8,17 @@ load_env_domain <- function(
                             max_depth,
                             regrid_resolution,
                             spatial_vars,
-                            bio_oracle_str_template = "BO2_%s%s_ss",
                             env_limits_sd,
                             env_offset,
                             env_id_col
                             ) {
 
-
+  tmp_timeout <- getOption("timeout")
+  options(timeout = 6000)
   env_raster <- suppressWarnings(sdmpredictors::load_layers(env_biooracle_names,
                                            datadir = biooracle_folder,
                                            rasterstack = FALSE))
-
+  options(timeout = tmp_timeout)
   target_grid <- raster::raster(x = env_poly$data[[1]],
                                      resolution = regrid_resolution,
                                      crs = "+proj=longlat +datum=WGS84")
