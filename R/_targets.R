@@ -114,7 +114,6 @@ list(
       max_depth,
       regrid_resolution,
       spatial_vars,
-      bio_oracle_str_template,
       env_limits_sd,
       env_offset,
       env_id_col
