@@ -14,6 +14,18 @@ export TMPDIR_SHARE="/data/uqpdyer/resources/hpc_scratch/slurm_${SLURM_JOB_ID}/"
 export COPY_MODULES=1 #copy HPC modules
 export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "GIT_BRANCH=tagname" during qsub
 export WORKERS=${WORKERS:-2} # 2 workers by default,
+if [[ -v WORKER_MEM ]]
+then
+   export WORKER_MEM
+fi
+if [[ -v WORKER_CORES ]]
+then
+   export WORKER_CORES
+fi
+if [[ -v WORKER_RUNTIME ]]
+then
+   export WORKER_RUNTIME
+fi
 export SCHEDULER="slurm"
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"

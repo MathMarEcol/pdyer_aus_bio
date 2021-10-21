@@ -28,10 +28,10 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
         clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl"),
         clustermq.defaults = list(work_dir =  getwd(),
-                                                        memory =  "20GB",
-                                                        cores = 1,
-                                                        log_file = "cmq_worker_${PBS_JOBID}_${PBS_ARRAY_INDEX}.log",
-                                                        runtime =  "7-00:00:00")
+                                  memory =  Sys.getenv("WORKER_MEM", "20GB"),
+                                  cores = Sys.getenv("WORKER_CORES", "1"),
+                                  log_file = "cmq_worker_${PBS_JOBID}_${PBS_ARRAY_INDEX}.log",
+                                  runtime =  Sys.getenv("WORKER_RUNTIME", "7-00:00:00"))
       )
   },
 
@@ -40,10 +40,10 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
         clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl"),
         clustermq.defaults = list(work_dir =  getwd(),
-                                                        memory =  "20GB",
-                                                        cores = 1,
-                                                        log_file = "cmq_worker_%j_%a.log",
-                                                        runtime =  "7-00:00:00")
+                                  memory =  Sys.getenv("WORKER_MEM", "20GB"),
+                                  cores = Sys.getenv("WORKER_CORES", "1"),
+                                  log_file = "cmq_worker_%j_%a.log",
+                                  runtime =  Sys.getenv("WORKER_RUNTIME", "7-00:00:00"))
       )
   },
  NA
