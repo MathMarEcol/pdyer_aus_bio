@@ -16,6 +16,7 @@ set -euo pipefail
 #I no longer assume anything about the calling directory, but depend on the calling script to set the important variables
 
 cd $ROOT_STORE_DIR
+mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Essential Code
 
