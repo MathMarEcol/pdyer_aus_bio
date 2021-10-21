@@ -9,6 +9,7 @@ export date_run=$(date +%Y-%m-%d_%H-%M-%S)
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
 7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.7z  ./_targets
+mkdir -p $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Store the outputs
@@ -19,6 +20,7 @@ rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q
 
 #The downloaded variables from bioORACLE are also worth saving
 export TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data
+mkdir -p $ROOT_STORE_DIR/Q1215
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/Q1215/
 
 #clean up TMPDIR_SHARE
