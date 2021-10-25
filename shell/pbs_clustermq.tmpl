@@ -11,7 +11,7 @@ cd {{ workdir | "$PBS_O_HOME" }}
 module load use.own
 module load aus_bio_module
 ulimit -v $(( 1024 * {{ memory | 4096 }} ))
-CMQ_AUTH={{ auth }} R --no-save --no-restore -e 'clustermq:::worker("{{ master }}")'
+CMQ_AUTH={{ auth }} R --no-save --no-restore -e 'clustermq:::worker("{{ master }}",timeout=getOption("clustermq.worker.timeout", 7 * 24 * 60 * 60)) '
 
 
 # Mostly From https://github.com/mschubert/clustermq/wiki/PBS
