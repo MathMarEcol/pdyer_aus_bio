@@ -16,4 +16,4 @@ export bindpath=${TMPDIR:-""}
 export bindpath=${bindpath},/data
 export SINGULARITY_BIND=$bindpath
 export SINGULARITYENV_APPEND_PATH="/home/${USER}/bin"
-singularity exec --env CMQ_AUTH={{auth}} $aus_bio_sif  Rscript --vanilla -e 'clustermq:::worker("{{ master }}") '
+singularity exec --env CMQ_AUTH={{auth}} $aus_bio_sif  Rscript --vanilla -e 'clustermq:::worker("{{ master }}",timeout=getOption("clustermq.worker.timeout", 7 * 24 * 60 * 60)) '
