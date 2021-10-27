@@ -310,7 +310,8 @@ list(
       plot_clust_labels,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster, gfbootstrap_predicted)
+    pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
+    format = "file"
   )
 
 
