@@ -101,11 +101,11 @@ combine_gfbootstrap_p2 <- function(
                                    gf_trees
                                    ) {
   #Recommended way to modify plan locally
+  # combinedBootstrapGF will look for a future plan. I had issues with mixing anything other than sequential with clustermq
   oplan <- future::plan(future::sequential)
   on.exit(future::plan(oplan))
 
   gfb <- gfbootstrap_combined_p1$gfbootstrap_list[[1]]
-  print(names(gfb))
   if(is.na(gfb) | length(gfb) < 2) {
     return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(NA))
