@@ -5,7 +5,7 @@ ggsave_wrapper <- function(filename, plot,
                            dpi = 300,
                            scale = 2
                            ){
-  ggsave(filename =  filename,
+  ggplot2::ggsave(filename =  filename,
          plot = plot,
          units = units,
          width = width,
@@ -22,7 +22,7 @@ tmap_save_wrapper <- function(tm, filename,
                            dpi = 300,
                            scale = 2
                            ){
-  tmap_save(tm = tm,
+  tmap::tmap_save(tm = tm,
             filename = filename,
             units = units,
             width = width,
