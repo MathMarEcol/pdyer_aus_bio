@@ -312,6 +312,19 @@ list(
     ),
     pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
     format = "file"
+  ),
+
+  ## TODO: refactor for issue #12
+  tar_target(
+    gfbootstrap_coverage,
+    calc_coverage(
+      gfbootstrap_caster,
+      gfbootstrap_predicted,
+      spatial_vars,
+      output_folder
+    ),
+    pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
+    format = "file"
   )
 
 
