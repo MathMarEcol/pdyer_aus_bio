@@ -1,5 +1,6 @@
 plot_gfbootstrap <- function(
                              gfbootstrap_caster,
+                             gfbootstrap_polygons,
                              gfbootstrap_predicted,
                              all_bio_env,
                              all_bio_long,
@@ -48,8 +49,7 @@ plot_gfbootstrap <- function(
       collapse = "\n"
   )
 
-  pl_no_samp <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
-                  gfbootstrap_caster$clust_ind[[1]]$cl,
+  pl_no_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
                   env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
@@ -117,8 +117,7 @@ plot_gfbootstrap <- function(
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
 
-  pl_samp_clipped <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
-                  gfbootstrap_caster$clust_ind[[1]]$cl,
+  pl_samp_clipped <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
                   env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
@@ -138,8 +137,7 @@ plot_gfbootstrap <- function(
 
 
 
-  pl_samp <- plot_clust_poly(gfbootstrap_caster$clust_ind[[1]][, ..spatial_vars],
-                  gfbootstrap_caster$clust_ind[[1]]$cl,
+  pl_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
                   env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
@@ -181,8 +179,7 @@ strip_diag <- function(x) {
   return(x)
 }
 
-plot_clust_poly <- function(sites,
-                            clustering,
+plot_clust_poly <- function(cluster_polygon,
                             spatial_vars,
                             marine_map,
                             env_poly,
@@ -192,7 +189,6 @@ plot_clust_poly <- function(sites,
                             grids = NULL,
                             clip_samples = TRUE){
 
-  sites<- as.data.table(sites)
   if(!is.null(samples)){
     samples <- as.data.table(samples)
   }
@@ -219,25 +215,17 @@ plot_clust_poly <- function(sites,
 ## #                             extent =
 ##                                      crs = "+proj=longlat +datum=WGS84")
 
-  clust_raster <- terra::rast(
-            x = as.matrix(data.frame(sites[, ..spatial_vars], clustering)),
-            type = "xyz",
-            crs = "+proj=longlat +datum=WGS84")
-
-  names(clust_raster) <- c("clustering")
-  clust_multipoly <- terra::as.polygons(clust_raster)
-  clust_poly_sf <- sf::st_as_sf(clust_multipoly)
   ## tmap does not like large numbers of cluster categories
   ## Since I am manually setting colours, I don't need to
   ## use a factor.
-  ## clust_poly_sf$clustering <- as.factor(  clust_poly_sf$clustering)
-  nclust <- max(clust_poly_sf$clustering)
+  ## cluster_polygons$clustering <- as.factor(  cluster_polygons$clustering)
+  nclust <- max(cluster_polygons$clustering)
   ## remove any values between 35% and 60% of the rainbow spectrum
   green_cut <- seq(0,  1,  1/(nclust-1))
   green_cut <- green_cut < 0.3 | green_cut > 0.45
   rainbow_cut <- rainbow(nclust)[green_cut]
 
-pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
+pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_polygons(col = "clustering",
                 style="cont",
                 palette = rainbow_cut,
@@ -245,7 +233,7 @@ pl_tm <-   tm_shape(clust_poly_sf, bbox = env_bbox) +
   tm_layout(legend.show = FALSE)
 
 
-  ## pl <- ggplot2::ggplot(clust_poly_sf, mapping = ggplot2::aes(fill = as.factor(clustering))) +
+  ## pl <- ggplot2::ggplot(cluster_polygons, mapping = ggplot2::aes(fill = as.factor(clustering))) +
   ##   ggplot2::geom_sf() +
   ## ggplot2::scale_fill_manual(values = rainbow(max(clustering)), guide = FALSE) +
   ## ggplot2::labs(fill = "cluster") +

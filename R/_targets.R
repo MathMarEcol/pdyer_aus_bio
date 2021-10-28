@@ -301,6 +301,7 @@ list(
     gfbootstrap_plotted,
     plot_gfbootstrap(
       gfbootstrap_caster,
+      gfbootstrap_polygons,
       gfbootstrap_predicted,
       all_bio_env,
       all_bio_long,
@@ -311,8 +312,52 @@ list(
       plot_clust_labels,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster, gfbootstrap_predicted)
+    pattern = map(gfbootstrap_caster,
+                  gfbootstrap_predicted,
+                  gfbootstrap_polygons),
+    format = "file"
+  ),
+
+  tar_target(
+    gfbootstrap_polygons,
+    cluster_raster_to_polygons(
+      gfbootstrap_caster,
+      spatial_vars
+    ),
+    pattern = map(gfbootstrap_caster)
+  ),
+
+  tar_target(
+    mpa_polygons,
+    get_mpa_polys(
+      country_code,
+      iucn_categories,
+      marine_categories
+      )
+   ),
+
+  tar_target(
+    gfbootstrap_coverage_plots,
+    plot_gfbootstrap_coverage(
+      gfbootstrap_polygons,
+      mpa_polygons,
+      output_folder
+    ),
+    pattern =  map(gfbootstrap_polygons),
+    format = "file"
   )
+
+  ## tar_target(
+  ##   gfbootstrap_coverage,
+  ##   calc_coverage(
+  ##     gfbootstrap_caster,
+  ##     gfbootstrap_predicted,
+  ##     spatial_vars,
+  ##     output_folder
+  ##   ),
+  ##   pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
+  ##   format = "file"
+  ## )
 
 
 )

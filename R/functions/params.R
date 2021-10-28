@@ -141,6 +141,11 @@ env_bounds = list(
   y = c(-47 - 23 / 24, -8 - 1 / 24)
 )
 
+#' MPA polygon params
+country_code <- "AUS"
+iucn_categories <- c("Ia", "Ib", "II")
+marine_categories <- c("marine")
+
 #' BioORACLE params
 bio_oracle_str_template = "BO22_%s%s_ss"
 env_vars = c(
