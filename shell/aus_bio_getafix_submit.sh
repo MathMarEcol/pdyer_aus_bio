@@ -14,6 +14,14 @@ export TMPDIR_SHARE="/data/uqpdyer/resources/hpc_scratch/slurm_${SLURM_JOB_ID}/"
 export COPY_MODULES=1 #copy HPC modules
 export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "GIT_BRANCH=tagname" during qsub
 export WORKERS=${WORKERS:-2} # 2 workers by default,
+if [[ -v WORKER_MEM_SMALL ]]
+then
+   export WORKER_MEM_SMALL
+fi
+if [[ -v WORKER_MEM_BIG ]]
+then
+   export WORKER_MEM_BIG
+fi
 if [[ -v WORKER_MEM ]]
 then
    export WORKER_MEM
