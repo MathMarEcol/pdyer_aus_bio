@@ -50,8 +50,7 @@ get_mpa_polys <- function(
   ## national scale analysis
   ## We only care about total area covered by MPAs,
   ## not individual MPA identities
-  country_mpa_clean_dissolved <- wdpar::
-    wdpa_dissolve(sf::st_as_sf(country_mpa_clean_sub))
+  country_mpa_clean_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_clean_sub))
   ## aus_mpa is already an sf object
   return(country_mpa_clean_dissolved)
 }
