@@ -6,10 +6,10 @@
 #SBATCH -o slurm.%j.out  # STDOUT
 #SBATCH -e slurm.%j.err  # STDERR
 
-# use "-v GIT_BRANCH=tagname -v WORKER_N=2" during qsub
-# eg qsub -v GIT_BRANCH=tagname -v WORKER_N=2 ./aus_bio_pbs_submit.sh
 # Example use:
-# GIT_BRANCH=f_targets_debug WORKER_N_S1=20 WORKER_MEM_S1=20GB WORKER_N_S2=1 WORKER_MEM_S2=100GB WORKER_RUNTIME=7-00:00 sbatch aus_bio_getafix_submit.sh
+# GIT_BRANCH=f_targets_debug sbatch aus_bio_getafix_submit.sh
+# If stage resources need to be tweaked:
+# GIT_BRANCH=f_targets_debug WORKER_N_S1=20 WORKER_MEM_S1=20GB WORKER_RUNTIME=7-00:00 sbatch aus_bio_getafix_submit.sh
 set -euo pipefail
 export ROOT_STORE_DIR="/data/uqpdyer/resources/QRISdata/" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 export TMPDIR_SHARE="/data/uqpdyer/resources/hpc_scratch/slurm_${SLURM_JOB_ID}/"
@@ -18,6 +18,7 @@ export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "
 export WORKER_N=${WORKER_N:-2} # 2 workers by default,
 export WORKER_MEM=${WORKER_MEM:-20GB} #20GB per worker by default
 export WORKER_CORES=${WORKER_CORES:-1} # 1 core by default,
+export WORKER_RUNTIME=${WORKER_RUNTIME:7-00:00:00}
 
 # On the Slurm scheduler, I can use resources more efficiently
 # by running tar_make_clustermq() in stages, with each
