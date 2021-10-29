@@ -182,7 +182,7 @@ then
       singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
    fi
 else
-   Rscript -e "targets::tar_make_clustermq(workers = ${WORKER_N})"
+   Rscript -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
 fi
 
 #Store the drake cache
