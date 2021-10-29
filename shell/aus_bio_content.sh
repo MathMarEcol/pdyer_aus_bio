@@ -127,60 +127,26 @@ then
    export bindpath=${bindpath},/data
    export SINGULARITY_BIND=$bindpath
    export SINGULARITYENV_APPEND_PATH="/home/${USER}/bin"
-   ## Breaking the pipeline up into stages if two memory requirements are specified.
-   if [[ -v WORKER_SMALL_MEM && -v WORKER_BIG_MEM ]]
-   then
-      ## Stage 1. Targets needing 20GB (min allowed on Getafix) or less. WORKER_MEM_SMALL
-      export WORKER_MEM=$WORKER_SMALL_MEM
-      export WORKER_N=$WORKER_SMALL_N
-      targets='c('
-      targets+='bac_site_csv,'
-      targets+='bac_otu_csv,'
-      targets+='marine_map,'
-      targets+='mapfile_location,'
-      targets+='env_poly,'
-      targets+='env_extent,'
-      targets+='env_domain,'
-      targets+='zoo_data_dir,'
-      targets+='zoo_load_script,'
-      targets+='fish_taxon_file,'
-      targets+='fish_data_dir,'
-      targets+='phy_data_dir,'
-      targets+='phy_load_script,'
-      targets+='biooracle_folder,'
-      targets+='fish_long,'
-      targets+='bac_long,'
-      targets+='zoo_long,'
-      targets+='phy_long,'
-      targets+='all_bio_env,'
-      targets+='all_bio_long,'
-      targets+='gf_survey,'
-      targets+='gfbootstrap_survey'
-      targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
+   ## Breaking the pipeline up into stages. see aus_bio_getafix_submit.sh for details
+      ## S1
+      export WORKER_MEM=$WORKER_MEM_S1
+      export WORKER_CORES=$WORKER_CORES_S1
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S1}, workers = ${WORKER_N_S1}, log_worker = TRUE)"
 
-      ## Stage 2. Targets needing more memory
-      export WORKER_MEM=$WORKER_BIG_MEM
-      export WORKER_N=$WORKER_BIG_N
-      targets='c('
-      targets+='gfbootstrap_combined_tmp'
-      targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
+      ## S2
+      export WORKER_MEM=$WORKER_MEM_S2
+      export WORKER_CORES=$WORKER_CORES_S2
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S2}, workers = ${WORKER_N_S2}, log_worker = TRUE)"
 
-      ## Stage 3. Remaining Targets
-      export WORKER_MEM=$WORKER_SMALL_MEM
-      export WORKER_N=$WORKER_SMALL_N
-      targets='c('
-      targets+='gfbootstrap_combined,'
-      targets+='gfbootstrap_predicted,'
-      targets+='gfbootstrap_caster,'
-      targets+='gfbootstrap_plotted,'
-      targets+='gfbootstrap_coverage'
-      targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
-   else
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
-   fi
+      ## S3
+      export WORKER_MEM=$WORKER_MEM_S3
+      export WORKER_CORES=$WORKER_CORES_S3
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S3}, workers = ${WORKER_N_S3}, log_worker = TRUE)"
+
+      ## S4
+      export WORKER_MEM=$WORKER_MEM_S4
+      export WORKER_CORES=$WORKER_CORES_S4
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S4}, workers = ${WORKER_N_S4}, log_worker = TRUE)"
 else
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
 fi
