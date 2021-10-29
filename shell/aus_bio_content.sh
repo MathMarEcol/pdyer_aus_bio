@@ -128,7 +128,7 @@ then
    export SINGULARITY_BIND=$bindpath
    export SINGULARITYENV_APPEND_PATH="/home/${USER}/bin"
    ## Breaking the pipeline up into stages if two memory requirements are specified.
-   if [[ -v WORKER_SMALL_MEM && -v WORKER_BIG_MEM]]
+   if [[ -v WORKER_SMALL_MEM && -v WORKER_BIG_MEM ]]
    then
       ## Stage 1. Targets needing 20GB (min allowed on Getafix) or less. WORKER_MEM_SMALL
       export WORKER_MEM=$WORKER_SMALL_MEM
