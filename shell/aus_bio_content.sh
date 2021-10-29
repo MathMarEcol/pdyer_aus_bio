@@ -157,7 +157,7 @@ then
       targets+='gf_survey,'
       targets+='gfbootstrap_survey'
       targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N})"
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
 
       ## Stage 2. Targets needing more memory
       export WORKER_MEM=$WORKER_BIG_MEM
@@ -165,7 +165,7 @@ then
       targets='c('
       targets+='gfbootstrap_combined_tmp'
       targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N})"
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
 
       ## Stage 3. Remaining Targets
       export WORKER_MEM=$WORKER_SMALL_MEM
@@ -177,9 +177,9 @@ then
       targets+='gfbootstrap_plotted,'
       targets+='gfbootstrap_coverage'
       targets+=')'
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N})"
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${targets}, workers = ${WORKER_N}, log_worker = TRUE)"
    else
-      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(workers = ${WORKER_N})"
+      singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
    fi
 else
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKER_N})"
