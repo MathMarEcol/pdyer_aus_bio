@@ -18,7 +18,7 @@ export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag, use -v "
 export WORKER_N=${WORKER_N:-2} # 2 workers by default,
 export WORKER_MEM=${WORKER_MEM:-20GB} #20GB per worker by default
 export WORKER_CORES=${WORKER_CORES:-1} # 1 core by default,
-export WORKER_RUNTIME=${WORKER_RUNTIME:7-00:00:00}
+export WORKER_RUNTIME=${WORKER_RUNTIME:-7-00:00:00}
 
 # On the Slurm scheduler, I can use resources more efficiently
 # by running tar_make_clustermq() in stages, with each
