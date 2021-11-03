@@ -36,10 +36,10 @@ fit_gfbootstrap <- function(all_bio_env,
     }
   }
 
-  return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
+  return(data.table::data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
     gfbootstrap = list(gf_fit),
     is_combined = FALSE,
     surv_full_name = surv_full_names,
-    frac_valid = as.numeric(!is.na(gf_fit))
+    frac_valid = as.numeric(all(!is.na(gf_fit)))
   ))
 }
