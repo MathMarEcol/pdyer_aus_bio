@@ -96,7 +96,7 @@ combine_gfbootstrap_p1 <- function(
 }
 
 combine_gfbootstrap_p2 <- function(
-                                   gfbootstrap_combined_p1,
+                                   gfbootstrap_combined_tmp,
                                    gf_bins,
                                    gf_trees
                                    ) {
@@ -105,9 +105,9 @@ combine_gfbootstrap_p2 <- function(
   oplan <- future::plan(future::sequential)
   on.exit(future::plan(oplan))
 
-  gfb <- gfbootstrap_combined_p1$gfbootstrap_list[[1]]
-  if(is.na(gfb) | length(gfb) < 2) {
-    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
+  gfb <- gfbootstrap_combined_tmp$gfbootstrap_list[[1]]
+  if(all(is.na(gfb)) | length(gfb) < 2) {
+    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(NA))
            )
   } else {
@@ -116,7 +116,7 @@ combine_gfbootstrap_p2 <- function(
     for (i in seq_along(out$gf_list)) {
       out$gf_list[[i]]$call <- NULL
     }
-    return(data.table(gfbootstrap_combined_p1[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
+    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(out))
            )
   }
