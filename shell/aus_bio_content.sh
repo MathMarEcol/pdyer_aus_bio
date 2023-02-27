@@ -161,7 +161,7 @@ then
       export WORKER_CORES=$WORKER_CORES_S4
       singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S4}, workers = ${WORKER_N_S4}, log_worker = TRUE)"
 else
-   Rscript -e "targets::tar_make_clustermq(workers = ${WORKER_N}, log_worker = TRUE)"
+   Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
 fi
 
 #Store the drake cache
