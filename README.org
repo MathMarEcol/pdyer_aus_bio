@@ -6,25 +6,40 @@
 Check out the latest commit.
 Currently the ~f_targets~ branch is the latest.
 
+Set the root directory, here we use home for simplicity:
+
 #+begin_src sh
-git clone -b f_targets --single-branch https://github.com/mathmarecol/pdyer_aus_bio.git ./code
+export ROOTDIR=~
+cd $ROOTDIR
 #+end_src
 
-Modify the paths in ~./code/shell/aus_bio_pbs_local.sh~ to point to real folders on your system.
 
-Make sure you have a working R installation.
-If you are using nix, then run:
 
 #+begin_src sh
-cd ./code/nix
+git clone -b f_targets --single-branch https://github.com/mathmarecol/pdyer_aus_bio.git
+cd pdyer_aus_bio
+#+end_src
+
+Modify the paths in ~./shell/aus_bio_local_submit.sh~ to point to real folders on your system.
+
+Make sure you have a working R installation.
+If you are using nix, then you can get the exact development environment I use. run:
+
+#+begin_src sh
+cd $ROOTDIR
+git clone https://github.com/PhDyellow/nix-shell-pin.git
+git clone https://github.com/PhDyellow/nix_r_dev_shell.git
+chmod +x nix-shell-pin/nix-shell-pin.sh
+cd nix_r_dev_shell
 # /vmshare/cust-nix/nix_shell_pin.sh r_shell.nix ~/.nixshellgc #Not contained in the repo, I use it to pin builds so gc doesn't lead to slow rebuilds.
-nix-shell r_shell.nix
+../nix-shell-pin/nix-shell-pin.sh r_shell.nix ~/.nixshellgc
+cd $ROOTDIR
 #+end_src
 
 Then to run the project:
 
 #+begin_src sh
-cd ../code/shell
+cd $ROOTDIR/pdyer_aus_bio/shell
 GIT_BRANCH=f_targets_quick WORKERS=2 ./aus_bio_pbs_local.sh
 #+end_src
 
