@@ -10,6 +10,19 @@ set -euo pipefail
 #Instead, this script uses cluster drives, such as /30days/ to run the job so that all nodes can see
 #the same data and folders, and cooperate in generating the results.
 
+#This script uses 7zip to pack up results.
+#7zip recently released a native version, but many distros will still be using the unofficial p7zip
+#This is only a problem here because p7zip uses "7za" as the running command, but official 7zip for linux uses "7zz"
+7z_cmd(){
+   if type 7zz; then
+      7zz "$@"
+   elif type 7za; then
+      7za "$@"
+   else
+      echo "No 7zip (7za or 7zz) command found"
+      exit 127
+   fi
+}
 
 #by default, PBS begins in the home dir, but the env var $PBS_O_WORKDIR contains the path to this script.
 #Assuming that this job was called from /???30days???/uqpdyer/Q1216/pdyer/pdyer_aus_bio/code
@@ -43,7 +56,7 @@ export TMP_DATA_DIR=$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/data
 
 #All of the datasets are in smallish blocks of files. no more than a few dozen files per dataset, most are less than 5
 mkdir -p $TMP_DATA_DIR/aus_microbiome/marine_bacteria
-7za x $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria_AustralianMicrobiome-2019-07-03T093815-csv.zip -o$TMP_DATA_DIR/aus_microbiome/marine_bacteria
+7z_cmd x $ROOT_STORE_DIR/Q1215/aus_microbiome/marine_bacteria_AustralianMicrobiome-2019-07-03T093815-csv.zip -o$TMP_DATA_DIR/aus_microbiome/marine_bacteria
 mkdir -p $TMP_DATA_DIR/bioORACLE
 rsync -irc $ROOT_STORE_DIR/Q1215/bioORACLE $TMP_DATA_DIR/
 mkdir -p $TMP_DATA_DIR/AusCPR
@@ -58,7 +71,7 @@ rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Tax
 #I put in current outputs, in order to avoid replotting. Update, I want to replot. Update, I don't want to replot
 mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
 if [[ -f "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z" ]]; then
-   7za x $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z -o$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/
+   7z_cmd x $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z -o$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/
 else
    mkdir -p $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/outputs
 fi
@@ -67,7 +80,7 @@ if [[ -f  "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.7z" ]
 then
    rsync -irc $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/targets_cache.7z $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
    cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
-   7za x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.7z
+   7z_cmd x $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.7z
 fi
 
 #Then run from the local disk
@@ -153,12 +166,12 @@ fi
 
 #Store the drake cache
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R
-7za u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.7z  ./_targets
+7z_cmd u -mx=0 $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.7z  ./_targets
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/R/targets_cache.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 
 #Store the outputs
 cd $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio
-7za a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  ./outputs
+7z_cmd a "$TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  ./outputs
 rsync -irc $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/*_outputs.* $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs
 cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z
 
