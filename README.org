@@ -40,7 +40,7 @@ Then to run the project:
 
 #+begin_src sh
 cd $ROOTDIR/pdyer_aus_bio/shell
-GIT_BRANCH=f_targets_quick WORKERS=2 ./aus_bio_pbs_local.sh
+GIT_BRANCH=f_targets_quick WORKERS=2 ./aus_bio_local_submit.sh
 #+end_src
 
 * Run on UQ RCC HPC
