@@ -152,9 +152,9 @@ fish_taxon_depth <-
     fish_sites_vec <- terra::vect(fish_sites, geom =  spatial_vars, crs =  "+proj=longlat +datum=WGS84 +no_defs")
     depth_sites <- terra::extract(bathy_raster,  fish_sites_vec, xy =  TRUE)
     data.table::setDT(depth_sites )
-    depth_sites <- depth_sites[!is.nan(MS_bathy_5m_lonlat) &
-                               MS_bathy_5m_lonlat <= -depth_range[[d]][1] ]
-    depth_sites[, c("ID",  "MS_bathy_5m_lonlat") := NULL]
+    depth_sites <- depth_sites[!is.nan(MS_bathy_5m) &
+                               MS_bathy_5m <= -depth_range[[d]][1] ]
+    depth_sites[, c("ID",  "MS_bathy_5m") := NULL]
     names(depth_sites) <- spatial_vars
     depth_sites[, site_id := seq.int(1,nrow(depth_sites))]
 ## tmap::qtm(sf::st_as_sf(depth_poly), fill = "blue")
