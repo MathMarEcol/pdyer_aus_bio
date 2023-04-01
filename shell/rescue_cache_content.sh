@@ -38,6 +38,6 @@ mkdir -p $ROOT_STORE_DIR/Q1215
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/Q1215/
 
 #clean up TMPDIR_SHARE
-chmod 770 -R $TMPDIR_SHARE
+chmod 770 -R $TMPDIR_SHARE/*
 rm -r $TMPDIR_SHARE/*
 #done
