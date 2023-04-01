@@ -18,7 +18,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
 
 
   switch(scheduler,
- "multiprocess" = {
+ "multisession" = {
       options(
         clustermq.defaults = list(log_file = "cmq_worker_%i.log")
       )
