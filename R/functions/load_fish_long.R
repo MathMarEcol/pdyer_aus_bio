@@ -148,10 +148,12 @@ fish_taxon_depth <-
                                            rasterstack = FALSE))[[1]])
   bathy_sites <- lapply(depth_names, function(d, bathy_raster, depth_range, fish_long, spatial_vars){
 
-    fish_sites <- data.table::CJ(lat = seq(-89.75, 89.75, 0.5), lon = seq(-179.75, 179.75, 0.5))
+      fish_sites <- data.table::CJ( lon = seq(-179.75, 179.75, 0.5), lat = seq(-89.75, 89.75, 0.5))
+      names(fish_sites) <- spatial_vars
     fish_sites_vec <- terra::vect(fish_sites, geom =  spatial_vars, crs =  "+proj=longlat +datum=WGS84 +no_defs")
-    depth_sites <- terra::extract(bathy_raster,  fish_sites_vec, xy =  TRUE)
-    data.table::setDT(depth_sites )
+    depth_sites <- terra::extract(bathy_raster,  fish_sites_vec, xy = FALSE)
+      data.table::setDT(depth_sites )
+      depth_sites[, (spatial_vars) := fish_sites]
     depth_sites <- depth_sites[!is.nan(MS_bathy_5m) &
                                MS_bathy_5m <= -depth_range[[d]][1] ]
     depth_sites[, c("ID",  "MS_bathy_5m") := NULL]
