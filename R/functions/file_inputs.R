@@ -1,6 +1,6 @@
 #' List of targets that
 #' track input files
-track_inputs <- function() {
+file_inputs <- function() {
   list(
     tar_target(
       bac_site_csv,

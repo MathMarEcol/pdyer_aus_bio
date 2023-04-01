@@ -95,7 +95,7 @@ list(
   # Last of all, plotting
 
   ## Load in all the input targets
-  track_inputs(), #returns a list of targets
+  file_inputs(), #returns a list of targets
   ##
   ## Load in environmental data and domain
   domain_extent_targets(
