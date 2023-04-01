@@ -2,3 +2,6 @@
 .Rhistory
 /R/_targets/
 /.direnv/
+.Rproj.user
+/R/#*
+/outputs
