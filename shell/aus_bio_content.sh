@@ -179,6 +179,6 @@ cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/Q1215/
 
 #clean up TMPDIR_SHARE
-chmod 770 -R $TMPDIR_SHARE
+chmod 770 -R $TMPDIR_SHARE/*
 rm -r $TMPDIR_SHARE/*
 #done
