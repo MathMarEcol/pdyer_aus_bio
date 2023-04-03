@@ -131,7 +131,7 @@ env_offset = 0
 ##in lat lon degrees, use 1/integer fraction
 ##for proper rastering later,
 ##currently 1/12 to allign with BioORACLE
-regrid_resolution = 1 / 4 #TODO: 1 / 12,
+regrid_resolution = 1 / 2 #TODO: 1 / 12,
 ##Extent chosen to match the largest extents of
 ##the Aus EEZ polygon and the FRDC benthic data
 ##FRDC is not being used, but previous effort
@@ -283,7 +283,7 @@ env_log = c(
 )
 
 #' Gradient Forest params
-gf_trees = 200
+gf_trees = 20
 gf_bootstrap_combinations = 2000
 gf_bins = 201
 gf_corr_thres = 0.5
