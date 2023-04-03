@@ -253,7 +253,7 @@ list(
     combine_gfbootstrap_p2(
       gfbootstrap_combined_tmp,
       gf_bins,
-      gf_trees
+      gf_bootstrap_combinations
       ),
     pattern = map(gfbootstrap_combined_tmp)
   ),

@@ -98,7 +98,7 @@ combine_gfbootstrap_p1 <- function(
 combine_gfbootstrap_p2 <- function(
                                    gfbootstrap_combined_tmp,
                                    gf_bins,
-                                   gf_trees
+                                   gf_bootstrap_combinations
                                    ) {
   #Recommended way to modify plan locally
   # combinedBootstrapGF will look for a future plan. I had issues with mixing anything other than sequential with clustermq
