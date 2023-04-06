@@ -33,6 +33,8 @@ tar_option_set(
   packages = c(
     "gfbootstrap",
     "gradientForest",
+    "castcluster",
+    "apcluster",
     "qs",
     "sf",
     "terra",
