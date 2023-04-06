@@ -121,7 +121,7 @@ apclust_optimise <- function(
   assertthat::assert_that(m >= 4)
   assertthat::assert_that(min_tol > 0)
 
-  pref_range <-  apclust::preferenceRange(sim_mat)
+  pref_range <-  apcluster::preferenceRange(sim_mat)
     
   ##begin recursion
   ret <- apclust_opt_recurse(sim_mat = sim_mat,
