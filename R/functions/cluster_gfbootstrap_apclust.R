@@ -9,7 +9,7 @@ cluster_gfbootstrap_apclust <- function(
                                 keep_all_clusts
                                 ) {
 
-     ap_clust <-  data.table::setDT(apc_optimise(gfbootstrap_predicted$sim_mat[[1]][[1]], m = m, min_range = min_range, min_tol = min_tol, return_full = keep_all_clusts))
+     ap_clust <-  data.table::setDT(apclust_optimise(gfbootstrap_predicted$sim_mat[[1]][[1]], m = m, min_range = min_range, min_tol = min_tol, return_full = keep_all_clusts))
 
 
   best_clust <- which.max(ap_clust$gamma)
@@ -96,7 +96,7 @@ apclust_opt_recurse <- function(sim_mat,
   if(diff(range(gamma_score$gamma, na.rm = TRUE)) < min_tol || diff(new_range) < min_range) {
     return(rbind(rec_data, gamma_score))
   } else {
-    return(cast_optimal_recurse(sim_mat = sim_mat,
+    return(apclust_opt_recurse(sim_mat = sim_mat,
                         pref_range = new_range,
                         m = m,
                         min_range = min_range,
