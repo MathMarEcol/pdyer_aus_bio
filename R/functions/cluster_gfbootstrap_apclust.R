@@ -49,7 +49,7 @@ apclust_opt_recurse <- function(sim_mat,
     ##first iteration, set up empty data.frame
     if(is.null(rec_data)){
         rec_data <- data.frame(pref = double(),
-                               gamma = double()
+                               gamma = double(),
                                k = integer(),
                                apc_ob = list(),
                                rec_depth = integer())
