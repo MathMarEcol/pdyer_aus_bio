@@ -297,7 +297,7 @@ list(
   tar_target(
     gfbootstrap_cluster,
     cluster_gfbootstrap(
-      clust_methods,
+      clust_methods_target,
       gfbootstrap_predicted,
       env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
       spatial_vars,
@@ -306,7 +306,7 @@ list(
       min_tol = min_gamma_tol,
       keep_all_clusts
           ),
-    pattern = cross(gfbootstrap_predicted, clust_methods)
+    pattern = cross(gfbootstrap_predicted, clust_methods_target)
   ),
   
 
