@@ -46,8 +46,14 @@ apclust_opt_recurse <- function(sim_mat,
     
       ## Check for errors in recursion logic, or bad inputs
   assertthat::assert_that(diff(pref_range) > min_range)
-
-
+    ##first iteration, set up empty data.frame
+    if(is.null(rec_data)){
+        rec_data <- data.frame(pref = double(),
+                               gamma = double()
+                               k = integer(),
+                               apc_ob = list(),
+                               rec_depth = integer())
+        }
   ## Calculate Hubert's \Gamma statistic for each partition
   pref_parts <- seq(min(pref_range), max(pref_range), length.out = m)
   
@@ -71,7 +77,7 @@ apclust_opt_recurse <- function(sim_mat,
                                              apc_ob = I(list(apc)),
                                              rec_depth = rec_depth))
                              }
-                         },  sim_mat = sim_mat, rec_depth = rec_depth)
+                         },  sim_mat = sim_mat, rec_depth = rec_depth, rec_data = rec_data)
   )
 
   ## Find the best gamma score
