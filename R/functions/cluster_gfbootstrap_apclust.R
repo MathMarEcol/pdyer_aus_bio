@@ -14,7 +14,7 @@ cluster_gfbootstrap_apclust <- function(
 
   best_clust <- which.max(ap_clust$gamma)
 
-  clust_ind <- castcluster::cast_obj_to_df(ap_clust$apc_obj[[best_clust]]@clusters)
+  clust_ind <- castcluster::cast_obj_to_df(ap_clust$apc_ob[[best_clust]]@clusters)
     names(clust_ind)[names(clust_ind) == "elem"] <- "x_row"
     names(clust_ind)[names(clust_ind) == "clust"] <- "cl"
     data.table::setDT(clust_ind)
@@ -43,20 +43,18 @@ apclust_opt_recurse <- function(sim_mat,
     ## sim_mat is similarity matrix
     ## mem_mat is clustering in format needed for hubert_gamma
     ## gamma is our target metric
-    
       ## Check for errors in recursion logic, or bad inputs
-  assertthat::assert_that(diff(pref_range) > min_range)
+  assertthat::assert_that(diff(pref_range)[1] > min_range)
     ##first iteration, set up empty data.frame
     if(is.null(rec_data)){
         rec_data <- data.frame(pref = double(),
                                gamma = double(),
                                k = integer(),
-                               apc_ob = list(),
+                               apc_ob = I(list()),
                                rec_depth = integer())
         }
   ## Calculate Hubert's \Gamma statistic for each partition
-  pref_parts <- seq(min(pref_range), max(pref_range), length.out = m)
-  
+    pref_parts <- seq(min(pref_range), max(pref_range), length.out = m)
   gamma_score <- do.call(rbind,
                          lapply(pref_parts, function(pref, sim_mat, rec_depth, rec_data) {
                              if(pref %in% rec_data$pref) {
@@ -91,15 +89,24 @@ apclust_opt_recurse <- function(sim_mat,
 
   if(gamma_score$pref[max_score_ind] == min(pref_parts)) {
       new_range[1] <- min(pref_parts) - diff(pref_parts)[1] / 2
+      new_range[2] <- pref_parts[m - 2]
     } else if(gamma_score$pref[max_score_ind] == max(pref_parts)){
-      new_range[2] <- max(pref_parts) + diff(pref_parts)[1] / 2
+        new_range[2] <- max(pref_parts) + diff(pref_parts)[1] / 2
+        new_range[1] <- pref_parts[3]
   }
   if(new_range[1] == new_range[2]) {
       new_range[1] <- min(new_range) - diff(pref_parts)[1] / 2
       new_range[2] <- max(new_range) + diff(pref_parts)[1] / 2
   }
-  ## Check whether to keep narrowing, or return
-  if(diff(range(gamma_score$gamma, na.rm = TRUE)) < min_tol || diff(new_range) < min_range) {
+  #new_range[new_range < 0] <- 0
+  #new_range[new_range > 1] <- 1
+    ## Check whether to keep narrowing, or return
+    if(all(is.nan(gamma_score$gamma))){
+        stop("cluster_gfbootstrap_apclust.R: All gamma scores were errors")
+    }
+    invalid_diff <- sum(!is.nan(gamma_score$gamma)) <= 1  
+        
+  if((diff(range(gamma_score$gamma, na.rm = TRUE))[1] < min_tol && !invalid_diff) || diff(new_range)[1] < min_range) {
     return(rbind(rec_data, gamma_score))
   } else {
     return(apclust_opt_recurse(sim_mat = sim_mat,
@@ -127,8 +134,7 @@ apclust_optimise <- function(
   assertthat::assert_that(m >= 4)
   assertthat::assert_that(min_tol > 0)
 
-  pref_range <-  apcluster::preferenceRange(sim_mat)
-    
+    pref_range <-  preferenceRange(s = sim_mat, exact = TRUE)
   ##begin recursion
   ret <- apclust_opt_recurse(sim_mat = sim_mat,
                          pref_range = pref_range,
