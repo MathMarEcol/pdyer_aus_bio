@@ -286,20 +286,27 @@ list(
     pattern = map(gfbootstrap_combined)
   ),
 
+  ##Setting up branching over clustering methods
   tar_target(
-    gfbootstrap_caster,
+    gfbootstrap_cluster,
     cluster_gfbootstrap(
+      clust_methods,
       gfbootstrap_predicted,
       env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
-      spatial_vars
-    ),
-    pattern = map(gfbootstrap_predicted)
+      spatial_vars,
+      m = clust_m,
+      min_range = min_range_tol,
+      min_tol = min_gamma_tol,
+      keep_all_clusts
+          ),
+    pattern = cross(gfbootstrap_predicted, clust_methods)
   ),
+  
 
   tar_target(
     gfbootstrap_plotted,
     plot_gfbootstrap(
-      gfbootstrap_caster,
+      gfbootstrap_cluster,
       gfbootstrap_polygons,
       gfbootstrap_predicted,
       all_bio_env,
@@ -311,7 +318,7 @@ list(
       plot_clust_labels,
       output_folder
     ),
-    pattern = map(gfbootstrap_caster,
+    pattern = map(gfbootstrap_cluster,
                   gfbootstrap_predicted,
                   gfbootstrap_polygons),
     format = "file"
@@ -320,10 +327,10 @@ list(
   tar_target(
     gfbootstrap_polygons,
     cluster_raster_to_polygons(
-      gfbootstrap_caster,
+      gfbootstrap_cluster,
       spatial_vars
     ),
-    pattern = map(gfbootstrap_caster)
+    pattern = map(gfbootstrap_cluster)
   ),
 
   tar_target(
@@ -349,12 +356,12 @@ list(
   ## tar_target(
   ##   gfbootstrap_coverage,
   ##   calc_coverage(
-  ##     gfbootstrap_caster,
+  ##     gfbootstrap_cluster,
   ##     gfbootstrap_predicted,
   ##     spatial_vars,
   ##     output_folder
   ##   ),
-  ##   pattern = map(gfbootstrap_caster, gfbootstrap_predicted),
+  ##   pattern = map(gfbootstrap_cluster, gfbootstrap_predicted),
   ##   format = "file"
   ## )
 

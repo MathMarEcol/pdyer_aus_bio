@@ -1,0 +1,40 @@
+cluster_gfbootstrap_caster <- function(
+                                       clust_methods,
+                                       gfbootstrap_predicted,
+                                       env_domain,
+                                       spatial_vars,
+                                       m,
+                                       min_range,
+                                       min_tol,
+                                       keep_all_clusts
+                                       ) {
+    
+    aff_range = range(gfbootstrap_predicted$sim_mat[[1]][[1]][
+                                                upper.tri(gfbootstrap_predicted$sim_mat[[1]][[1]])])
+    min_range = diff(aff_range)/100
+
+ caster_clust <-  data.table::setDT(castcluster::cast_optimal(gfbootstrap_predicted$sim_mat[[1]][[1]], m = m, min_tol = min_tol, return_full = keep_all_clusts, aff_range = aff_range, min_range = min_range))
+
+
+  best_clust <- which.max(caster_clust$gamma)
+
+  clust_ind <- data.table::rbindlist(lapply(seq_along(caster_clust$cast_ob[[best_clust]]), function(x) {data.table::data.table(x_row = caster_clust$cast_ob[[best_clust]][[x]], cl = x)}))
+  data.table::setkey(clust_ind, "x_row")
+
+  clust_ind[env_domain[domain == gfbootstrap_predicted$env_domain[[1]], data][[1]], on = c(x_row = env_id_col),
+            c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
+
+  clust_ind[, cl_factor := as.factor(cl)]
+
+
+
+
+    return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid, env_pred_stats, env_pred_raw, imp_preds, sim_mat)],
+                      clust_method = clust_methods,
+                    clust = list(caster_clust),
+                    best_clust = best_clust,
+                    clust_ind = list(clust_ind)
+                    ))
+
+
+}

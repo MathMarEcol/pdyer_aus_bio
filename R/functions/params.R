@@ -304,6 +304,15 @@ clara_rngR = TRUE
 clara_pamLike = TRUE
 clara_correct.d = TRUE
 
+
+##Clustering settings
+##Currently implemented clustering methods are "caster" and "apclust"
+clust_methods = c("caster", "apclust")
+clust_m = 4
+min_gamma_tol = 0.005
+min_range_tol = 0.001
+keep_all_clusts = FALSE
+
 # Limiting importance
 # If an integer >= 1, then uses that number of predictors, sorted so that more
 # important predictors are used first, in for clustering.
