@@ -102,8 +102,15 @@ list(
     mapfile_location,
     map_layer,
     env_bounds
-    ),
+  ),
+  
+  tar_target(
+      clust_methods_target,
+      function(clust_methods){clust_methods},
+      iteration = "vector"
+  ),
 
+      
   tar_target(
     env_domain,
     load_env_domain(
