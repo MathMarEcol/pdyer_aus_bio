@@ -60,20 +60,33 @@ apclust_opt_recurse <- function(sim_mat,
                              if(pref %in% rec_data$pref) {
                                         #already calculated, reuse
                                  reuse_data <- rec_data[match(pref, rec_data$pref), ]
-                                 
-                           return(data.frame(pref = pref, gamma = reuse_data$gamma,
+                                 out <- data.frame(pref = pref, gamma = reuse_data$gamma,
                                              k = reuse_data$k,
                                              apc_ob = I(reuse_data$apc_ob),
-                                             rec_depth = rec_depth))
-                                 
+                                             rec_depth = rec_depth)
+                                 return(out)
+                                         
                              } else {
-                             apc <- apcluster(s = sim_mat, p = pref)
-                             mem_mat <- castcluster::membership_mat(apc@clusters)
-                             h <- castcluster::hubert_gamma(sim_mat, mem_mat, norm_z = TRUE)
-                           return(data.frame(pref = pref, gamma = h,
+                                 apc <- apcluster(s = sim_mat, p = pref)
+                                 ##May not return a well formed cluster
+                                 ## if apclust does not converge.
+                                 if(length(apc@clusters) < 2) {
+                                        #no valid clustering found
+                                     h <- NA
+                                     out <- data.frame(pref = pref, gamma = h,
                                              k = length(apc@clusters),
                                              apc_ob = I(list(apc)),
-                                             rec_depth = rec_depth))
+                                             rec_depth = rec_depth)
+
+                                 } else {
+                                     mem_mat <- castcluster::membership_mat(apc@clusters)
+                                     h <- castcluster::hubert_gamma(sim_mat, mem_mat, norm_z = TRUE)
+                                     out <- data.frame(pref = pref, gamma = h,
+                                             k = length(apc@clusters),
+                                             apc_ob = I(list(apc)),
+                                             rec_depth = rec_depth)
+                                 }
+                                 return(out)
                              }
                          },  sim_mat = sim_mat, rec_depth = rec_depth, rec_data = rec_data)
   )
