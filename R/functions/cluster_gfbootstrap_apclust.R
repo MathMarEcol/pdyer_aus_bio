@@ -13,8 +13,8 @@ cluster_gfbootstrap_apclust <- function(
 
 
   best_clust <- which.max(ap_clust$gamma)
-
-  clust_ind <- castcluster::cast_obj_to_df(ap_clust$apc_ob[[best_clust]]@clusters)
+  best_clust_ob <- ap_clust$apc_ob[[best_clust]]@clusters
+  clust_ind <- castcluster::cast_obj_to_df(best_clust_ob)
     names(clust_ind)[names(clust_ind) == "elem"] <- "x_row"
     names(clust_ind)[names(clust_ind) == "clust"] <- "cl"
     data.table::setDT(clust_ind)
@@ -29,6 +29,7 @@ cluster_gfbootstrap_apclust <- function(
                     clust_method = clust_methods,
                     clust = list(ap_clust),
                     best_clust = best_clust,
+                    best_clust_ob = I(list(best_clust_ob)),
                     clust_ind = list(clust_ind)
                     ))
 }

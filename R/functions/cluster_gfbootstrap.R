@@ -17,6 +17,7 @@ cluster_gfbootstrap <- function(
                         clust_method = clust_methods,
       clust = list(NA),
       best_clust =  NA,
+      best_clust_ob = list(NA),
       clust_ind = list(NA)
     ))
   }

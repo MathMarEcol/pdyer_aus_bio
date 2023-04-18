@@ -1,5 +1,5 @@
 plot_gfbootstrap <- function(
-                             gfbootstrap_caster,
+                             gfbootstrap_cluster,
                              gfbootstrap_polygons,
                              gfbootstrap_predicted,
                              all_bio_env,
@@ -34,7 +34,7 @@ plot_gfbootstrap <- function(
     sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
     sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
   )
-  if (is.na(gfbootstrap_caster$best_clust)) {
+  if (is.na(gfbootstrap_cluster$best_clust)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
@@ -46,7 +46,7 @@ plot_gfbootstrap <- function(
     return(pl_file)
   }
 
-  k <- gfbootstrap_caster$caster_clust[[1]]$k[gfbootstrap_caster$best_clust]
+  k <- gfbootstrap_cluster$clust[[1]]$k[gfbootstrap_cluster$best_clust]
   imp_preds <- gfbootstrap_predicted$imp_preds[[1]]
   pred_string <- paste(
       sapply(
@@ -59,14 +59,14 @@ plot_gfbootstrap <- function(
   pl_no_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
-                  env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
+                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                   labels = plot_clust_labels)+
-    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
+    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain}\n",
-                                                 "with {k} clusters and predictors:\n{pred_string}"
-                                                 ),
+                                                 "studying trophic level [{trophic}], domain is {env_domain}.\n",
+                                                 "Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
+                                                 "{pred_string}"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
@@ -77,7 +77,7 @@ plot_gfbootstrap <- function(
   grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "clust_method")
   use_vars <- gfbootstrap_cluster[, ..grouping_vars]
   use_vars <- grouping_vars[use_vars != "all"]
-  bio_env_merge <- all_bio_env[gfbootstrap_caster, on = use_vars]
+  bio_env_merge <- all_bio_env[gfbootstrap_cluster, on = use_vars]
   fit_grids <- unique(data.table::rbindlist(
                               lapply(bio_env_merge$wide_taxa_env,
                                     function(x, spatial_vars){
@@ -101,7 +101,7 @@ plot_gfbootstrap <- function(
   if(length(use_vars) == 0) {
     bio_merge <- all_bio_long
   } else {
-    bio_merge <- all_bio_long[gfbootstrap_caster, on = use_vars]
+    bio_merge <- all_bio_long[gfbootstrap_cluster, on = use_vars]
   }
   fit_samples <- unique(data.table::rbindlist(
                               lapply(bio_merge$samps,
@@ -127,15 +127,15 @@ plot_gfbootstrap <- function(
   pl_samp_clipped <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
-                  env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
+                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                                     labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids)+
-    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
+    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering showing samples in domain for depth [{depth_cat}]\n",
-                                                 "n survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} with {k} clusters and predictors\n",
+                                                 "in survey [{survey}] studying trophic level [{trophic}],\n",
+                                                 "domain is {env_domain}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
@@ -147,35 +147,46 @@ plot_gfbootstrap <- function(
   pl_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                   spatial_vars,
                   marine_map,
-                  env_poly[name == gfbootstrap_caster$env_domain, data][[1]],
+                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                                     labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids,
                   clip_samples = FALSE) +
-    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_caster,
+    tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering showing all samples, including unused, for depth [{depth_cat}]\n",
                                                  "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} with {k} clusters and predictors\n",
+                                                 "domain is {env_domain}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
   tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"], scale = 0.1, dpi = 1200)
+    sim_mat <- gfbootstrap_predicted[
+        depth_cat == gfbootstrap_cluster$depth_cat &
+        survey == gfbootstrap_cluster$survey &
+        trophic == gfbootstrap_cluster$trophic &
+        env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
+    is_caster <- gfbootstrap_cluster$clust_method == "caster"
+    aff_thres_local <- if(is_caster){
+                           glbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
+                       } else {
+                           NULL
+                       }
+    pl_sim_mat <- castcluster::gg_sim_mat(sim_mat,
+                                                      cast_ob = gfbootstrap_cluster$best_clust_ob[[1]],
+                                                      aff_thres = aff_thres_local,
+                                                      highlight = TRUE,
+                                                      sort_within_clust = is_caster,
+                                                      sort_among_clust = is_caster) +
+                    ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
 
-  pl_sim_mat <- castcluster::gg_sim_mat(gfbootstrap_predicted$sim_mat[[1]][[1]],
-                                       cast_ob = gfbootstrap_caster$caster_clust[[1]]$cast_ob[[gfbootstrap_caster$best_clust]],
-                                       aff_thres = gfbootstrap_caster$caster_clust[[1]]$aff_thres[gfbootstrap_caster$best_clust],
-                                       highlight = TRUE) +
-    ggplot2::ggtitle(glue::glue_data(gfbootstrap_caster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} with {k} clusters"))
+                ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
-  ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
-
-
-  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(gfbootstrap_predicted$sim_mat[[1]][[1]]))),
+  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
                                      ggplot2::aes(x = x)) +
     geom_histogram(na.rm = TRUE) +
-    ggplot2::ggtitle(glue::glue_data(gfbootstrap_caster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} with {k} clusters"))
+    ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters"))
 
   ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
   return(pl_file)

@@ -317,7 +317,7 @@ list(
     plot_gfbootstrap(
       gfbootstrap_cluster,
       gfbootstrap_polygons,
-      gfbootstrap_predicted,
+      gfbootstrap_predicted,#Have to select rows, does not align with clust_method
       all_bio_env,
       all_bio_long,
       env_poly,
@@ -328,7 +328,6 @@ list(
       output_folder
     ),
     pattern = map(gfbootstrap_cluster,
-                  gfbootstrap_predicted,
                   gfbootstrap_polygons),
     format = "file"
   ),

@@ -17,8 +17,8 @@ cluster_gfbootstrap_caster <- function(
 
 
   best_clust <- which.max(caster_clust$gamma)
-
-  clust_ind <- data.table::rbindlist(lapply(seq_along(caster_clust$cast_ob[[best_clust]]), function(x) {data.table::data.table(x_row = caster_clust$cast_ob[[best_clust]][[x]], cl = x)}))
+  best_clust_ob <- caster_clust$cast_ob[[best_clust]]
+  clust_ind <- data.table::rbindlist(lapply(seq_along(best_clust_ob), function(x) {data.table::data.table(x_row = caster_clust$cast_ob[[best_clust]][[x]], cl = x)}))
   data.table::setkey(clust_ind, "x_row")
 
   clust_ind[env_domain[domain == gfbootstrap_predicted$env_domain[[1]], data][[1]], on = c(x_row = env_id_col),
@@ -33,6 +33,7 @@ cluster_gfbootstrap_caster <- function(
                       clust_method = clust_methods,
                     clust = list(caster_clust),
                     best_clust = best_clust,
+                    best_clust_ob = list(best_clust_ob),
                     clust_ind = list(clust_ind)
                     ))
 
