@@ -3,14 +3,21 @@ plot_gfbootstrap_coverage <- function(
                                         mpa_polygons,
                                         output_folder
                                       ) {
+    pl_survey_name <- paste0(gfbootstrap_cluster[,
+                                                 c("env_domain",
+                                                   "trophic",
+                                                   "survey",
+                                                   "depth_cat",
+                                                   "clust_method")],
+                                                 collapse = "_")
 
-  pl_file_base <- file.path(output_folder, gfbootstrap_polygons$surv_full_name[1])
+  pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <-  paste0(pl_file_base, "_cluster_mpa_coverage.png")
   ### Skip failed surveys
   if (is.na(gfbootstrap_polygons$polygons)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
-      ggplot2::ggtitle(paste0(gfbootstrap_polygons$surv_full_name[1], " has not successfully clustered"))
+      ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
     ggsave_wrapper(filename = pl_file, plot = no_plot)
     return(pl_file)
   }
@@ -38,7 +45,7 @@ plot_gfbootstrap_coverage <- function(
   pl_clust_coverage <- ggplot2::ggplot(clust_area_table ,  ggplot2::aes(x = reorder(clust_id, area), y = area)) +
     ggplot2::scale_x_discrete("Cluster") +
     ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits =  c(0, 1), breaks = seq(0, 1, 0.1 )) +
-    ggplot2::ggtitle(paste0(gfbootstrap_polygons$surv_full_name[1], " MPA coverage by cluster") ) +
+    ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster") ) +
     ggplot2::geom_col() +
     ggthemes::theme_tufte()
 

@@ -12,7 +12,7 @@ predict_gfbootstrap <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+    return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(NA),
       env_pred_raw = list(NA),
       imp_preds = list(NA),
@@ -453,7 +453,7 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
   sim_mat[upper.tri(sim_mat)] <- t(sim_mat)[upper.tri(sim_mat)]
   diag(sim_mat) <- 1
 
-    return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid)],
+    return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
       imp_preds = list(imp_preds),

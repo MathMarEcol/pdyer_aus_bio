@@ -18,8 +18,15 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus
   ## Clusters around Aus with samples
   ## Sim Mat
-  ## Sim Mat histogram
-  pl_file_base <- file.path(output_folder, gfbootstrap_caster$surv_full_name[1])
+    ## Sim Mat histogram
+    pl_survey_name <- paste0(gfbootstrap_cluster[,
+                                                 c("env_domain",
+                                                   "trophic",
+                                                   "survey",
+                                                   "depth_cat",
+                                                   "clust_method")],
+                                                 collapse = "_")
+  pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
     no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
     samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
@@ -30,7 +37,7 @@ plot_gfbootstrap <- function(
   if (is.na(gfbootstrap_caster$best_clust)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
-      ggplot2::ggtitle(paste0(gfbootstrap_caster$surv_full_name[1], " has not successfully clustered"))
+      ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
@@ -67,8 +74,8 @@ plot_gfbootstrap <- function(
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain")
-  use_vars <- gfbootstrap_caster[, ..grouping_vars]
+  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "clust_method")
+  use_vars <- gfbootstrap_cluster[, ..grouping_vars]
   use_vars <- grouping_vars[use_vars != "all"]
   bio_env_merge <- all_bio_env[gfbootstrap_caster, on = use_vars]
   fit_grids <- unique(data.table::rbindlist(

@@ -8,7 +8,7 @@ cluster_raster_to_polygons <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid, clust_method, clust, best_clust, clust_ind)],
+    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, clust_method)],
       polygons = list(NA)
     ))
 
@@ -25,7 +25,7 @@ cluster_raster_to_polygons <- function(
   clust_multipoly <- terra::as.polygons(clust_raster)
   clust_poly_sf <- sf::st_as_sf(clust_multipoly)
 
-    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid, clust_method, clust, best_clust, clust_ind)],
+    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, clust_method)],
       polygons = list(clust_poly_sf)
     ))
 }

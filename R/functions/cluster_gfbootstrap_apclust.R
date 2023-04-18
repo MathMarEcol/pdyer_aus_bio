@@ -25,7 +25,7 @@ cluster_gfbootstrap_apclust <- function(
 
     clust_ind[, cl_factor := as.factor(cl)]
 
-  return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat, is_combined, surv_full_name, frac_valid, env_pred_stats, env_pred_raw, imp_preds, sim_mat)],
+  return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat)],
                     clust_method = clust_methods,
                     clust = list(ap_clust),
                     best_clust = best_clust,
