@@ -128,7 +128,9 @@ combine_gfbootstrap_p2 <- function(
                       gfbootstrap = list(NA))
            )
   } else {
-    combine_args <- c(nbin = gf_bins, n_samp = gf_bootstrap_combinations, gfb)
+      combine_args <- c(nbin = gf_bins,
+                        n_samp = gf_bootstrap_combinations*length(gfb),
+                        gfb)
     out <- do.call(gfbootstrap::combinedBootstrapGF, combine_args)
     for (i in seq_along(out$gf_list)) {
       out$gf_list[[i]]$call <- NULL
