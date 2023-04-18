@@ -3,7 +3,7 @@ plot_gfbootstrap_coverage <- function(
                                         mpa_polygons,
                                         output_folder
                                       ) {
-    pl_survey_name <- paste0(gfbootstrap_cluster[,
+    pl_survey_name <- paste0(gfbootstrap_polygons[,
                                                  c("env_domain",
                                                    "trophic",
                                                    "survey",
