@@ -17,7 +17,7 @@ cluster_raster_to_polygons <- function(
   ## cluster_row is assumed to have a clust_ind table with sites and a cl entry with cluster IDs
   sites<- data.table::as.data.table(cluster_row$clust_ind[[1]][, ..spatial_vars])
   clust_raster <- terra::rast(
-            x = as.matrix(data.frame(sites[, ..spatial_vars], gfbootstrap_caster$clust_ind[[1]]$cl)),
+            x = as.matrix(data.frame(sites[, ..spatial_vars], cluster_row$clust_ind[[1]]$cl)),
             type = "xyz",
             crs = "+proj=longlat +datum=WGS84")
 
