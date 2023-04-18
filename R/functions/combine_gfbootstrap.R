@@ -16,6 +16,12 @@ combine_gfbootstrap_p1 <- function(
 
     gfboot_surv[,
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
+                depth_cat = "all",
+                is_combined = TRUE),
+                by = c("env_domain", "trophic", "survey")],
+
+    gfboot_surv[,
+                .(frac_valid = sum(!is.na(gfbootstrap))/.N,
                 survey = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
@@ -51,6 +57,17 @@ combine_gfbootstrap_p1 <- function(
                   survey = "all",
                   is_combined = TRUE),
                 by = c("env_domain", "trophic", "depth_cat")],
+
+    gfboot_surv[,
+                .(
+                  gfbootstrap_list =
+                    list(
+                      stats::setNames(gfbootstrap,
+                                      nm = surv_full_name)
+                    ),
+                  depth_cat = "all",
+                  is_combined = TRUE),
+                by = c("env_domain", "trophic", "survey")],
 
     gfboot_surv[,
                 .(
