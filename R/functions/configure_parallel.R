@@ -20,7 +20,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
   switch(scheduler,
  "multiprocess" = {
       options(
-        clustermq.defaults = list(log_file = "cmq_worker_%i.log")
+        clustermq.defaults = list(log_file = "cmq_worker_%i.log"),
         future.globals.maxSize = 8*2^30 #8GB of globals are acceptable
       )
    },
