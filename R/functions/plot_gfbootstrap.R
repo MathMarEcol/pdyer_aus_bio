@@ -197,7 +197,7 @@ strip_diag <- function(x) {
   return(x)
 }
 
-plot_clust_poly <- function(cluster_polygon,
+plot_clust_poly <- function(cluster_polygons,
                             spatial_vars,
                             marine_map,
                             env_poly,
