@@ -19,12 +19,16 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus with samples
   ## Sim Mat
     ## Sim Mat histogram
-    pl_survey_name <- paste0(gfbootstrap_cluster[,
+   survey_specs <- gfbootstrap_cluster[,
                                                  c("env_domain",
                                                    "trophic",
                                                    "survey",
                                                    "depth_cat",
-                                                   "clust_method")],
+                                                   "clust_method")]
+    survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
+    survey_specs <- as.character(survey_specs)
+
+    pl_survey_name <- paste0(survey_specs,
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
@@ -247,7 +251,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_polygons(col = "clustering",
                 style="cont",
                 palette = rainbow_cut,
-                breaks =  seq.int(1, max(cluster_polygons$clustering))) +
+                breaks =  seq.int(1, nclust)) +
   tm_layout(legend.show = FALSE)
 
 
@@ -304,7 +308,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
 
   ## marine_map throws warning "bounding box has potentially an invalid value
   ## range for longlat data"
-    pl_tm <- pl_tm + tm_shape(marine_map, bbox = env_bbox) +
+    pl_tm <- pl_tm + tm_shape(env_poly, bbox = env_bbox) +
     tm_borders(lwd = 2)
 
   ## return(pl)
