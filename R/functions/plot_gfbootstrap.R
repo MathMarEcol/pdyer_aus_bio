@@ -247,7 +247,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_polygons(col = "clustering",
                 style="cont",
                 palette = rainbow_cut,
-                breaks =  seq.int(1, max(clustering))) +
+                breaks =  seq.int(1, max(cluster_polygons$clustering))) +
   tm_layout(legend.show = FALSE)
 
 
