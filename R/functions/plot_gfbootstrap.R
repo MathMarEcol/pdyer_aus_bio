@@ -173,7 +173,7 @@ plot_gfbootstrap <- function(
         env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
     is_caster <- gfbootstrap_cluster$clust_method == "caster"
     aff_thres_local <- if(is_caster){
-                           glbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
+                           gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
                        } else {
                            NULL
                        }
