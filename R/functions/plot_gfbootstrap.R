@@ -78,7 +78,7 @@ plot_gfbootstrap <- function(
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "clust_method")
+  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain")
   use_vars <- gfbootstrap_cluster[, ..grouping_vars]
   use_vars <- grouping_vars[use_vars != "all"]
   bio_env_merge <- all_bio_env[gfbootstrap_cluster, on = use_vars]
