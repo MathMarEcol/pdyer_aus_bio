@@ -60,10 +60,11 @@ plot_gfbootstrap <- function(
       collapse = "\n"
   )
 
-  pl_no_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
-                  spatial_vars,
-                  marine_map,
-                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
+  pl_no_samp <- plot_clust_poly(cluster_polygons = gfbootstrap_polygons$polygons[[1]],
+                  spatial_vars = spatial_vars,
+                  marine_map = env_poly[name == "aus_eez", data][[1]],
+                  plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
+                  env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                   labels = plot_clust_labels)+
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
@@ -129,9 +130,10 @@ plot_gfbootstrap <- function(
   ##                            crs = "+proj=longlat +datum=WGS84")
 
   pl_samp_clipped <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
-                  spatial_vars,
-                  marine_map,
-                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
+                  spatial_vars = spatial_vars,
+                  marine_map = env_poly[name == "aus_eez", data][[1]],
+                  plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
+                  env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                                     labels = plot_clust_labels,
                   samples = fit_samples,
@@ -149,9 +151,10 @@ plot_gfbootstrap <- function(
 
 
   pl_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
-                  spatial_vars,
-                  marine_map,
-                  env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
+                  spatial_vars = spatial_vars,
+                  marine_map = env_poly[name == "aus_eez", data][[1]],
+                  plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
+                  env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   regrid_res = regrid_resolution,
                                     labels = plot_clust_labels,
                   samples = fit_samples,
@@ -204,6 +207,7 @@ strip_diag <- function(x) {
 plot_clust_poly <- function(cluster_polygons,
                             spatial_vars,
                             marine_map,
+                            plot_map = FALSE,
                             env_poly,
                             regrid_res,
                             labels = TRUE,
@@ -303,9 +307,12 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
 
   pl_tm <- pl_tm +
     tm_shape(grids) +
-    tm_squares(col = "dimgray")
+    tm_symbols(col = "dimgray", border.lwd = NA, alpha = 0.4, size = 0.4, shape = 23)
   }
-
+  if(plot_map){
+    pl_tm <- pl_tm + tm_shape(marine_map, bbox = env_bbox) +
+      tm_borders(lwd = 2)
+  }
   ## marine_map throws warning "bounding box has potentially an invalid value
   ## range for longlat data"
     pl_tm <- pl_tm + tm_shape(env_poly, bbox = env_bbox) +
