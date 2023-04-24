@@ -172,7 +172,7 @@ merge_bio_env <- function(
   taxa_keep <- grid_env_bio[ ,
                         .(cov = sd(abund) / mean(abund),
                           freq = sum(abund != 0)/.N,
-                          occ = sum(abund != 0)
+                          occ = length(unique(abund))
                           ),
                         by = c("taxon_id")]
 
