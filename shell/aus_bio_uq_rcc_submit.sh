@@ -27,7 +27,7 @@ then
    export WORKER_RUNTIME
 fi
 export SCHEDULER="pbs"
-export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-8000000000}
+export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-20000000000}
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source $PBS_O_WORKDIR/aus_bio_content.sh

@@ -8,7 +8,7 @@ export COPY_MODULES=0 #don't copy HPC module files locally
 export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag
 export WORKERS=${WORKERS:-2} # 2 workers by default,
 export SCHEDULER="multiprocess" #note, this is clustermq multiprocess (callr) not future multiprocess (deprecated, gives sequential behaviour, use multisession)
-export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-8000000000}
+export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-20000000000}
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source ./aus_bio_content.sh
