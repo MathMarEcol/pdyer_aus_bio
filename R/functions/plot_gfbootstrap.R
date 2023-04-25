@@ -249,13 +249,12 @@ plot_clust_poly <- function(cluster_polygons,
   ## remove any values between 35% and 60% of the rainbow spectrum
   green_cut <- seq(0,  1,  1/(nclust-1))
   green_cut <- green_cut < 0.3 | green_cut > 0.45
-  rainbow_cut <- rainbow(nclust)[green_cut]
+  rainbow_cut <- rainbow(100)[green_cut] ##100 rainbow colour points should be fine, due to interpolation
 
 pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_polygons(col = "clustering",
                 style="cont",
-                palette = rainbow_cut,
-                breaks =  seq.int(1, nclust)) +
+                palette = rainbow_cut) +
   tm_layout(legend.show = FALSE)
 
 
