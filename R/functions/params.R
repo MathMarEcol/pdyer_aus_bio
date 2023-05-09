@@ -131,7 +131,11 @@ env_offset = 0
 ##in lat lon degrees, use 1/integer fraction
 ##for proper rastering later,
 ##currently 1/12 to allign with BioORACLE
-regrid_resolution = 1 / 4 #TODO: 1 / 12,
+regrid_resolution = list(
+    grid_res_gf = 1 / 12, #Fit gf models at max res offered by BioORACLE
+    grid_res_cluster = 1 / 4, # Cluster at low resolution for tractability
+    grid_res_plot = 1 / 12 # plot at higher resolution
+    )
 ##Extent chosen to match the largest extents of
 ##the Aus EEZ polygon and the FRDC benthic data
 ##FRDC is not being used, but previous effort
@@ -319,7 +323,7 @@ keep_all_clusts = FALSE
 # If in range (0,1) then take as many predictors as needed to include that
 # fraction of the importance. eg 0.8 maens keep 80% of importance.
 # To include all predictors, set to Inf
-pred_importance_top = 4
+pred_importance_top = 0.8
 
 is_targets_project <- rprojroot::root_criterion(function(path){
   testfile <- file.path(path,"_targets.R")

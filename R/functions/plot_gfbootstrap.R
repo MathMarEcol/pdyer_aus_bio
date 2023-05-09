@@ -9,6 +9,8 @@ plot_gfbootstrap <- function(
                             regrid_resolution,
                             marine_map,
                             plot_clust_labels,
+                            plot_description,
+                            plot_sim_mat,
                             output_folder
                              ) {
   ## As a targets pipeline function that just plots,
@@ -28,7 +30,7 @@ plot_gfbootstrap <- function(
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
-    pl_survey_name <- paste0(survey_specs,
+    pl_survey_name <- paste0(c(survey_specs, plot_description),
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
@@ -61,7 +63,8 @@ plot_gfbootstrap <- function(
   )
 
   pl_no_samp <- plot_clust_poly(cluster_polygons = gfbootstrap_polygons$polygons[[1]],
-                  spatial_vars = spatial_vars,
+                                gfbootstrap_polygons$polygons_no_clust[[1]],
+                                spatial_vars = spatial_vars,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
@@ -130,7 +133,8 @@ plot_gfbootstrap <- function(
   ##                            crs = "+proj=longlat +datum=WGS84")
 
   pl_samp_clipped <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
-                  spatial_vars = spatial_vars,
+                                     gfbootstrap_polygons$polygons_no_clust[[1]],
+                                     spatial_vars = spatial_vars,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
@@ -150,7 +154,8 @@ plot_gfbootstrap <- function(
 
 
 
-  pl_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
+    pl_samp <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
+                               gfbootstrap_polygons$polygons_no_clust[[1]],
                   spatial_vars = spatial_vars,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
@@ -169,33 +174,39 @@ plot_gfbootstrap <- function(
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
   tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"], scale = 0.1, dpi = 1200)
-    sim_mat <- gfbootstrap_predicted[
-        depth_cat == gfbootstrap_cluster$depth_cat &
-        survey == gfbootstrap_cluster$survey &
-        trophic == gfbootstrap_cluster$trophic &
-        env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
-    is_caster <- gfbootstrap_cluster$clust_method == "caster"
-    aff_thres_local <- if(is_caster){
-                           gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
-                       } else {
-                           NULL
-                       }
-    pl_sim_mat <- castcluster::gg_sim_mat(sim_mat,
-                                                      cast_ob = gfbootstrap_cluster$best_clust_ob[[1]],
-                                                      aff_thres = aff_thres_local,
-                                                      highlight = TRUE,
-                                                      sort_within_clust = is_caster,
-                                                      sort_among_clust = is_caster) +
-                    ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
 
-                ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
+    if(plot_sim_mat) {
+        sim_mat <- gfbootstrap_predicted[
+            depth_cat == gfbootstrap_cluster$depth_cat &
+            survey == gfbootstrap_cluster$survey &
+            trophic == gfbootstrap_cluster$trophic &
+            env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
+        is_caster <- gfbootstrap_cluster$clust_method == "caster"
+        aff_thres_local <- if(is_caster){
+                               gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
+                           } else {
+                               NULL
+                           }
+        pl_sim_mat <- castcluster::gg_sim_mat(sim_mat,
+                                              cast_ob = gfbootstrap_cluster$best_clust_ob[[1]],
+                                              aff_thres = aff_thres_local,
+                                              highlight = TRUE,
+                                              sort_within_clust = is_caster,
+                                              sort_among_clust = is_caster) +
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
 
-  pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
-                                     ggplot2::aes(x = x)) +
-    geom_histogram(na.rm = TRUE) +
-    ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters"))
+        ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
-  ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
+        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
+                                           ggplot2::aes(x = x)) +
+            geom_histogram(na.rm = TRUE) +
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters"))
+
+        ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
+    } else {
+        ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
+        ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
+    }
   return(pl_file)
 }
 
@@ -205,6 +216,7 @@ strip_diag <- function(x) {
 }
 
 plot_clust_poly <- function(cluster_polygons,
+                            no_cluster_polygons,
                             spatial_vars,
                             marine_map,
                             plot_map = FALSE,
@@ -257,7 +269,10 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
                 palette = rainbow_cut) +
   tm_layout(legend.show = FALSE)
 
-
+    if(!is.na(no_cluster_polygons)) {
+        pl_tm <- pl_tm + tm_shape(no_cluster_polygons, bbox = env_bbox) +
+            tm_polygons(col = "grey")
+    }
   ## pl <- ggplot2::ggplot(cluster_polygons, mapping = ggplot2::aes(fill = as.factor(clustering))) +
   ##   ggplot2::geom_sf() +
   ## ggplot2::scale_fill_manual(values = rainbow(max(clustering)), guide = FALSE) +

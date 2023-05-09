@@ -112,10 +112,7 @@ list(
       iteration = "vector"
   ),
 
-      
-  tar_target(
-    env_domain,
-    load_env_domain(
+  env_domain_targets(
       biooracle_folder,
       env_biooracle_names,
       env_poly,
@@ -125,9 +122,6 @@ list(
       env_limits_sd,
       env_offset,
       env_id_col
-    ),
-    pattern = map(env_poly), # maps over box polygon and
-    iteration = "vector"
   ),
 
   ## Load in biological data and convert to
@@ -177,7 +171,7 @@ list(
       spatial_vars,
       depth_names,
       depth_range,
-      regrid_resolution,
+      regrid_resolution$grid_res_fit,
       env_offset,
       biooracle_folder
     )
@@ -195,7 +189,7 @@ list(
         bac_long,
         fish_long
       ),
-      regrid_res = regrid_resolution,
+      regrid_res = regrid_resolution$grid_res_fit,
       env_offset = env_offset,
       agg_fun = mean,
       spatial_vars = spatial_vars
@@ -215,10 +209,10 @@ list(
   tar_target(
     all_bio_env,
     merge_bio_env(
-      env_domain,
+      env_domain_fit,
       all_bio_long,
       spatial_vars,
-      regrid_res = regrid_resolution,
+      regrid_res = regrid_resolution$grid_res_fit,
       env_offset,
       agg_fun,
       env_id_col,
@@ -227,7 +221,7 @@ list(
       min_occurrence,
       max_taxa
     ),
-    pattern = cross(env_domain, all_bio_long),
+    pattern = cross(env_domain_fit, all_bio_long),
     iteration = "vector"
   ),
 
@@ -285,7 +279,7 @@ list(
     gfbootstrap_predicted,
     predict_gfbootstrap(
       gfbootstrap_combined,
-      env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
       env_biooracle_names,
       extrap,
       pred_importance_top,
@@ -301,7 +295,8 @@ list(
     cluster_gfbootstrap(
       clust_methods_target,
       gfbootstrap_predicted,
-      env_domain, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      env_id_col,
       spatial_vars,
       m = clust_m,
       min_range = min_range_tol,
@@ -322,9 +317,11 @@ list(
       all_bio_long,
       env_poly,
       spatial_vars,
-      regrid_resolution,
+      regrid_resolution$grid_res_cluster,
       marine_map,
       plot_clust_labels,
+      plot_description = "clustering_resolution",
+      plot_sim_mat = TRUE,
       output_folder
     ),
     pattern = map(gfbootstrap_cluster,
@@ -359,6 +356,68 @@ list(
     ),
     pattern =  map(gfbootstrap_polygons),
     format = "file"
+  ),
+
+  tar_target(
+      cluster_env_extrapolate_present,
+      extrapolate_to_env(
+          gfbootstrap_combined,
+          gfbootstrap_predicted,
+          gfbootstrap_cluster,
+          env_domain_plot,
+          env_biooracle_names,
+          extrap,
+          pred_importance_top,
+          env_id_col,
+          depth_range
+      ),
+      pattern =map(gfbootstrap_cluster,
+                   cross(map(gfbootstrap_predicted,
+                             gfbootstrap_combined),
+                         clust_methods_target))
+      ),
+
+  tar_target(
+      cluster_env_assign_cluster_present,
+      assign_new_sites_to_cluster(
+          cluster_env_extrapolate_present,
+          gfbootstrap_cluster,
+          env_domain,
+          env_id_col,
+          spatial_vars
+      ),
+      pattern = map(cluster_env_extrapolate_present, gfbootstrap_cluster)
+  ),
+
+  tar_target(
+      extrap_polygons_present,
+      cluster_raster_to_polygons(
+          cluster_env_assign_cluster_present,
+          spatial_vars
+      ),
+      pattern = map(cluster_env_assign_cluster_present)
+  ),
+
+  tar_target(
+      extrap_plotted_present,
+      plot_gfbootstrap(
+          cluster_env_assign_cluster_present,
+          extrap_polygons_present,
+          gfbootstrap_predicted,
+          all_bio_env,
+          all_bio_long,
+          env_poly,
+          spatial_vars,
+          regrid_resolution$grid_res_plot,
+          marine_map,
+          plot_clust_labels,
+          plot_description = "extrap_present",
+          plot_sim_mat = FALSE,
+          output_folder
+      ),
+      pattern = map(cluster_env_assign_cluster_present,
+                         extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target)),
+      format = "file"
   )
 
   ## tar_target(

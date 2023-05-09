@@ -1,5 +1,76 @@
 #' Pull in env data, process, and shape to
 #' domain of study
+#'
+#'
+# Generate a list of targets for each regrid_resolution
+env_domain_targets <- function(
+                               biooracle_folder,
+                               env_biooracle_names,
+                               env_poly,
+                               max_depth,
+                               regrid_resolution,
+                               spatial_vars,
+                               env_limits_sd,
+                               env_offset,
+                               env_id_col
+                               ) {
+
+    list(
+
+        tar_target(
+            env_domain_fit,
+            load_env_domain(
+                biooracle_folder,
+                env_biooracle_names,
+                env_poly,
+                max_depth,
+                regrid_resolution$grid_res_gf,
+                spatial_vars,
+                env_limits_sd,
+                env_offset,
+                env_id_col
+            ),
+            pattern = map(env_poly),
+            iteration = "vector"
+        ),
+
+        tar_target(
+            env_domain_cluster,
+            load_env_domain(
+                biooracle_folder,
+                env_biooracle_names,
+                env_poly,
+                max_depth,
+                regrid_resolution$grid_res_cluster,
+                spatial_vars,
+                env_limits_sd,
+                env_offset,
+                env_id_col
+            ),
+            pattern = map(env_poly),
+            iteration = "vector"
+        ),
+
+        tar_target(
+            env_domain_plot,
+            load_env_domain(
+                biooracle_folder,
+                env_biooracle_names,
+                env_poly,
+                max_depth,
+                regrid_resolution$grid_res_plot,
+                spatial_vars,
+                env_limits_sd,
+                env_offset,
+                env_id_col
+            ),
+            pattern = map(env_poly),
+            iteration = "vector"
+        )
+    )
+
+
+}
 
 load_env_domain <- function(
                             biooracle_folder,

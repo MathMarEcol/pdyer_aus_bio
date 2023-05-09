@@ -2,6 +2,7 @@ cluster_gfbootstrap_apclust <- function(
                                         clust_methods,
                                         gfbootstrap_predicted,
                                 env_domain,
+                                env_id_col,
                                 spatial_vars,
                                 m,
                                 min_range,
