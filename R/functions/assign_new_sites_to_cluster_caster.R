@@ -27,5 +27,5 @@ assign_new_sites_to_cluster_caster <- function(
                       clust_ind = list(clust_ind),
                       pred_membership = list(predicted_cluster_membership),
                       pred_prob = list(predict_cluster_probability)
-                      )
+                      ))
 }
