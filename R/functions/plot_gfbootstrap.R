@@ -233,7 +233,7 @@ plot_clust_poly <- function(cluster_polygons,
   if(!is.null(grids)){
     grids <- as.data.table(grids)
   }
-  if (clip_samples | is.null(samples)){
+  if (clip_samples || is.null(samples)){
     env_bbox <-  sf::st_bbox(env_poly,
                              crs = "+proj=longlat +datum=WGS84")
   } else {
@@ -288,7 +288,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
 
   }
   if(!is.null(samples)){
-    if(class(samples)[1] == "list" & length(samples) == 1){
+    if(class(samples)[1] == "list" && length(samples) == 1){
       samples <- samples[[1]]
      }
     if(clip_samples){
@@ -310,7 +310,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_dots(col = "lightgray", shape = 01, size = 0.2)
   }
   if(!is.null(grids)){
-    if(class(grids)[1] == "list" & length(grids) == 1){
+    if(class(grids)[1] == "list" && length(grids) == 1){
       grids <- grids[[1]]
      }
   ##   pl <- pl +

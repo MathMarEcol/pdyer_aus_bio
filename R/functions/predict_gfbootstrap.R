@@ -471,7 +471,7 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
                                ){
     ## If the input determinants are 0,
     ## then bhattacharyya dist will be infinite
-    if (x_det == 0 | y_det == 0) {
+    if (x_det == 0 || y_det == 0) {
       return(Inf)
     }
     joint_mean <- x_mean-y_mean
