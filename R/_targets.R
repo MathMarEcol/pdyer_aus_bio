@@ -171,7 +171,7 @@ list(
       spatial_vars,
       depth_names,
       depth_range,
-      regrid_resolution$grid_res_fit,
+      regrid_resolution$grid_res_gf,
       env_offset,
       biooracle_folder
     )
@@ -189,7 +189,7 @@ list(
         bac_long,
         fish_long
       ),
-      regrid_res = regrid_resolution$grid_res_fit,
+      regrid_res = regrid_resolution$grid_res_gf,
       env_offset = env_offset,
       agg_fun = mean,
       spatial_vars = spatial_vars
@@ -212,7 +212,7 @@ list(
       env_domain_fit,
       all_bio_long,
       spatial_vars,
-      regrid_res = regrid_resolution$grid_res_fit,
+      regrid_res = regrid_resolution$grid_res_gf,
       env_offset,
       agg_fun,
       env_id_col,
