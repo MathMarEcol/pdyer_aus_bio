@@ -71,9 +71,9 @@ extrapolate_to_env <- function(
     ## Here we create a "similarity matrix" between just-predicted sites
     ## and predicted sites from earlier
 
-    gfbootstrap_predicted$env_pred_stats contains the target sites
-    gfbootstrap_predicted$sim_mat contains the internal similarities of old sites
-    gfbbotstrap_cluster$ contains the clustering object.
+    ## gfbootstrap_predicted$env_pred_stats contains the target sites
+    ## gfbootstrap_predicted$sim_mat contains the internal similarities of old sites
+    ## gfbbotstrap_cluster$ contains the clustering object.
 
     site_pairs <- data.table::CJ(old = gfbootstrap_predicted$env_pred_stats[[1]]$x_row,
                                  new = predicted_stats$x_row)
