@@ -11,9 +11,9 @@ assign_new_sites_to_cluster <- function(
         ## Propagating
         ##
         return(data.table(cluster_env_extrapolate[, .(env_domain, trophic, survey, depth_cat, clust_method)],
-                          clust_ind = list(clust_ind),
-                          pred_membership = list(predicted_cluster_membership),
-                          pred_prob = list(predict_cluster_probability)
+                          clust_ind = list(NA),
+                          pred_membership = list(NA),
+                          pred_prob = list(NA)
                           ))
     }
 

@@ -15,8 +15,11 @@ extrapolate_to_env <- function(
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
-         TODO: put NA's for intended return value'                 ????
+        return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+													env_pred_stats = list(NA),
+													env_pred_raw = list(NA),
+													imp_preds = list(NA),
+													pred_sim_mat = list(NA) ##double wrap the sim mat so data.table doesn't try to print it
                           ))
     }
     
