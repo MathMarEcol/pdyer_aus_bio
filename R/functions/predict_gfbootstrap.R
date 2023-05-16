@@ -487,7 +487,7 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     joint_cov <- as.gpu.matrix((x_sigma + y_sigma)/2, dtype = "float32")
     joint_det <- determinant(joint_cov, logarithm = FALSE)$modulus
     joint_cov_inv <- tryCatch(
-			ginv(joint_cov)
+			ginv(joint_cov),
       ## chol2inv(chol(joint_cov)),
     error = function(e){
       return(MASS::ginv(joint_cov))
