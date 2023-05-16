@@ -81,8 +81,8 @@ predict_gfbootstrap <- function(
 																 wide_boot_gm <- as.gpu.matrix(wide_boot, dtype = "float32")
                               site_mean <- colMeans(wide_boot_gm)
                               site_sigma <- cov(wide_boot_gm)
-                                 out <- data.table::data.table(site_mean = list(as.vector(site_mean)),
-                                                   site_sigma = list(as.matrix(site_sigma)),
+                                 out <- data.table::data.table(site_mean = list(site_mean),
+                                                   site_sigma = list(site_sigma),
                                                    site_sigma_det = determinant(site_sigma, logarithm=FALSE)$modulus)
                                  },
                                by = c("x_row")]
