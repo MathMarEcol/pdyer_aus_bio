@@ -484,7 +484,7 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     ##     return(Inf)
     ##     }
     ## }
-    joint_cov <- as.gpu.matrix(x_sigma + y_sigma)/2, dtype = "float32")
+    joint_cov <- as.gpu.matrix((x_sigma + y_sigma)/2, dtype = "float32")
     joint_det <- determinant(joint_cov, logarithm = FALSE)$modulus
     joint_cov_inv <- tryCatch(
 			ginv(joint_cov)
