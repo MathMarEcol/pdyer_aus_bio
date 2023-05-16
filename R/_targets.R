@@ -58,7 +58,9 @@ tar_option_set(
     "purrr",
     "lutz", # needed for loading phy and zoo
     "lubridate", # needed for loading phy and zoo
-    "rfishbase"
+    "rfishbase",
+		"GPUmatrix",
+		"float"
   ),
   ## Debug breaking functions. Otherwise, comment
   ## debug = "zoo_long",

@@ -78,10 +78,11 @@ predict_gfbootstrap <- function(
                                                             gf ~ pred,
                                                             value.var = "y")
                                  wide_boot[, gf := NULL]
-                              site_mean <- colMeans(wide_boot)
-                              site_sigma <- cov(wide_boot)
-                                 out <- data.table::data.table(site_mean = list(site_mean),
-                                                   site_sigma = list(site_sigma),
+																 wide_boot_gm <- as.gpu.matrix(wide_boot, dtype = "float32")
+                              site_mean <- colMeans(wide_boot_gm)
+                              site_sigma <- cov(wide_boot_gm)
+                                 out <- data.table::data.table(site_mean = list(as.vector(site_mean)),
+                                                   site_sigma = list(as.matrix(site_sigma)),
                                                    site_sigma_det = determinant(site_sigma, logarithm=FALSE)$modulus)
                                  },
                                by = c("x_row")]
@@ -483,10 +484,11 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     ##     return(Inf)
     ##     }
     ## }
-    joint_cov <- (x_sigma + y_sigma)/2
+    joint_cov <- as.gpu.matrix(x_sigma + y_sigma)/2, dtype = "float32")
     joint_det <- determinant(joint_cov, logarithm = FALSE)$modulus
     joint_cov_inv <- tryCatch(
-      chol2inv(chol(joint_cov)),
+			ginv(joint_cov)
+      ## chol2inv(chol(joint_cov)),
     error = function(e){
       return(MASS::ginv(joint_cov))
       }
