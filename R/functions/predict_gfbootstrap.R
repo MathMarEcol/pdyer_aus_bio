@@ -92,7 +92,7 @@ predict_gfbootstrap <- function(
 																 ## print("there")
 																 out <- data.table::data.table(
 																												site_mean = list(as.vector(site_mean)),
-                                                   site_sigma = list(as.matrix(site_sigma)),
+                                                   site_sigma = list(site_sigma),
 																												site_sigma_det = determinant(site_sigma, logarithm=TRUE)$modulus
 																										)
                                  },
@@ -495,8 +495,8 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     ##     return(Inf)
     ##     }
 			## }
-			x_sigma <- as.gpu.matrix(x_sigma, type = "tensorflow", dtype="float32", device = "cuda")
-			y_sigma <- as.gpu.matrix(y_sigma, type = "tensorflow", dtype="float32", device = "cuda")
+			## x_sigma <- as.gpu.matrix(x_sigma, type = "tensorflow", dtype="float32", device = "cuda")
+			## y_sigma <- as.gpu.matrix(y_sigma, type = "tensorflow", dtype="float32", device = "cuda")
     joint_cov <- (x_sigma + y_sigma)/2
     joint_det <- determinant(joint_cov, logarithm = TRUE)$modulus
     joint_cov_inv <- tryCatch(
