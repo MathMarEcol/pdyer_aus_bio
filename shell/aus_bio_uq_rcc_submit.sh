@@ -28,6 +28,7 @@ then
 fi
 export SCHEDULER="pbs"
 export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-100000000000}
+export TF_FORCE_GPU_ALLOW_GROWTH="true"
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source $PBS_O_WORKDIR/aus_bio_content.sh
