@@ -498,6 +498,6 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     #joint_mean <- x_mean-y_mean
 
     bhattacharyya_dist <- 0.125 * ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
-      0.5 * log(exp(joint_det) / sqrt(exp(x_det) * exp(y_det))
+      0.5 * log(exp(joint_det) / sqrt(exp(x_det) * exp(y_det)))
     return(bhattacharyya_dist)
     }
