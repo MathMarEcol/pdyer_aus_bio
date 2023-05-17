@@ -78,12 +78,23 @@ predict_gfbootstrap <- function(
                                                             gf ~ pred,
                                                             value.var = "y")
                                  wide_boot[, gf := NULL]
-																 wide_boot_gmm <- as.gpu.matrix(as.data.frame(wide_boot), dtype = "float32", type = "tensorflow")
-                              site_mean <- colMeans(wide_boot_gmm)
+																 ## print(rownames(wide_boot)
+																			 ## )
+																 ## print(names(wide_boot))
+																 ## print(dim(wide_boot))
+																 ## wide_boot_gmm <- wide_boot
+																 wide_boot_gmm <- as.gpu.matrix(as.data.frame(wide_boot), type = "tensorflow", dtype="float32", device = "cuda")
+																 ## print("here")
+																 names(wide_boot_gmm) <- NULL
+																 rownames(wide_boot_gmm) <- NULL
+																 site_mean <- colMeans(wide_boot_gmm)
                               site_sigma <- cov(wide_boot_gmm)
-                                 out <- data.table::data.table(site_mean = list(site_mean),
-                                                   site_sigma = list(site_sigma),
-                                                   site_sigma_det = determinant(site_sigma, logarithm=TRUE)$modulus)
+																 ## print("there")
+																 out <- data.table::data.table(
+																												site_mean = list(as.vector(site_mean)),
+                                                   site_sigma = list(as.matrix(site_sigma)),
+																												site_sigma_det = determinant(site_sigma, logarithm=TRUE)$modulus
+																										)
                                  },
                                by = c("x_row")]
 
@@ -483,7 +494,9 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     ##     if(min(m1,m2) > thres){
     ##     return(Inf)
     ##     }
-    ## }
+			## }
+			x_sigma <- as.gpu.matrix(x_sigma, type = "tensorflow", dtype="float32", device = "cuda")
+			y_sigma <- as.gpu.matrix(y_sigma, type = "tensorflow", dtype="float32", device = "cuda")
     joint_cov <- (x_sigma + y_sigma)/2
     joint_det <- determinant(joint_cov, logarithm = TRUE)$modulus
     joint_cov_inv <- tryCatch(
@@ -498,6 +511,6 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     #joint_mean <- x_mean-y_mean
 
     bhattacharyya_dist <- 0.125 * ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
-      0.5 * log(exp(joint_det) / sqrt(exp(x_det) * exp(y_det)))
-    return(bhattacharyya_dist)
+				0.5 * log(exp(joint_det) / sqrt(exp(x_det) * exp(y_det)))
+    return(as.numeric(bhattacharyya_dist))
     }
