@@ -78,7 +78,7 @@ predict_gfbootstrap <- function(
                                                             gf ~ pred,
                                                             value.var = "y")
                                  wide_boot[, gf := NULL]
-																 wide_boot_gm <- as.gpu.matrix(wide_boot, dtype = "float32")
+																 wide_boot_gm <- as.gpu.matrix(wide_boot, dtype = "float32", type = "tensorflow")
                               site_mean <- colMeans(wide_boot_gm)
                               site_sigma <- cov(wide_boot_gm)
                                  out <- data.table::data.table(site_mean = list(site_mean),
@@ -484,7 +484,7 @@ microbenchmark::microbenchmark(t(joint_m) %*% predicted_stats$site_sigma_inv[[.x
     ##     return(Inf)
     ##     }
     ## }
-    joint_cov <- as.gpu.matrix((x_sigma + y_sigma)/2, dtype = "float32")
+    joint_cov <- as.gpu.matrix((x_sigma + y_sigma)/2, type = "tensorflow", dtype = "float32")
     joint_det <- determinant(joint_cov, logarithm = FALSE)$modulus
     joint_cov_inv <- tryCatch(
 			ginv(joint_cov),
