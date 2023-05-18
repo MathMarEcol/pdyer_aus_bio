@@ -14,7 +14,6 @@ predict_gfbootstrap <- function(
     ##
     return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(NA),
-      env_pred_raw = list(NA),
 			env_id = list(NA),
       imp_preds = list(NA),
       sim_mat = list(NA)
@@ -59,6 +58,8 @@ predict_gfbootstrap <- function(
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds <- length(imp_preds)
+		rm(predicted)
+		rm(pred_points)
 		## r x c
 		## pred_wide is (x_row*gf) x (n_preds)
 		## I want to batch into (x_row) x  (npreds) x (gf)
@@ -67,32 +68,40 @@ predict_gfbootstrap <- function(
 		## so vector is (from slowest to fastest changing) (pred), (x_row), (gf)
 		## array goes from fastest changing to slowest. Reverse the order for array
 		pred_wide_array <-array(as.matrix(pred_wide), c(n_gf, n_x_row, n_preds))
+		rm(pred_wide)
 		## torch assumes the leftmost dim is the slices, so leftmost needs to be x_row.
 		## also, rows are variables (preds). Is it still row x col? Yes.
 		pred_wide_batch <- aperm(pred_wide_array, c(2,3,1))
-
+		rm(pred_wide_array)
 		## t -> (npreds) x (x_row *gf)
 		## c -> (
 		##;; pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
 		pred_wide_tensor <- torch_tensor(pred_wide_batch)
+		rm(pred_wide_batch)
+		gc()
 		site_mean <- torch_mean(pred_wide_tensor, 3)
 		site_sigma <- torch_tensor(array(0, c(n_x_row, n_preds, n_preds)))
 
 		for (i in seq.int(n_x_row)) {
 				site_sigma[i,,] <- pred_wide_tensor[i,,]$cov()
 		}
-
+		rm(pred_wide_tensor)
+		gc()
 		site_sigma_det <- torch_slogdet(site_sigma)[[2]]
 
 		singular_det_sites <- as.logical(site_sigma_det$isfinite())
 		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[singular_det_sites], j = seq.int(n_x_row)[singular_det_sites])
 		row_pairs_filtered <- row_pairs[ i < j, ]
 
-		joint_mean <- site_mean[row_pairs_filtered$i, ] - site_mean[row_pairs_filtered$j, ]
 
 		joint_cov <- (site_sigma[row_pairs_filtered$i, , ] + site_sigma[row_pairs_filtered$j, ,])/2
 		joint_det <- torch_slogdet(joint_cov)[[2]]
 		joint_cov_inv <- torch_inverse(joint_cov)
+
+		rm(joint_cov)
+		gc()
+		joint_mean <- site_mean[row_pairs_filtered$i, ] - site_mean[row_pairs_filtered$j, ]
+
 		## joint_mean_t <- joint_mean$unsqueeze(2)
 		## joint_mean$unsqueeze_(3)
 
@@ -107,6 +116,9 @@ predict_gfbootstrap <- function(
 		beta = 0.5,
 		alpha = 0.125)$squeeze_()$neg_()$exp_()
 
+		rm(joint_mean)
+		rm(joint_cov_inv)
+		gc()
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered)), bhattacharyya_dist, c(n_x_row, n_x_row))$to_dense() 
 
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
@@ -139,7 +151,6 @@ predict_gfbootstrap <- function(
 														site_sigma_det = as.numeric(site_sigma_det))
     return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
-      env_pred_raw = list(predicted),
 			env_id = list(env_dom[,..env_id_col]),
       imp_preds = list(imp_preds),
       sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
