@@ -135,7 +135,7 @@ predict_gfbootstrap <- function(
 
 		## Unset gpu.matrix in predicted_stats
 		predicted_stats <- list(site_mean = as.matrix(site_mean),
-														site_sigma = array(site_sigma),
+														site_sigma = array(as.numeric(site_sigma), dim(site_sigma)),
 														site_sigma_det = as.numeric(site_sigma_det))
     return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
