@@ -78,7 +78,7 @@ predict_gfbootstrap <- function(
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds <- length(imp_preds)
 
-		pred_wide_gpu <- as.gpu.matrix(as.data.frame(pred_wide), type = "tensorflow", dtype = "float32", device = "cuda")
+		## pred_wide_gpu <- as.gpu.matrix(as.data.frame(pred_wide), type = "tensorflow", dtype = "float32", device = "cuda")
 
 		site_mean <- do.call(rbind, purrr::map(seq.int(n_x_row), \(x, n_gf, pred_wide_gpu){
 				row_index <- seq.int(from = (x-1)*n_gf + 1, length.out = n_gf)
