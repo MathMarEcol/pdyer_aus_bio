@@ -140,7 +140,7 @@ predict_gfbootstrap <- function(
     return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
-			env_id = list(env_dom[,..env_id_col])
+			env_id = list(env_dom[,..env_id_col]),
       imp_preds = list(imp_preds),
       sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
     ))
