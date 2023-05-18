@@ -18,7 +18,9 @@ predict_gfbootstrap <- function(
       imp_preds = list(NA),
       sim_mat = list(NA)
     ))
-  }
+ }
+
+		print(gfbootstrap_combined)
   env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
 
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
@@ -77,7 +79,9 @@ predict_gfbootstrap <- function(
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds <- length(imp_preds)
-
+		print(n_x_row)
+		print(n_gf)
+		print(n_preds)
 		## pred_wide_gpu <- as.gpu.matrix(as.data.frame(pred_wide), type = "tensorflow", dtype = "float32", device = "cuda")
 
 		site_mean <- do.call(rbind, purrr::map(seq.int(n_x_row), \(x, n_gf, pred_wide_gpu){
@@ -106,7 +110,9 @@ predict_gfbootstrap <- function(
 
 		dist_long <- purrr::map2_dbl(row_pairs$i, row_pairs$j,
               ~ {
-                if(.x < .y) {
+									if(.x < .y) {
+											print(.x)
+											print(.y)
                     b_dist <- my_bhattacharyya_dist_gpu(
 												              .x,
 																			.y,
@@ -126,8 +132,10 @@ predict_gfbootstrap <- function(
   diag(sim_mat) <- 1
 
 		## Unset gpu.matrix in predicted_stats
-		predicted_stats[ , site_sigma := lapply(site_sigma, as.matrix)]
-
+		predicted_stats <- list(site_mean = site_mean,
+														site_sigma = site_sigma,
+														site_sigma_det = site_sigma_det)
+print("done")
     return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
