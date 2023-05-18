@@ -15,16 +15,16 @@ predict_gfbootstrap <- function(
     return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(NA),
       env_pred_raw = list(NA),
+			env_id = list(NA),
       imp_preds = list(NA),
       sim_mat = list(NA)
     ))
  }
 
-		print(gfbootstrap_combined)
   env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
 
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
-    env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
+			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
   }
 
   predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
@@ -47,26 +47,6 @@ predict_gfbootstrap <- function(
     imp_preds <- names(imp)[seq.int(1,n_preds)]
   }
 
-  predicted_stats <- pred_points[pred %in% imp_preds,
-                               {
-                                 wide_boot <- data.table::dcast(
-                                                            .SD[, .(pred, y, gf)],
-                                                            gf ~ pred,
-                                                            value.var = "y")
-                                 wide_boot[, gf := NULL]
-																 wide_boot_gmm <- wide_boot
-																 ## wide_boot_gmm <- as.gpu.matrix(as.data.frame(wide_boot), type = "tensorflow", dtype="float32", device = "cuda")
-																 names(wide_boot_gmm) <- NULL
-																 rownames(wide_boot_gmm) <- NULL
-																 site_mean <- colMeans(wide_boot_gmm)
-																 site_sigma <- cov(wide_boot_gmm)
-																 out <- data.table::data.table(
-																												site_mean = list(as.vector(site_mean)),
-                                                   site_sigma = list(site_sigma),
-																												site_sigma_det = determinant(site_sigma, logarithm=TRUE)$modulus
-																										)
-                                 },
-                               by = c("x_row")]
 
 		## Batch GPU version: One giant matrix, operate on subsets
 		pred_wide <- data.table::dcast(
@@ -79,159 +59,90 @@ predict_gfbootstrap <- function(
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds <- length(imp_preds)
-		print(n_x_row)
-		print(n_gf)
-		print(n_preds)
-		## pred_wide_gpu <- as.gpu.matrix(as.data.frame(pred_wide), type = "tensorflow", dtype = "float32", device = "cuda")
+		## r x c
+		## pred_wide is (x_row*gf) x (n_preds)
+		## I want to batch into (x_row) x  (npreds) x (gf)
+		## to align with cov
+		## matrix inner veector currently starts with a pred, goes through all gfs in an x_row, starts a new x_row.
+		## so vector is (from slowest to fastest changing) (pred), (x_row), (gf)
+		## array goes from fastest changing to slowest. Reverse the order for array
+		pred_wide_array <-array(as.matrix(pred_wide), c(n_gf, n_x_row, n_preds))
+		## torch assumes the leftmost dim is the slices, so leftmost needs to be x_row.
+		## also, rows are variables (preds). Is it still row x col? Yes.
+		pred_wide_batch <- aperm(pred_wide_array, c(2,3,1))
 
-		site_mean <- do.call(rbind, purrr::map(seq.int(n_x_row), \(x, n_gf, pred_wide_gpu){
-				row_index <- seq.int(from = (x-1)*n_gf + 1, length.out = n_gf)
-				out <- colMeans(pred_wide_gpu[row_index, ])
-		}, pred_wide_gpu = pred_wide, n_gf = n_gf))
-																				#site_mean <- as.gpu.matrix(site_mean, type = "torch", dtype = "float32", device = "cuda")
+		## t -> (npreds) x (x_row *gf)
+		## c -> (
+		##;; pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
+		pred_wide_tensor <- torch_tensor(pred_wide_batch)
+		site_mean <- torch_mean(pred_wide_tensor, 3)
+		site_sigma <- torch_tensor(array(0, c(n_x_row, n_preds, n_preds)))
 
-		site_sigma <- do.call(rbind, purrr::map(seq.int(n_x_row), \(x, n_gf, pred_wide_gpu){
-				row_index <- seq.int(from = (x-1)*n_gf + 1, length.out = n_gf)
-				out <- cov(pred_wide_gpu[row_index, ])
-		}, pred_wide_gpu = pred_wide, n_gf = n_gf))
-		#site_sigma <- as.gpu.matrix(site_sigma, type = "torch", dtype = "float32", device = "cuda")
-		row_pairs <- data.table::CJ(i = seq.int(n_x_row), j = seq.int(n_x_row))
+		for (i in seq.int(n_x_row)) {
+				site_sigma[i,,] <- pred_wide_tensor[i,,]$cov()
+		}
 
-		site_sigma_det <- do.call(c, purrr::map(seq.int(n_x_row), \(x, n_preds, site_sigma){
-				## sigma_det_rows <- ncol(site_sigma_det)
-				##x_sigma_det_ind <- seq.int(from = (x-1) * sigma_det_rows + 1, length.out = sigma_det_rows)
-				row_index <- seq.int(from = (x-1)*n_preds + 1, length.out = n_preds)
-				submat <- site_sigma[row_index, ]
-				out <- determinant(submat, logarithm=TRUE)$modulus
+		site_sigma_det <- torch_slogdet(site_sigma)[[2]]
 
-		}, site_sigma = site_sigma, n_preds = n_preds))
+		singular_det_sites <- as.logical(site_sigma_det$isfinite())
+		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[singular_det_sites], j = seq.int(n_x_row)[singular_det_sites])
+		row_pairs_filtered <- row_pairs[ i < j, ]
 
-		row_pairs <- data.table::CJ(i = seq.int(n_x_row), j = seq.int(n_x_row))
+		joint_mean <- site_mean[row_pairs_filtered$i, ] - site_mean[row_pairs_filtered$j, ]
 
-		dist_long <- purrr::map2_dbl(row_pairs$i, row_pairs$j,
-              ~ {
-									if(.x < .y) {
-											print(.x)
-											print(.y)
-                    b_dist <- my_bhattacharyya_dist_gpu(
-												              .x,
-																			.y,
-																			site_mean,
-																			site_sigma,
-																			site_sigma_det
-										)
-                  return(b_dist)
-                } else {
-                  return(NA)
-                }
-              }, predicted_stats)
+		joint_cov <- (site_sigma[row_pairs_filtered$i, , ] + site_sigma[row_pairs_filtered$j, ,])/2
+		joint_det <- torch_slogdet(joint_cov)[[2]]
+		joint_cov_inv <- torch_inverse(joint_cov)
+		## joint_mean_t <- joint_mean$unsqueeze(2)
+		## joint_mean$unsqueeze_(3)
 
-  ## Bhattacharyya coefficient = exp(-Bhattacharyya distance)
-  sim_mat <- matrix(exp(-dist_long), nrow(predicted_stats), nrow(predicted_stats))
-  sim_mat[upper.tri(sim_mat)] <- t(sim_mat)[upper.tri(sim_mat)]
-  diag(sim_mat) <- 1
+		## torch_baddbmm
+		## beta * param1 + alpha * (param2 x param3)
+		## here param3 is cov * mean.colvec
+		## and param2 is mean.rowvec
+		bhattacharyya_dist <- torch_baddbmm(
+		(joint_det - 0.5 * (site_sigma_det[row_pairs_filtered$i] + site_sigma_det[row_pairs_filtered$j]))$unsqueeze_(-1)$unsqueeze_(-1),
+		joint_mean$unsqueeze(2), ## Don't modify inline, tends to mess up evaluate here,
+		torch_bmm(joint_cov_inv, joint_mean$unsqueeze(3)),
+		beta = 0.5,
+		alpha = 0.125)$squeeze_()$neg_()$exp_()
+
+		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered)), bhattacharyya_dist, c(n_x_row, n_x_row))$to_dense() 
+
+		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
+		sim_mat<- as.matrix(sim_mat)
+		## implements
+		## bhattacharyya_dist <- 0.125 *
+				## ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
+				## 0.5 * log(
+									## exp(joint_det) /
+									## (sqrt(exp(site_sigma_det[x]) * exp(site_sigma_det[y])))
+							## )
+
+		## this is all wrapped in a log, apply
+		##log quotient ->
+		## log(exp(joint_det)) - log(sqrt(exp(detx) * exp(dety)))
+		## log e and log power ->
+		## joint_det - 0.5 log(exp(detx) * exp(dety))
+		## log mult ->
+		## joint_det - 0.5 * ( log(exp(detx)) + log(exp(dety)))
+		## log e again ->
+		## joint_det - 0.5 * ( detx + dety)
+		## This works because I was already taking the log
+		## of each determinant with torch_slogdet
+		## Numerically, using logs and addition is better.
+
 
 		## Unset gpu.matrix in predicted_stats
-		predicted_stats <- list(site_mean = site_mean,
-														site_sigma = site_sigma,
-														site_sigma_det = site_sigma_det)
-print("done")
+		predicted_stats <- list(site_mean = as.matrix(site_mean),
+														site_sigma = array(site_sigma),
+														site_sigma_det = as.numeric(site_sigma_det))
     return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
       env_pred_raw = list(predicted),
+			env_id = list(env_dom[,..env_id_col])
       imp_preds = list(imp_preds),
       sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
     ))
 
-}
-
-  my_bhattacharyya_dist <- function(x_mean,
-                               x_sigma,
-                               x_det,
-                               y_mean,
-                               y_sigma,
-                               y_det
-                               ){
-    ## If the input determinants are 0,
-    ## then bhattacharyya dist will be infinite
-    if (exp(x_det) == 0 || exp(y_det) == 0) {
-      return(Inf)
-    }
-    joint_mean <- x_mean-y_mean
-    ## if(!is.na(thres)){
-    ##     m1 <- t(joint_mean) %*% y_sigma_inv %*% joint_mean
-    ##     m2 <- t(joint_mean) %*% x_sigma_inv %*% joint_mean
-    ##     #print(c(m1,m2))
-    ##     if(min(m1,m2) > thres){
-    ##     return(Inf)
-    ##     }
-			## }
-			## x_sigma <- as.gpu.matrix(x_sigma, type = "tensorflow", dtype="float32", device = "cuda")
-			## y_sigma <- as.gpu.matrix(y_sigma, type = "tensorflow", dtype="float32", device = "cuda")
-    joint_cov <- (x_sigma + y_sigma)/2
-    joint_det <- determinant(joint_cov, logarithm = TRUE)$modulus
-    joint_cov_inv <- tryCatch(
-			ginv(joint_cov),
-      ## chol2inv(chol(joint_cov)),
-    error = function(e){
-      return(MASS::ginv(joint_cov))
-      }
-    )
-
-
-    #joint_mean <- x_mean-y_mean
-
-    bhattacharyya_dist <- 0.125 * ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
-				0.5 * log(exp(joint_det) / sqrt(exp(x_det) * exp(y_det)))
-    return(as.numeric(bhattacharyya_dist))
-    }
-
-
-my_bhattacharyya_dist_gpu <- function(x,
-																			y,
-																			site_mean,
-																			site_sigma,
-																			site_sigma_det
-																			){
-																				#mem_used<-torch::cuda_memory_stats()$allocated_bytes$all$current
-																				#if (mem_used > 240000000) torch::cuda_empty_cache()
-		## If the input determinants are 0,
-		## then bhattacharyya dist will be infinite
-		if (exp(site_sigma_det[x]) == 0 || exp(site_sigma_det[y]) == 0) {
-				return(Inf)
-		}
-		joint_mean <- site_mean[x, ] - site_mean[y, ]
-		## if(!is.na(thres)){
-		##     m1 <- t(joint_mean) %*% y_sigma_inv %*% joint_mean
-		##     m2 <- t(joint_mean) %*% x_sigma_inv %*% joint_mean
-		##     #print(c(m1,m2))
-		##     if(min(m1,m2) > thres){
-		##     return(Inf)
-		##     }
-		## }
-		## x_sigma <- as.gpu.matrix(x_sigma, type = "tensorflow", dtype="float32", device = "cuda")
-		## y_sigma <- as.gpu.matrix(y_sigma, type = "tensorflow", dtype="float32", device = "cuda")
-		sigma_rows <- ncol(site_sigma)
-		x_sigma_ind <- seq.int(from = (x-1) * sigma_rows + 1, length.out = sigma_rows)
-		y_sigma_ind <- seq.int(from = (y-1) * sigma_rows + 1, length.out = sigma_rows)
-		joint_cov <- (site_sigma[x_sigma_ind, ] + site_sigma[y_sigma_ind])/2
-		joint_det <- determinant(joint_cov, logarithm = TRUE)$modulus
-		joint_cov_inv <- tryCatch(
-				ginv(joint_cov),
-				## chol2inv(chol(joint_cov)),
-				error = function(e){
-						return(MASS::ginv(joint_cov))
-				}
-		)
-
-
-																				#joint_mean <- x_mean-y_mean
-
-		bhattacharyya_dist <- 0.125 * ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
-				0.5 * log(
-									exp(joint_det) /
-									sqrt(exp(site_sigma_det[x]) * exp(site_sigma_det[y]))
-							)
-
-		return(as.numeric(bhattacharyya_dist))
 }

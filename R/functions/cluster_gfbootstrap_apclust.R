@@ -20,7 +20,7 @@ cluster_gfbootstrap_apclust <- function(
     names(clust_ind)[names(clust_ind) == "clust"] <- "cl"
     data.table::setDT(clust_ind)
       data.table::setkey(clust_ind, "x_row")
-  clust_ind <-  cbind(clust_ind, gfbootstrap_predicted$env_pred_stats[[1]][, ..env_id_col])
+    clust_ind <-  cbind(clust_ind, gfbootstrap_predicted$env_id[[1]][, ..env_id_col])
   clust_ind[env_domain[domain == gfbootstrap_predicted$env_domain[[1]], data][[1]], on = c(env_id_col),
             c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
 
