@@ -25,7 +25,8 @@ predict_gfbootstrap <- function(
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
 			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
   }
-
+	## Assume 6000 sites, 1000 gf, 30 preds
+	## Size: sites * gf * (preds + 3) * float64 = 1.4GB
   predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
                        newdata = env_dom[,..env_biooracle_names],
                        ## Just take points, and calculate full coefficient matrix from points
@@ -55,6 +56,8 @@ predict_gfbootstrap <- function(
 																 subset = .(pred %in% imp_preds))
 		pred_wide[, gf := NULL]
 		pred_wide[, x_row := NULL]
+		## size: sites * gf * imp_preds * float64 (8 bytes), still ~1.4GB
+
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds <- length(imp_preds)
@@ -76,11 +79,14 @@ predict_gfbootstrap <- function(
 		## t -> (npreds) x (x_row *gf)
 		## c -> (
 		##;; pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
-		pred_wide_tensor <- torch_tensor(pred_wide_batch)
+		## Size: sites * gf * preds *float32 = 0.77GB
+		pred_wide_tensor <- torch_tensor(pred_wide_batch, dtype = torch_float32())
 		rm(pred_wide_batch)
 		gc()
+		## Size: sites * preds * float32 = 720Kb  <- Lots of gfs dropped here
 		site_mean <- torch_mean(pred_wide_tensor, 3)
-		site_sigma <- torch_tensor(array(0, c(n_x_row, n_preds, n_preds)))
+		## Size: sites * preds ^2 * float32 = 21Mb
+		site_sigma <- torch_tensor(array(0, c(n_x_row, n_preds, n_preds)), dtype = torch_float32())
 
 		for (i in seq.int(n_x_row)) {
 				site_sigma[i,,] <- pred_wide_tensor[i,,]$cov()
@@ -89,37 +95,35 @@ predict_gfbootstrap <- function(
 		gc()
 		site_sigma_det <- torch_slogdet(site_sigma)[[2]]
 
-		singular_det_sites <- as.logical(site_sigma_det$isfinite())
-		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[singular_det_sites], j = seq.int(n_x_row)[singular_det_sites])
+		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite())
+		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[nonsingular_det_sites], j = seq.int(n_x_row)[nonsingular_det_sites])
+		## Size = (sites^2 - sites)/2 *integer(4bytes)*2 = 143Mb (250Mb before filtering
 		row_pairs_filtered <- row_pairs[ i < j, ]
 
+		## Batch into appropriate memory size chunks
+		## As shown below, max memory is:
+		## row_pairs * 4 <float32> * (6 + 4 * preds + 2 * preds ^2)
+		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2)
+		if (is.na(mem_max <- as.integer(Sys.getenv("TENSOR_MEM_MAX", "")))) {
+				max_rows <- Inf
+		} else {
+				n_row_batch <- floor(mem_max / mem_per_pair)
+				n_batchs <- ceiling(nrow(row_pairs_filtered) / n_row_batch)
+		}
 
-		joint_cov <- (site_sigma[row_pairs_filtered$i, , ] + site_sigma[row_pairs_filtered$j, ,])/2
-		joint_det <- torch_slogdet(joint_cov)[[2]]
-		joint_cov_inv <- torch_inverse(joint_cov)
+		row_pairs_filtered[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(row_pairs_filtered))]
 
-		rm(joint_cov)
-		gc()
-		joint_mean <- site_mean[row_pairs_filtered$i, ] - site_mean[row_pairs_filtered$j, ]
-
-		## joint_mean_t <- joint_mean$unsqueeze(2)
-		## joint_mean$unsqueeze_(3)
-
-		## torch_baddbmm
-		## beta * param1 + alpha * (param2 x param3)
-		## here param3 is cov * mean.colvec
-		## and param2 is mean.rowvec
-		bhattacharyya_dist <- torch_baddbmm(
-		(joint_det - 0.5 * (site_sigma_det[row_pairs_filtered$i] + site_sigma_det[row_pairs_filtered$j]))$unsqueeze_(-1)$unsqueeze_(-1),
-		joint_mean$unsqueeze(2), ## Don't modify inline, tends to mess up evaluate here,
-		torch_bmm(joint_cov_inv, joint_mean$unsqueeze(3)),
-		beta = 0.5,
-		alpha = 0.125)$squeeze_()$neg_()$exp_()
-
-		rm(joint_mean)
-		rm(joint_cov_inv)
-		gc()
-		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered)), bhattacharyya_dist, c(n_x_row, n_x_row))$to_dense() 
+		row_pairs_filtered[ i,
+											 bhatt_dist :=	bhattacharyya_dist_tensor(
+													 .SD[ , .(i, j)],
+													 site_mean,
+													 site_sigma,
+													 site_sigma_det),
+											 by = batch_ind]
+		row_pairs_filtered[ , batch_ind := NULL]
+		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)]),
+																				 row_pairs_filtered$bhatt_dist,
+																				 c(n_x_row, n_x_row))$to_dense()
 
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
 		sim_mat<- as.matrix(sim_mat)

@@ -28,6 +28,7 @@ then
 fi
 export SCHEDULER="pbs"
 export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-100000000000}
+export TENSOR_MEM_MAX=${TENSOR_MEM_MAX:-45000000000} #Certain operations that do bulk operations over matricies will batch to keep memory usage within this amount (in bytes)
 export TF_FORCE_GPU_ALLOW_GROWTH="true"
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
