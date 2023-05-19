@@ -104,7 +104,7 @@ predict_gfbootstrap <- function(
 		## As shown in ./bhattacharyya_dist_tensor.R, max memory is:
 		## row_pairs * 4 <float32> * (6 + 4 * preds + 2 * preds ^2)
 		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2)
-		if (is.na(mem_max <- as.integer(Sys.getenv("TENSOR_MEM_MAX", "")))) {
+		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(row_pairs_filtered)
 		} else {
 				n_row_batch <- floor(mem_max / mem_per_pair)
