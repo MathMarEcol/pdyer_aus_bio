@@ -105,11 +105,11 @@ predict_gfbootstrap <- function(
 		## row_pairs * 4 <float32> * (6 + 4 * preds + 2 * preds ^2)
 		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2)
 		if (is.na(mem_max <- as.integer(Sys.getenv("TENSOR_MEM_MAX", "")))) {
-				max_rows <- Inf
+				n_row_batch <- nrow(row_pairs_filtered)
 		} else {
 				n_row_batch <- floor(mem_max / mem_per_pair)
-				n_batchs <- ceiling(nrow(row_pairs_filtered) / n_row_batch)
 		}
+		n_batches <- ceiling(nrow(row_pairs_filtered) / n_row_batch)
 
 		row_pairs_filtered[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(row_pairs_filtered))]
 
