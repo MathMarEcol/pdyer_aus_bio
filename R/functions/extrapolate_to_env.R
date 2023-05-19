@@ -111,8 +111,8 @@ extrapolate_to_env <- function(
 		site_pairs[ , batch_ind := NULL]
 		
 		sim_mat <- matrix(site_pairs$bhatt_dist,
-											nrow(gfbootstrap_predicted$env_id[[1]]),
-											length(nonsingular_det_sites))
+											length(nonsingular_det_sites),
+											nrow(gfbootstrap_predicted$env_id[[1]]))
 
 		## Unset gpu.matrix in predicted_stats
 		predicted_stats <- list(site_mean = as.matrix(site_mean),
