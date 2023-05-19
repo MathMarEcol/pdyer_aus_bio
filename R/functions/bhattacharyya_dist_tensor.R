@@ -49,7 +49,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## sites_hs * float32 (6 + 4 * preds + 2 * preds^2)
 		## 7704 * sites_hs for 30 preds.
 		bhattacharyya_dist <- torch_baddbmm(
-		  (joint_det - 0.5 * (site_sigma_det[row_pairs_filtered[,1]] + site_sigma_det[row_pairs_filtered[,2]))$unsqueeze_(-1)$unsqueeze_(-1),
+		  (joint_det - 0.5 * (site_sigma_det[row_pairs_filtered[,1]] + site_sigma_det[row_pairs_filtered[,2]]))$unsqueeze_(-1)$unsqueeze_(-1),
 			joint_mean$unsqueeze(2), ## Don't modify inline, tends to mess up evaluate here,
 			torch_bmm(joint_cov_inv, joint_mean$unsqueeze(3)),
 			beta = 0.5,
