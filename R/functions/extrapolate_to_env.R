@@ -109,13 +109,11 @@ extrapolate_to_env <- function(
 													 site_sigma_det)),
 											 by = batch_ind]
 		site_pairs[ , batch_ind := NULL]
-		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(site_pairs[,.(cluster,new)])),
-																				 site_pairs$bhatt_dist,
-																				 c(n_x_row, nrow(cluster_site_mean)))$to_dense()
-
-		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
-		sim_mat<- as.matrix(sim_mat)
 		
+		sim_mat <- matrix(site_pairs$bhatt_dist,
+											nrow(gfbootstrap_predicted$env_id[[1]]),
+											length(nonsingular_det_sites))
+
 		## Unset gpu.matrix in predicted_stats
 		predicted_stats <- list(site_mean = as.matrix(site_mean),
 														site_sigma = array(as.numeric(site_sigma), dim(site_sigma)),
