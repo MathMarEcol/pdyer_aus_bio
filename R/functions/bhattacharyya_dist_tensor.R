@@ -18,8 +18,9 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 																			site_sigma_det_y
 																			) {
 		## Size = (sites^2 - sites)/2 * preds ^2 * float32 = 64GB
-		
-		joint_cov <- (site_sigma_x[row_pairs[,1], , ] + site_sigma_y[row_pairs[,2], ,])/2
+		rows_x <- row_pairs[[1]]
+		rows_y <- row_pairs[[2]]
+		joint_cov <- (site_sigma_x[rows_x, , ] + site_sigma_y[rows_y, ,])/2
 		## Size = (sites^2 - sites)/2 * float32 = 70Mb
 		joint_det <- torch_slogdet(joint_cov)[[2]]
 		## Size same as joint_cov, so also 64GB
@@ -29,7 +30,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		rm(joint_cov)
 		gc()
 		## Size = (sites^2 - sites)/2 *preds * float32 = 2.1GB
-		joint_mean <- site_mean_x[row_pairs_filtered[,1], ] - site_mean_y[row_pairs_filtered[,2], ]
+		joint_mean <- site_mean_x[rows_x, ] - site_mean_y[rows_y, ]
 
 		## joint_mean_t <- joint_mean$unsqueeze(2)
 		## joint_mean$unsqueeze_(3)
@@ -53,7 +54,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## sites_hs * float32 (6 + 4 * preds + 2 * preds^2)
 		## 7704 * sites_hs for 30 preds.
 		bhattacharyya_dist <- torch_baddbmm(
-		  (joint_det - 0.5 * (site_sigma_det_x[row_pairs_filtered[,1]] + site_sigma_det_y[row_pairs_filtered[,2]]))$unsqueeze_(-1)$unsqueeze_(-1),
+		  (joint_det - 0.5 * (site_sigma_det_x[rows_x] + site_sigma_det_y[rows_y]))$unsqueeze_(-1)$unsqueeze_(-1),
 			joint_mean$unsqueeze(2), ## Don't modify inline, tends to mess up evaluate here,
 			torch_bmm(joint_cov_inv, joint_mean$unsqueeze(3)),
 			beta = 0.5,

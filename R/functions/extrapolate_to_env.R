@@ -99,14 +99,14 @@ extrapolate_to_env <- function(
 				dtype = torch_float32())
 		
 		site_pairs[ ,
-											 bhatt_dist :=	bhattacharyya_dist_tensor(
+											 bhatt_dist :=	as.numeric(bhattacharyya_dist_tensor(
 													 .SD[ , .(cluster, new)],
 													 cluster_site_mean,
 													 cluster_site_sigma,
 													 cluster_site_sigma_det,
 													 site_mean,
 													 site_sigma,
-													 site_sigma_det),
+													 site_sigma_det)),
 											 by = batch_ind]
 		site_pairs[ , batch_ind := NULL]
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(site_pairs[,.(cluster,new)])),

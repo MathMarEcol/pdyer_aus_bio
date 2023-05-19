@@ -114,14 +114,14 @@ predict_gfbootstrap <- function(
 		row_pairs_filtered[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(row_pairs_filtered))]
 
 		row_pairs_filtered[ ,
-											 bhatt_dist :=	bhattacharyya_dist_tensor(
+											 bhatt_dist :=	as.numeric(bhattacharyya_dist_tensor(
 													 .SD[ , .(i, j)],
 													 site_mean,
 													 site_sigma,
 													 site_sigma_det,
 													 site_mean,
 													 site_sigma,
-													 site_sigma_det),
+													 site_sigma_det)),
 											 by = batch_ind]
 		row_pairs_filtered[ , batch_ind := NULL]
 
