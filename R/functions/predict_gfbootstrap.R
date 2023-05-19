@@ -101,7 +101,7 @@ predict_gfbootstrap <- function(
 		row_pairs_filtered <- row_pairs[ i < j, ]
 
 		## Batch into appropriate memory size chunks
-		## As shown below, max memory is:
+		## As shown in ./bhattacharyya_dist_tensor.R, max memory is:
 		## row_pairs * 4 <float32> * (6 + 4 * preds + 2 * preds ^2)
 		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2)
 		if (is.na(mem_max <- as.integer(Sys.getenv("TENSOR_MEM_MAX", "")))) {
@@ -113,9 +113,12 @@ predict_gfbootstrap <- function(
 
 		row_pairs_filtered[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(row_pairs_filtered))]
 
-		row_pairs_filtered[ i,
+		row_pairs_filtered[ ,
 											 bhatt_dist :=	bhattacharyya_dist_tensor(
 													 .SD[ , .(i, j)],
+													 site_mean,
+													 site_sigma,
+													 site_sigma_det,
 													 site_mean,
 													 site_sigma,
 													 site_sigma_det),
