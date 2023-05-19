@@ -121,7 +121,8 @@ predict_gfbootstrap <- function(
 													 site_sigma_det),
 											 by = batch_ind]
 		row_pairs_filtered[ , batch_ind := NULL]
-		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)]),
+
+		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
 																				 row_pairs_filtered$bhatt_dist,
 																				 c(n_x_row, n_x_row))$to_dense()
 
