@@ -39,7 +39,7 @@ extrapolate_to_env <- function(
     pred_points <- predicted$points
     data.table::setDT(pred_points)
 
-		imp_preds <- gfbootstrap_combined$imp_preds[[1]]
+		imp_preds <- gfbootstrap_predicted$imp_preds[[1]]
 		
 		## Batch GPU version: One giant matrix, operate on subsets
 		## See ./predict_gfbootstrap.R for code comments
@@ -83,7 +83,7 @@ extrapolate_to_env <- function(
 		## Adding * 3 to give better accuracy
 		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2) * 3
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
-				n_row_batch <- floor(mem_max / mem_per_pair)
+				n_row_batch <- nrow(site_pairs)
 		} else {
 				n_row_batch <- floor(mem_max / mem_per_pair)
 		}
@@ -92,13 +92,13 @@ extrapolate_to_env <- function(
 		site_pairs[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(site_pairs))]
 
 		cluster_site_mean <- torch_tensor(
-				gfbootstrap_combined$env_pred_stats$site_mean[[1]],
+				gfbootstrap_predicted$env_pred_stats[[1]]$site_mean,
 				dtype = torch_float32())
 		cluster_site_sigma <- torch_tensor(
-				gfbootstrap_combined$env_pred_stats$site_sigma[[1]],
+				gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma,
 				dtype = torch_float32())
 		cluster_site_sigma_det <- torch_tensor(
-				gfbootstrap_combined$env_pred_stats$site_sigma_det[[1]],
+				gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma_det,
 				dtype = torch_float32())
 		
 		site_pairs[ ,
