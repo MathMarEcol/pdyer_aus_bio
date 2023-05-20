@@ -7,6 +7,7 @@ export TMPDIR_SHARE="/para/resources/hpc_sandbox"
 export COPY_MODULES=0 #don't copy HPC module files locally
 export GIT_BRANCH=${GIT_BRANCH:-"develop"} #to submit a particular tag
 export WORKERS=${WORKERS:-2} # 2 workers by default,
+export FUTURE_WORKERS=${FUTURE_WORKERS:-8}
 export SCHEDULER="multiprocess" #note, this is clustermq multiprocess (callr) not future multiprocess (deprecated, gives sequential behaviour, use multisession)
 export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-100000000000}
 export TF_FORCE_GPU_ALLOW_GROWTH="true"
