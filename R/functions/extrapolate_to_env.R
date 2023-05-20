@@ -77,8 +77,11 @@ extrapolate_to_env <- function(
 		
     site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
                                  new = seq.int(n_x_row)[nonsingular_det_sites])
-
-		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2)
+		## current simulation says 2904 bytes per row
+		## 3443526 rows per batch should use ~10GB
+		## Watching memory usage showed ~25GB usage
+		## Adding * 3 to give better accuracy
+		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2) * 3
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- floor(mem_max / mem_per_pair)
 		} else {
