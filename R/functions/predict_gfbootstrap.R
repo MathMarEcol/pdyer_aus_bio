@@ -171,11 +171,7 @@ predict_gfbootstrap <- function(
 				## site sigma
 				n_x_row * n_preds ^ 2 * size_dtype +
 				## site sigma det
-				n_x_row * size_dtype + 
-				## Clustering sites
-				n_cluster_sites * n_preds * size_dtype +
-				n_cluster_sites * n_preds ^ 2 * size_dtype +
-				n_cluster_sites * size_dtype 
+				n_x_row * size_dtype
 		
 		mem_per_pair <- size_dtype * (
 				5 * n_preds ^ 2 +
