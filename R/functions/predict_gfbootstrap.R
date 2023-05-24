@@ -25,8 +25,6 @@ predict_gfbootstrap <- function(
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
 			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
   }
-	## Assume 6000 sites, 1000 gf, 30 preds
-	## Size: sites * gf * (preds + 3) * float64 = 1.4GB
   predicted <- predict(object = gfbootstrap_combined$gfbootstrap[[1]],
                        newdata = env_dom[,..env_biooracle_names],
                        ## Just take points, and calculate full coefficient matrix from points
@@ -34,9 +32,6 @@ predict_gfbootstrap <- function(
                        extrap = extrap)
   pred_points <- predicted$points
   data.table::setDT(pred_points)
-  ## With only 20 trees, and therefore 20 samples, for fitting 28 dimensions, covariance matrices are coming out
-  ## singular. Test by dropping most predictors.
-  ## May even automatically add a top 80% of variance method
   imp <- importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
   if (pred_importance_top >= 1) {
     imp_preds <- names(imp)[seq.int(1,min(length(imp), pred_importance_top))]
@@ -56,7 +51,6 @@ predict_gfbootstrap <- function(
 																 subset = .(pred %in% imp_preds))
 		pred_wide[, gf := NULL]
 		pred_wide[, x_row := NULL]
-		## size: sites * gf * imp_preds * float64 (8 bytes), still ~1.4GB
 
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
@@ -78,7 +72,7 @@ predict_gfbootstrap <- function(
 		rm(pred_wide_array)
 		## t -> (npreds) x (x_row *gf)
 		## c -> (
-		##;; pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
+		## pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
 
 		## 32bit may be faster, and uses half the memory
 		## per tensor element
@@ -96,8 +90,6 @@ predict_gfbootstrap <- function(
 				local_device <- torch_device("cpu")
 		}
 
-
-		
 		## Size: sites * gf * preds *float32 = 0.77GB
 		pred_wide_tensor <- torch_tensor(pred_wide_batch, device = local_device)
 		rm(pred_wide_batch)
@@ -152,16 +144,7 @@ predict_gfbootstrap <- function(
 
 		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite()$to(device = "cpu"))
 		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[nonsingular_det_sites], j = seq.int(n_x_row)[nonsingular_det_sites])
-		## Size = (sites^2 - sites)/2 *integer(4bytes)*2 = 143Mb (250Mb before filtering
 		row_pairs_filtered <- row_pairs[ i < j, ]
-
-		## Batch into appropriate memory size chunks
-		## As shown in ./bhattacharyya_dist_tensor.R, max memory is:
-		## row_pairs * 4 <float32> * (6 + 4 * preds + 2 * preds ^2)
-		## current simulation says 2904 bytes per row
-		## 3443526 rows per batch should use ~10GB
-		## Watching memory usage showed ~25GB usage
-		## Adding * 3 to give better accuracy
 
 		overhead <-
 				## CUDA module overhead
@@ -205,26 +188,6 @@ predict_gfbootstrap <- function(
 
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
 		sim_mat<- as.matrix(sim_mat)
-		## implements
-		## bhattacharyya_dist <- 0.125 *
-				## ((t(joint_mean) %*% joint_cov_inv) %*% joint_mean) +
-				## 0.5 * log(
-									## exp(joint_det) /
-									## (sqrt(exp(site_sigma_det[x]) * exp(site_sigma_det[y])))
-							## )
-
-		## this is all wrapped in a log, apply
-		##log quotient ->
-		## log(exp(joint_det)) - log(sqrt(exp(detx) * exp(dety)))
-		## log e and log power ->
-		## joint_det - 0.5 log(exp(detx) * exp(dety))
-		## log mult ->
-		## joint_det - 0.5 * ( log(exp(detx)) + log(exp(dety)))
-		## log e again ->
-		## joint_det - 0.5 * ( detx + dety)
-		## This works because I was already taking the log
-		## of each determinant with torch_slogdet
-		## Numerically, using logs and addition is better.
 
 
 		## Unset gpu.matrix in predicted_stats
