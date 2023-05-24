@@ -79,23 +79,78 @@ predict_gfbootstrap <- function(
 		## t -> (npreds) x (x_row *gf)
 		## c -> (
 		##;; pred_wide_batch <- aperm(array(t(pred_wide), c(n_preds,n_preds,n_x_row)), c(3,1,2))
+
+		## 32bit may be faster, and uses half the memory
+		## per tensor element
+		torch_set_default_dtype(torch_float32())
+		size_dtype <- 4
+
+				## GPU is often faster, but is not always available.
+		if (Sys.getenv("TENSOR_DEVICE") == "CUDA") {
+				if (torch::cuda_is_available()) {
+						local_device <- torch_device("cuda")
+				} else {
+						stop("extrapolate_to_env.R: Cuda device requested by env var TENSOR_DEVICE, but torch::cuda_is_available() == FALSE")
+				}
+		} else {
+				local_device <- torch_device("cpu")
+		}
+
+
+		
 		## Size: sites * gf * preds *float32 = 0.77GB
-		pred_wide_tensor <- torch_tensor(pred_wide_batch, dtype = torch_float32())
+		pred_wide_tensor <- torch_tensor(pred_wide_batch, device = local_device)
 		rm(pred_wide_batch)
-		gc()
+		
 		## Size: sites * preds * float32 = 720Kb  <- Lots of gfs dropped here
 		site_mean <- torch_mean(pred_wide_tensor, 3)
-		## Size: sites * preds ^2 * float32 = 21Mb
-		site_sigma <- torch_tensor(array(0, c(n_x_row, n_preds, n_preds)), dtype = torch_float32())
 
-		for (i in seq.int(n_x_row)) {
-				site_sigma[i,,] <- pred_wide_tensor[i,,]$cov()
+		overhead <-
+				## fixed overhead by CUDA
+				222e6 +
+				## site_mean
+				size_dtype * n_x_row * n_preds +
+				## pred_wide_tensor
+				size_dtype * n_x_row * n_gf * n_preds +
+				## site_sigma
+				size_dtype * n_x_row * n_preds^2 
+		
+		
+		mem_per_site <- size_dtype * (
+				## allocate subset of pred_wide_tensor
+				n_gf * n_preds +
+				## tmp_mean
+				n_preds +
+				## tmp_diff with intermerdiate then reshape
+				2 * n_gf * n_preds +
+				## tmp_prods, no intermediates seem to be generated
+				n_gf * n_preds ^ 2 +
+				## batched_cov assuming one intermediate then div 
+				n_gf * n_preds * 2 
+		)
+
+		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
+				n_row_batch <- n_x_row
+		} else {
+				n_row_batch <- floor((mem_max - overhead) / mem_per_site)
 		}
+		n_batches <- ceiling(n_x_row / n_row_batch)
+
+		batch_dt <- data.table(batch_ind = rep(seq.int(n_batches), each = n_row_batch, length.out = n_x_row), x_row = seq.int(n_x_row))
+		
+		batch_list <- batch_dt[ , list(batch_rows = list(.SD$x_row)), by = batch_ind]
+
+		site_sigma_list <- list()
+		for (n in seq.int(n_batches)) {
+				site_sigma_list[[n]] <- t_batch_cov(pred_wide_tensor[batch_list$batch_rows[[n]],,], batch_list$batch_rows[[n]], n_gf, n_preds)
+		}
+		site_sigma <- torch_cat(site_sigma_list, 1)
 		rm(pred_wide_tensor)
-		gc()
+		rm(site_sigma_list)
+		
 		site_sigma_det <- torch_slogdet(site_sigma)[[2]]
 
-		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite())
+		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite()$to(device = "cpu"))
 		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[nonsingular_det_sites], j = seq.int(n_x_row)[nonsingular_det_sites])
 		## Size = (sites^2 - sites)/2 *integer(4bytes)*2 = 143Mb (250Mb before filtering
 		row_pairs_filtered <- row_pairs[ i < j, ]
@@ -107,7 +162,26 @@ predict_gfbootstrap <- function(
 		## 3443526 rows per batch should use ~10GB
 		## Watching memory usage showed ~25GB usage
 		## Adding * 3 to give better accuracy
-		mem_per_pair <- 4 * (6 + 4 * n_preds + 2 * n_preds^2) * 3
+
+		overhead <-
+				## CUDA module overhead
+				222e6 +
+				## Site mean
+				n_x_row * n_preds * size_dtype +
+				## site sigma
+				n_x_row * n_preds ^ 2 * size_dtype +
+				## site sigma det
+				n_x_row * size_dtype + 
+				## Clustering sites
+				n_cluster_sites * n_preds * size_dtype +
+				n_cluster_sites * n_preds ^ 2 * size_dtype +
+				n_cluster_sites * size_dtype 
+		
+		mem_per_pair <- size_dtype * (
+				5 * n_preds ^ 2 +
+				4 * n_preds +
+				10)
+		
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(row_pairs_filtered)
 		} else {
@@ -131,7 +205,7 @@ predict_gfbootstrap <- function(
 
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
 																				 row_pairs_filtered$bhatt_dist,
-																				 c(n_x_row, n_x_row))$to_dense()
+																				 c(n_x_row, n_x_row))$to_dense()$to(device = "cpu")
 
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
 		sim_mat<- as.matrix(sim_mat)
@@ -158,10 +232,11 @@ predict_gfbootstrap <- function(
 
 
 		## Unset gpu.matrix in predicted_stats
-		predicted_stats <- list(site_mean = as.matrix(site_mean),
-														site_sigma = array(as.numeric(site_sigma), dim(site_sigma)),
-														site_sigma_det = as.numeric(site_sigma_det))
-    return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+		predicted_stats <- list(site_mean = as.matrix(site_mean$to(device = "cpu")),
+														site_sigma = array(as.numeric(site_sigma$to(device = "cpu")), dim(site_sigma)),
+														site_sigma_det = as.numeric(site_sigma_det$to(device = "cpu")))
+
+		return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       env_pred_stats = list(predicted_stats),
 			env_id = list(env_dom[,..env_id_col]),
       imp_preds = list(imp_preds),

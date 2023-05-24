@@ -28,8 +28,10 @@ then
 fi
 export SCHEDULER="pbs"
 export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-100000000000}
-export TENSOR_MEM_MAX=${TENSOR_MEM_MAX:-45000000000} #Certain operations that do bulk operations over matricies will batch to keep memory usage within this amount (in bytes)
 export TF_FORCE_GPU_ALLOW_GROWTH="true"
+export TENSOR_MEM_MAX=${TENSOR_MEM_MAX:-6000000000} #Certain operations that do bulk operations over matricies will batch to keep memory usage within this amount (in bytes)
+export TENSOR_DEVICE=${TENSOR_DEVICE:-CUDA} # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
+export CUDA_MODULE_LOADING=LAZY
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source $PBS_O_WORKDIR/aus_bio_content.sh

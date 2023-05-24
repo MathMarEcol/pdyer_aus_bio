@@ -27,8 +27,8 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## Peak here is 2 * joint_cov, order of magnitude larger than anything else
 		joint_cov_inv <- torch_inverse(joint_cov)
 
+		## Allow R to reclaim memory if needed
 		rm(joint_cov)
-		gc()
 		## Size = (sites^2 - sites)/2 *preds * float32 = 2.1GB
 		joint_mean <- site_mean_x[rows_x, ] - site_mean_y[rows_y, ]
 
@@ -60,8 +60,5 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 			beta = 0.5,
 			alpha = 0.125)$squeeze_()$neg_()$exp_()
 
-		rm(joint_mean)
-		rm(joint_cov_inv)
-		gc()
-		return(bhattacharyya_dist)
+		return(bhattacharyya_dist$to(device = "cpu"))
 }
