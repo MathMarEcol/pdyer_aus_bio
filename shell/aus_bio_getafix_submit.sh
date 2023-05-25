@@ -20,7 +20,7 @@ export WORKER_MEM=${WORKER_MEM:-20GB} #20GB per worker by default
 export WORKER_CORES=${WORKER_CORES:-1} # 1 core by default,
 export WORKER_RUNTIME=${WORKER_RUNTIME:-7-00:00:00}
 export R_FUTURE_GLOBALS_MAXSIZE=${R_FUTURE_GLOBALS_MAXSIZE:-100000000000}
-export TENSOR_MEM_MAX=${TENSOR_MEM_MAX:-6000000000} #Certain operations that do bulk operations over matricies will batch to keep memory usage within this amount (in bytes)
+export TENSOR_MEM_MAX=${TENSOR_MEM_MAX:-5000000000} #Certain operations that do bulk operations over matricies will batch to keep memory usage within this amount (in bytes)
 export TENSOR_DEVICE=${TENSOR_DEVICE:-CUDA} # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
 export CUDA_MODULE_LOADING=LAZY
 # On the Slurm scheduler, I can use resources more efficiently

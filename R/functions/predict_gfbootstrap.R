@@ -170,20 +170,20 @@ predict_gfbootstrap <- function(
 
 		row_pairs_filtered[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(row_pairs_filtered))]
 
-		row_pairs_filtered[ ,
-											 bhatt_dist :=	as.numeric(bhattacharyya_dist_tensor(
+		bhatt_list <- row_pairs_filtered[ ,
+											 list(bhatt_dist = list(bhattacharyya_dist_tensor(
 													 .SD[ , .(i, j)],
 													 site_mean,
 													 site_sigma,
 													 site_sigma_det,
 													 site_mean,
 													 site_sigma,
-													 site_sigma_det)),
+													 site_sigma_det))),
 											 by = batch_ind]
-		row_pairs_filtered[ , batch_ind := NULL]
+		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
 
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
-																				 row_pairs_filtered$bhatt_dist,
+																				 bhatt_vec,
 																				 c(n_x_row, n_x_row))$to_dense()$to(device = "cpu")
 
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))

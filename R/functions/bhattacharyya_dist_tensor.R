@@ -3,12 +3,11 @@
 ## @param row_pairs is an n x 2 matrix or equivalent
 ## where each row is the indicies of the sites being
 ## compared
-## @param site_mean, site_sigma and site_sigma_det
-## are arrays, where the first dim is the index of the
+## @param site_mean, site_sigma and site_sigma_det are torch
+## tensor arrays, where the first dim is the index of the
 ## site. site_mean is a vector per site, dim(site, pred).
 ## site_sigma is a matrix per site, dim(site, pred, pred).
 ## site_sigma_det is a numeric per site, dim(site).
-## Code probably runs fastest if they are torch tensors.
 bhattacharyya_dist_tensor <- function(row_pairs,
 																			site_mean_x,
 																			site_sigma_x,
@@ -46,5 +45,13 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 			beta = 0.5,
 			alpha = 0.125)$squeeze_()$neg_()$exp_()
 
-		return(bhattacharyya_dist$to(device = "cpu"))
+		## On CPU, which may use swap, manually GC
+		## to stay within max memory usage.
+		## GPU has no swap, so automatic GC will keep
+		## memory within limits. Also, GPU will crash if asked to
+		## use too much memory.
+		if (bhattacharyya_dist$device == torch_device("cpu")) {
+				gc()
+		}
+		return(bhattacharyya_dist)
 }

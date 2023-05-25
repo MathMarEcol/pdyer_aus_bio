@@ -133,8 +133,6 @@ extrapolate_to_env <- function(
 		
 		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite()$to(device = "cpu"))
 		
-    site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
-                                 new = seq.int(n_x_row)[nonsingular_det_sites])
 		## current simulation says 2904 bytes per row
 		## 3443526 rows per batch should use ~10GB
 		## Watching memory usage showed ~25GB usage
@@ -174,25 +172,27 @@ extrapolate_to_env <- function(
 				n_row_batch <- floor(mem_max / mem_per_pair)
 		}
 		n_batches <- ceiling(nrow(site_pairs) / n_row_batch)
-		
+
+		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
+                                 new = seq.int(n_x_row)[nonsingular_det_sites])
+
 		site_pairs[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(site_pairs))]
-
-
 		
-		
-		site_pairs[ ,
-							 bhatt_dist :=	as.numeric(bhattacharyya_dist_tensor(
+		## reworking into a torch_cat style workflow,
+		## so GPU->CPU only happens once at the end.
+		bhatt_list <- site_pairs[ , list(bhatt_dist = list(bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],
 									 cluster_site_mean,
 									 cluster_site_sigma,
 									 cluster_site_sigma_det,
 									 site_mean,
 									 site_sigma,
-									 site_sigma_det)),
-							 by = batch_ind]
-		site_pairs[ , batch_ind := NULL]
+									 site_sigma_det))),
+									 by = batch_ind]
+
+		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
 		
-		sim_mat <- matrix(site_pairs$bhatt_dist,
+		sim_mat <- matrix(as.numeric(bhatt_vec$to(device = "cpu")),
 											length(nonsingular_det_sites),
 											nrow(gfbootstrap_predicted$env_id[[1]]))
 
