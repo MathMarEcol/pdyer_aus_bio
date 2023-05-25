@@ -113,7 +113,10 @@ extrapolate_to_env <- function(
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- n_x_row
 		} else {
-				n_row_batch <- floor((mem_max - overhead) / mem_per_site)
+				if (mem_max <= overhead) {
+						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
+				}
+				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
 		}
 		n_batches <- ceiling(n_x_row / n_row_batch)
 
@@ -157,7 +160,9 @@ extrapolate_to_env <- function(
 				## Clustering sites
 				n_cluster_sites * n_preds * size_dtype +
 				n_cluster_sites * n_preds ^ 2 * size_dtype +
-				n_cluster_sites * size_dtype 
+				n_cluster_sites * size_dtype +
+				## Distance tensor
+				n_cluster_sites * n_x_row * size_dtype
 
 		
 		mem_per_pair <- size_dtype * (
@@ -169,7 +174,10 @@ extrapolate_to_env <- function(
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(site_pairs)
 		} else {
-				n_row_batch <- floor(mem_max / mem_per_pair)
+				if (mem_max <= overhead) {
+						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
+				}
+				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
 		}
 		n_batches <- ceiling(nrow(site_pairs) / n_row_batch)
 
@@ -180,7 +188,8 @@ extrapolate_to_env <- function(
 		
 		## reworking into a torch_cat style workflow,
 		## so GPU->CPU only happens once at the end.
-		bhatt_list <- site_pairs[ , list(bhatt_dist = list(bhattacharyya_dist_tensor(
+		bhatt_list <- site_pairs[ ,
+						    list(bhatt_dist = list(bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],
 									 cluster_site_mean,
 									 cluster_site_sigma,
@@ -190,9 +199,10 @@ extrapolate_to_env <- function(
 									 site_sigma_det))),
 									 by = batch_ind]
 
-		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
+		bhatt_vec <- torch_cat(lapply(bhatt_list$bhatt_dist,
+																	\(x) {x$to(device = "cpu")}))
 		
-		sim_mat <- matrix(as.numeric(bhatt_vec$to(device = "cpu")),
+		sim_mat <- matrix(as.numeric(bhatt_vec),
 											length(nonsingular_det_sites),
 											nrow(gfbootstrap_predicted$env_id[[1]]))
 

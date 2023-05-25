@@ -124,7 +124,10 @@ predict_gfbootstrap <- function(
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- n_x_row
 		} else {
-				n_row_batch <- floor((mem_max - overhead) / mem_per_site)
+				if (mem_max <= overhead) {
+						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
+				}
+				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
 		}
 		n_batches <- ceiling(n_x_row / n_row_batch)
 
@@ -154,7 +157,9 @@ predict_gfbootstrap <- function(
 				## site sigma
 				n_x_row * n_preds ^ 2 * size_dtype +
 				## site sigma det
-				n_x_row * size_dtype
+				n_x_row * size_dtype + 
+				## Distance tensor
+				nrow(row_pairs_filtered) * size_dtype
 		
 		mem_per_pair <- size_dtype * (
 				5 * n_preds ^ 2 +
@@ -164,7 +169,10 @@ predict_gfbootstrap <- function(
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(row_pairs_filtered)
 		} else {
-				n_row_batch <- floor(mem_max / mem_per_pair)
+				if (mem_max <= overhead) {
+						stop("predict_gfbootstrap.R: Memory overheads exceed allocated memory.")
+				}
+				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
 		}
 		n_batches <- ceiling(nrow(row_pairs_filtered) / n_row_batch)
 
@@ -180,7 +188,9 @@ predict_gfbootstrap <- function(
 													 site_sigma,
 													 site_sigma_det))),
 											 by = batch_ind]
-		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
+
+		bhatt_vec <- torch_cat(lapply(bhatt_list$bhatt_dist,
+																	\(x) {x$to(device = "cpu")}))
 
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
 																				 bhatt_vec,
