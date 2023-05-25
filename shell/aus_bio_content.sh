@@ -161,6 +161,39 @@ then
       export WORKER_CORES=$WORKER_CORES_S4
       singularity exec  $aus_bio_sif  Rscript --vanilla -e "targets::tar_make_clustermq(${TARGETS_S4}, workers = ${WORKER_N_S4}, log_worker = TRUE)"
 else
+    ## Breaking the pipeline up into stages
+    ## Most target branches use one core and a modest amount of
+    ## memory. They can easily be run in parallel using many R target
+    ## workers.
+    ## A few targets use linear algebra libraries that use either
+    ## the GPU or all available cores within a single target branch.
+    ## These must be run sequentially on a single machine, or extreme
+    ## slowdowns and crashes occur.
+    ## currently these are:
+    ## gfbootstrap_predicted, cluster_env_extrapolate_present
+    ## Each stage is a set of targets that have the same set of
+    ## resource needs, and don't depend on any targets in later stages.
+
+    ## S1 - parallel workers
+    ## Everything up to gfbootstrap_combined
+    ## This might miss a few "leaf" branches, that is ok
+    Rscript -e "targets::tar_make_clustermq(gfbootstrap_combined, workers = ${WORKERS}, log_worker = TRUE)"
+
+    ## S2 - single worker GPU or lots of RAM/CORES
+    ## gfbootstrap_predicted
+    Rscript -e "targets::tar_make_clustermq(gfbootstrap_predicted, workers = 1, log_worker = TRUE)"
+
+    ## S3 - parallel workers
+    ## Up to plotting without extrapolation. Critial target is gfbootstrap_cluster.
+    ## Other targets can wait until env is extrapolated.
+    Rscript -e "targets::tar_make_clustermq(gfbootstrap_cluster, workers = ${WORKERS}, log_worker = TRUE)"
+
+    ## S4 - single worker GPU or lots of RAM/CORES
+    ## cluster_env_extrapolate_present, others added when future conditions are
+    ## added.
+    Rscript -e "targets::tar_make_clustermq(c(cluster_env_extrapolate_present), workers = 1, log_worker = TRUE)"
+
+    ## S5 - All remaining targets
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
 fi
 
