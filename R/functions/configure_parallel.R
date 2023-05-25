@@ -20,7 +20,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
   switch(scheduler,
  "multiprocess" = {
       options(
-        clustermq.defaults = list(log_file = "cmq_worker_%i.log"),
+        clustermq.defaults = list(log_file = "cmq_worker_%i.log")
       )
 			future::plan(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))
    },
