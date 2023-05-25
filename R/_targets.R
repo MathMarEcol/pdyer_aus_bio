@@ -59,7 +59,6 @@ tar_option_set(
     "lutz", # needed for loading phy and zoo
     "lubridate", # needed for loading phy and zoo
     "rfishbase",
-		"GPUmatrix",
 		"float",
 		"torch"
   ),
