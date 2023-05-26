@@ -199,6 +199,9 @@ predict_gfbootstrap <- function(
 		sim_mat <- sim_mat + sim_mat$transpose(1,2) + torch_diag(rep(1, n_x_row))
 		sim_mat<- as.matrix(sim_mat)
 
+		## Can have issues with rounding errors creating similarities greater than 1
+		sim_mat[sim_mat > 1] <- 1 
+
 
 		## Unset gpu.matrix in predicted_stats
 		predicted_stats <- list(site_mean = as.matrix(site_mean$to(device = "cpu")),
