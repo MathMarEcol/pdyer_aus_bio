@@ -186,11 +186,10 @@ predict_gfbootstrap <- function(
 													 site_sigma_det,
 													 site_mean,
 													 site_sigma,
-													 site_sigma_det))),
+													 site_sigma_det)$to(device = "cpu"))),
 											 by = batch_ind]
 
-		bhatt_vec <- torch_cat(lapply(bhatt_list$bhatt_dist,
-																	\(x) {x$to(device = "cpu")}))
+		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
 
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
 																				 bhatt_vec,

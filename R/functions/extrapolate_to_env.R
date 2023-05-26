@@ -162,7 +162,7 @@ extrapolate_to_env <- function(
 				n_cluster_sites * n_preds ^ 2 * size_dtype +
 				n_cluster_sites * size_dtype +
 				## Distance tensor
-				n_cluster_sites * n_x_row * size_dtype
+				## n_cluster_sites * n_x_row * size_dtype
 
 		
 		mem_per_pair <- size_dtype * (
@@ -188,6 +188,10 @@ extrapolate_to_env <- function(
 		
 		## reworking into a torch_cat style workflow,
 		## so GPU->CPU only happens once at the end.
+		## For very large datasets, better
+		## to run much bigger batches and transfer
+		## after each batch to avoid
+		## using all the GPU memory storing previous batch results.
 		bhatt_list <- site_pairs[ ,
 						    list(bhatt_dist = list(bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],
@@ -196,11 +200,10 @@ extrapolate_to_env <- function(
 									 cluster_site_sigma_det,
 									 site_mean,
 									 site_sigma,
-									 site_sigma_det))),
+									 site_sigma_det)$to(device = "cpu"))),
 									 by = batch_ind]
 
-		bhatt_vec <- torch_cat(lapply(bhatt_list$bhatt_dist,
-																	\(x) {x$to(device = "cpu")}))
+		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
 		
 		sim_mat <- matrix(as.numeric(bhatt_vec),
 											length(nonsingular_det_sites),
