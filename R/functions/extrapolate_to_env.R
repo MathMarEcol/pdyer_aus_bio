@@ -170,6 +170,8 @@ extrapolate_to_env <- function(
 				4 * n_preds +
 				10)
 
+		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
+                                 new = seq.int(n_x_row)[nonsingular_det_sites])
 		
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(site_pairs)
@@ -181,8 +183,6 @@ extrapolate_to_env <- function(
 		}
 		n_batches <- ceiling(nrow(site_pairs) / n_row_batch)
 
-		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
-                                 new = seq.int(n_x_row)[nonsingular_det_sites])
 
 		site_pairs[ , batch_ind := rep(seq.int(n_batches), each = n_row_batch, length.out = nrow(site_pairs))]
 		
