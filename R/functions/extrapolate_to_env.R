@@ -160,7 +160,7 @@ extrapolate_to_env <- function(
 				## Clustering sites
 				n_cluster_sites * n_preds * size_dtype +
 				n_cluster_sites * n_preds ^ 2 * size_dtype +
-				n_cluster_sites * size_dtype +
+				n_cluster_sites * size_dtype
 				## Distance tensor
 				## n_cluster_sites * n_x_row * size_dtype
 
