@@ -166,9 +166,7 @@ extrapolate_to_env <- function(
 
 		
 		mem_per_pair <- size_dtype * (
-				5 * n_preds ^ 2 +
-				4 * n_preds +
-				10)
+				7 * n_preds ^ 2)
 
 		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
                                  new = seq.int(n_x_row)[nonsingular_det_sites])
@@ -195,8 +193,6 @@ extrapolate_to_env <- function(
 		bhatt_list <- site_pairs[ ,
 														 list(bhatt_dist = list(
 														 {
-																 ## explicit gc to prevent OOM
-																 gc()
 
 																 bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],

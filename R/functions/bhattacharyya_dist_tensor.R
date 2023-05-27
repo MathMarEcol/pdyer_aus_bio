@@ -29,7 +29,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## or 8 for float64.
 		## Ignores overhead of inputs and any variables
 		## not passed into function.
-		joint_cov_inv <- torch_inverse(joint_cov)
+		joint_cov_inv <- joint_cov$cholesky()$cholesky_inverse()
 
 		## Allow R to reclaim memory if needed
 		rm(joint_cov)

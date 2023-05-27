@@ -160,12 +160,10 @@ predict_gfbootstrap <- function(
 				n_x_row * size_dtype + 
 				## Distance tensor
 				nrow(row_pairs_filtered) * size_dtype
-		
+
 		mem_per_pair <- size_dtype * (
-				5 * n_preds ^ 2 +
-				4 * n_preds +
-				10)
-		
+				7 * n_preds ^ 2)
+
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(row_pairs_filtered)
 		} else {
