@@ -205,9 +205,7 @@ extrapolate_to_env <- function(
 									 cluster_site_sigma_det,
 									 site_mean,
 									 site_sigma,
-									 site_sigma_det)$to(device = "cpu"))
-														 }
-									 ),
+									 site_sigma_det)$to(device = "cpu")})),
 									 by = batch_ind]
 
 		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
