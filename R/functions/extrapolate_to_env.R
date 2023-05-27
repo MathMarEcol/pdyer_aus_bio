@@ -193,14 +193,21 @@ extrapolate_to_env <- function(
 		## after each batch to avoid
 		## using all the GPU memory storing previous batch results.
 		bhatt_list <- site_pairs[ ,
-						    list(bhatt_dist = list(bhattacharyya_dist_tensor(
+														 list(bhatt_dist = list(
+														 {
+																 ## explicit gc to prevent OOM
+																 gc()
+
+																 bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],
 									 cluster_site_mean,
 									 cluster_site_sigma,
 									 cluster_site_sigma_det,
 									 site_mean,
 									 site_sigma,
-									 site_sigma_det)$to(device = "cpu"))),
+									 site_sigma_det)$to(device = "cpu"))
+														 }
+									 ),
 									 by = batch_ind]
 
 		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
