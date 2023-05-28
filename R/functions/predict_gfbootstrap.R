@@ -128,6 +128,7 @@ predict_gfbootstrap <- function(
 						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
 				}
 				n_row_batch <- floor((mem_max - overhead) / mem_per_site)
+				if(n_row_batch > 100) n_row_batch <- 100
 		}
 		n_batches <- ceiling(n_x_row / n_row_batch)
 
@@ -171,6 +172,8 @@ predict_gfbootstrap <- function(
 						stop("predict_gfbootstrap.R: Memory overheads exceed allocated memory.")
 				}
 				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
+				if(n_row_batch > 10000) n_row_batch <- 10000
+
 		}
 		n_batches <- ceiling(nrow(row_pairs_filtered) / n_row_batch)
 

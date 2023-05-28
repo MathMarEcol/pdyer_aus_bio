@@ -29,10 +29,9 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## or 8 for float64.
 		## Ignores overhead of inputs and any variables
 		## not passed into function.
-		joint_cov_inv <- joint_cov$cholesky()
-		rm(joint_cov)
-		joint_cov_inv <- joint_cov_inv$cholesky_inverse()
-
+		## for matrices up to 30x30, standard inverse is faster
+		## joint_cov_inv <- joint_cov$cholesky()$cholesky_inverse()
+		joint_cov_inv <- joint_cov$inverse()
 		## Allow R to reclaim memory if needed
 		joint_mean <- site_mean_x[rows_x, ] - site_mean_y[rows_y, ]
 

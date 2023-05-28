@@ -117,6 +117,7 @@ extrapolate_to_env <- function(
 						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
 				}
 				n_row_batch <- floor((mem_max - overhead) / mem_per_site)
+				if(n_row_batch > 100) n_row_batch <- 100
 		}
 		n_batches <- ceiling(n_x_row / n_row_batch)
 
@@ -164,9 +165,49 @@ extrapolate_to_env <- function(
 				## Distance tensor
 				## n_cluster_sites * n_x_row * size_dtype
 
+####### Debugging from here.
+		## Does not run at 3x
+		## Does not run at 3.5x
+		## 4.5x manual GC runs in 14.34s 13.96s
+		## 5x manual GC runs in 14.93s
+		##   Time is linear with rows, doubled rows, 29s then 58s
+		## 4.5x no GC not stable
+		## 5x no GC not stable
+		## 5.5x no GC not stable
+		## 6x no GC runs in 15.21s. Not stable
+		## 7x no GC not stable
+		## Stable at 20x no GC 8.56s. Add GC: 39.81s
+		## Stable at 10x no GC 12.8s
+		## stable at 9x no GC 13.37
+		## stable at 8x no GC 13.92
+		## Still seeing speedups at 40x 7.63s, 8.6 13s
+		## Slower at 80x 12.8s
+		## 60x 10.61 12.26s
+		## 50x 12.7s
+		## 45 12.37s
+		## 41 10.8s
+		## 30 9.06s
+		## 35 12.15s
+		## What is special about 72000 rows?
+		## Not much
+
+		## Limiting factor is not batches OR loop
+		## Too little memory crashes.
+		## Lots of small loops: each loop runs quickly, expected looping overhead.
+		## A few big loops: little looping overhead, lots of time spent in loop
+
+		## likely explanation:
+		## grinding the batched matrices is the limiting factor.
+		## Not GC, not looping.
+		## If grinding is roughly linear with size, then
+		## above a lower batch size, grinding will be the limit.
+
+		## At 10 rows per batch, overheads matter more.
+		## Max GPU utilisation occurs around
+		## above 1000, but by 10000
 		
 		mem_per_pair <- size_dtype * (
-				3 * n_preds ^ 2)
+				10 * n_preds ^ 2)
 
 		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
                                  new = seq.int(n_x_row)[nonsingular_det_sites])
@@ -178,6 +219,7 @@ extrapolate_to_env <- function(
 						stop("extrapolate_to_env.R: Memory overheads exceed allocated memory.")
 				}
 				n_row_batch <- floor((mem_max - overhead) / mem_per_pair)
+				if(n_row_batch > 10000) n_row_batch <- 10000
 		}
 		n_batches <- ceiling(nrow(site_pairs) / n_row_batch)
 
