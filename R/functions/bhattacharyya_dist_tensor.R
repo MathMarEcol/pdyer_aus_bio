@@ -31,7 +31,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## not passed into function.
 		joint_cov_inv <- joint_cov$cholesky()
 		rm(joint_cov)
-		joint_cov_inv <- joint_cov$cholesky_inverse()
+		joint_cov_inv <- joint_cov_inv$cholesky_inverse()
 
 		## Allow R to reclaim memory if needed
 		joint_mean <- site_mean_x[rows_x, ] - site_mean_y[rows_y, ]
