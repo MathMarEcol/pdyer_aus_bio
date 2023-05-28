@@ -162,7 +162,7 @@ predict_gfbootstrap <- function(
 				nrow(row_pairs_filtered) * size_dtype
 
 		mem_per_pair <- size_dtype * (
-				7 * n_preds ^ 2)
+				3 * n_preds ^ 2)
 
 		if (is.na(mem_max <- as.numeric(Sys.getenv("TENSOR_MEM_MAX", "")))) {
 				n_row_batch <- nrow(row_pairs_filtered)

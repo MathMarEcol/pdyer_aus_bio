@@ -166,7 +166,7 @@ extrapolate_to_env <- function(
 
 		
 		mem_per_pair <- size_dtype * (
-				7 * n_preds ^ 2)
+				3 * n_preds ^ 2)
 
 		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
                                  new = seq.int(n_x_row)[nonsingular_det_sites])
@@ -192,8 +192,6 @@ extrapolate_to_env <- function(
 		## using all the GPU memory storing previous batch results.
 		bhatt_list <- site_pairs[ ,
 														 list(bhatt_dist = list(
-														 {
-
 																 bhattacharyya_dist_tensor(
 									 .SD[ , .(cluster, new)],
 									 cluster_site_mean,
@@ -201,7 +199,7 @@ extrapolate_to_env <- function(
 									 cluster_site_sigma_det,
 									 site_mean,
 									 site_sigma,
-									 site_sigma_det)$to(device = "cpu")})),
+									 site_sigma_det)$to(device = "cpu"))),
 									 by = batch_ind]
 
 		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)

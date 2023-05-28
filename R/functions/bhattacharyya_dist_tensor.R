@@ -18,7 +18,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 																			) {
 		rows_x <- row_pairs[[1]]
 		rows_y <- row_pairs[[2]]
-		joint_cov <- (site_sigma_x[rows_x, , ] + site_sigma_y[rows_y, ,])/2
+		joint_cov <- site_sigma_x[rows_x, , ]$add_(site_sigma_y[rows_y, , ])$mul_(0.5)
 		joint_det <- torch_slogdet(joint_cov)[[2]]
 		## Peak memory usage follows formula:
 		## nrow(row_pairs) * size_dtype * (
@@ -29,10 +29,11 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		## or 8 for float64.
 		## Ignores overhead of inputs and any variables
 		## not passed into function.
-		joint_cov_inv <- joint_cov$cholesky()$cholesky_inverse()
+		joint_cov_inv <- joint_cov$cholesky()
+		rm(joint_cov)
+		joint_cov_inv <- joint_cov$cholesky_inverse()
 
 		## Allow R to reclaim memory if needed
-		rm(joint_cov)
 		joint_mean <- site_mean_x[rows_x, ] - site_mean_y[rows_y, ]
 
 		bhattacharyya_dist <- torch_baddbmm(
