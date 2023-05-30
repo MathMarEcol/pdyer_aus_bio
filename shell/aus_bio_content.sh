@@ -191,7 +191,7 @@ else
     ## S4 - single worker GPU or lots of RAM/CORES
     ## cluster_env_extrapolate_present, others added when future conditions are
     ## added.
-    Rscript -e "targets::tar_make_clustermq(c(cluster_env_extrapolate_present), workers = 2, log_worker = TRUE)"
+    Rscript -e "targets::tar_make_clustermq(c(cluster_env_extrapolate_present), workers = 1, log_worker = TRUE)"
 
     ## S5 - All remaining targets
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
