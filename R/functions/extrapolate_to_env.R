@@ -92,7 +92,7 @@ extrapolate_to_env <- function(
 																											extrap),
 										 by = batch_ind]
 
-		sim_mat <- matrix(similarity_long$bhatt_dist,
+		sim_mat <- matrix(similarity_long$bhatt_vec,
 											n_x_row,
 											nrow(gfbootstrap_predicted$env_id[[1]]))
 
