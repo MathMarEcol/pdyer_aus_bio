@@ -19,7 +19,7 @@ extrapolate_to_env <- function(
 													env_pred_stats = list(NA),
 													env_id = list(NA),
 													imp_preds = list(NA),
-													pred_sim_mat = list(NA) ##double wrap the sim mat so data.table doesn't try to print it
+													extrap_sims = list(NA) ##double wrap the sim mat so data.table doesn't try to print it
                           ))
     }
     
@@ -80,8 +80,15 @@ extrapolate_to_env <- function(
 		## Long form. Memory usage in long form is still much smaller than
 		## memory needed to calculate each distance value, less than 1%
 		## Long form makes combinations more general.
+
+		## New bug: long form can end up exceeding R vector limits
+		## of 2^31-1. Data.table does not yet support long vectors internally.
+		## Returning list of values.
+
+		## However, I don't see why this code is hitting the limits.
+		##
 		similarity_long <- env_dom_batch[ ,
-																		 new_sites_process(.SD$site,
+																		 list(site_pairs = list(new_sites_process(.SD$site,
 																											 env_dom,
 																											 env_biooracle_names,
 																											 gfbootstrap_combined$gfbootstrap[[1]],
@@ -89,12 +96,13 @@ extrapolate_to_env <- function(
 																											imp_preds,
 																											mem_max,
 																											local_device,
-																											extrap),
+																											extrap))),
 										 by = batch_ind]
 
-		sim_mat <- matrix(similarity_long$bhatt_vec,
-											n_x_row,
-											nrow(gfbootstrap_predicted$env_id[[1]]))
+		
+		## sim_mat <- matrix(similarity_long$bhatt_vec,
+											## n_x_row,
+											## nrow(gfbootstrap_predicted$env_id[[1]]))
 
 		## Unset gpu.matrix in predicted_stats
 		## predicted_stats <- list(site_mean = as.matrix(site_mean$to(device = "cpu")),
@@ -105,7 +113,7 @@ extrapolate_to_env <- function(
          ## env_pred_stats = list(predicted_stats),
 				 env_id = list(env_dom[,..env_id_col]),
 				 imp_preds = list(imp_preds),
-				 pred_sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
+				 extrap_sims = list(similarity_long) 
                                   ))
 }
 

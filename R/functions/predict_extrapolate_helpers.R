@@ -214,7 +214,7 @@ new_sites_process <- function(
 				8 * n_preds ^ 2)
 
 		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
-                                 new = x_rows[nonsingular_det_sites])
+                                 new = seq.int(n_x_row)[nonsingular_det_sites])
 
 
 		pair_batches <- data.table::as.data.table(prepare_batch(
@@ -244,7 +244,9 @@ new_sites_process <- function(
 																					site_sigma_det)$to(device = "cpu"))),
 														 by = batch_ind]
 		site_pairs[, batch_ind := NULL]
+		site_pairs[, new := x_rows[new[nonsingular_det_sites]]]
 		site_pairs[, bhatt_vec := as.numeric(torch_cat(bhatt_list$bhatt_dist))]
+		data.table::setkeyv(site_pairs, c("cluster", "new"))
 		return(site_pairs)
 }
 
