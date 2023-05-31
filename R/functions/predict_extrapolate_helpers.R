@@ -214,7 +214,7 @@ new_sites_process <- function(
 				8 * n_preds ^ 2)
 
 		site_pairs <- data.table::CJ(cluster = seq.int(nrow(gfbootstrap_predicted$env_id[[1]])),
-                                 new = seq.int(n_x_row)[nonsingular_det_sites])
+                                 new = x_rows[nonsingular_det_sites])
 
 
 		pair_batches <- data.table::as.data.table(prepare_batch(
