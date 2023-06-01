@@ -9,6 +9,16 @@ assign_new_sites_to_cluster_apclust <- function(
     ## However, an apcluster object is a set of exemplars
     ## Just need to find the nearest exemplar.
     exemplars <- gfbootstrap_cluster$best_clust_ob@exemplars
+
+		stop("Break here for workspace")
+		## Batch over list from cluster_env_extrapolate
+		row_clust_membership <- cluster_env_extrapolate$extrap_sims[[1]][ ,
+														caster_extrap_membership(
+																.SD$site_pairs[[1]],
+																gfbootstrap_cluster,
+																cluster_env_extrapolate$env_id[[1]][[env_id_col]],
+																env_id_col),
+														by = batch_ind]
     
     predicted_cluster_raw <- cluster_env_extrapolate$pred_mat[[1]][ , exemplars]
     predicted_cluster_prob <- predicted_cluster_raw / rowSums(predicted_cluster_raw)
@@ -43,3 +53,22 @@ assign_new_sites_to_cluster_apclust <- function(
 }
 
 
+apclust_extrap_membership <- function (long_sim_mat,
+																			 exemplars,
+																			 env_ids,
+																			 env_id_col) {
+
+		max_clust <- long_sim_mat[cluster %in% exemplars,
+								 .SD[which.max(bhatt_vec),],
+								 by = new]
+
+		exemplar_to_clust <- exemplars
+		max_clust <- max_clust[exemplar_to_clust]
+		
+		max_dt <- data.table(cl = predicted_cluster_membership, cl_factor = as.factor(predicted_cluster_membership))
+		max_dt[, c(env_id_col) := env_ids]
+ 		
+		return(list(max = list(max_dt), prob_cl = list(predict_cluster_probability)))
+
+		
+}
