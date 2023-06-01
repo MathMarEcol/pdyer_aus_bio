@@ -1,7 +1,6 @@
 extrapolate_to_env <- function(
                                gfbootstrap_combined,
                                gfbootstrap_predicted,
-                               gfbootstrap_cluster,
                                env_domain_plot,
                                env_biooracle_names,
                                extrap,
@@ -15,7 +14,7 @@ extrapolate_to_env <- function(
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
 													env_pred_stats = list(NA),
 													env_id = list(NA),
 													imp_preds = list(NA),

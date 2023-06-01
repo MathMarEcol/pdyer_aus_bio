@@ -365,7 +365,6 @@ list(
       extrapolate_to_env(
           gfbootstrap_combined,
           gfbootstrap_predicted,
-          gfbootstrap_cluster,
           env_domain_plot,
           env_biooracle_names,
           extrap,
@@ -373,10 +372,8 @@ list(
           env_id_col,
           depth_range
       ),
-      pattern =map(gfbootstrap_cluster,
-                   cross(map(gfbootstrap_predicted,
-                             gfbootstrap_combined),
-                         clust_methods_target))
+      pattern = map(gfbootstrap_predicted,
+                             gfbootstrap_combined)
       ),
 
   tar_target(
@@ -388,7 +385,9 @@ list(
           env_id_col,
           spatial_vars
       ),
-      pattern = map(cluster_env_extrapolate_present, gfbootstrap_cluster)
+      pattern = map(
+					cross(cluster_env_extrapolate_present, clust_methods_target),
+					gfbootstrap_cluster)
   ),
 
   tar_target(

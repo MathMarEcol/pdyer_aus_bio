@@ -180,20 +180,10 @@ else
     Rscript -e "targets::tar_make_clustermq(gfbootstrap_combined, workers = ${WORKERS}, log_worker = TRUE)"
 
     ## S2 - single worker GPU or lots of RAM/CORES
-    ## gfbootstrap_predicted
-    Rscript -e "targets::tar_make_clustermq(gfbootstrap_predicted, workers = 2, log_worker = TRUE)"
+    ## gfbootstrap_predicted and extrapolation targets
+    Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_predicted, starts_with(cluster_env_extrapolate_)), workers = 1, log_worker = TRUE)"
 
-    ## S3 - parallel workers
-    ## Up to plotting without extrapolation. Critial target is gfbootstrap_cluster.
-    ## Other targets can wait until env is extrapolated.
-    Rscript -e "targets::tar_make_clustermq(gfbootstrap_cluster, workers = ${WORKERS}, log_worker = TRUE)"
-
-    ## S4 - single worker GPU or lots of RAM/CORES
-    ## cluster_env_extrapolate_present, others added when future conditions are
-    ## added.
-    Rscript -e "targets::tar_make_clustermq(c(cluster_env_extrapolate_present), workers = 1, log_worker = TRUE)"
-
-    ## S5 - All remaining targets
+    ## S3 - All remaining targets
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
 fi
 
