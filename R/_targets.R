@@ -384,7 +384,7 @@ list(
       assign_new_sites_to_cluster(
           cluster_env_extrapolate_present,
           gfbootstrap_cluster,
-          env_domain,
+          env_domain_plot,
           env_id_col,
           spatial_vars
       ),
