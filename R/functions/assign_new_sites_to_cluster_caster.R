@@ -26,7 +26,7 @@ assign_new_sites_to_cluster_caster <- function(
 
     return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
                       clust_ind = list(clust_ind),
-                      pred_membership = list(row_clust_membership),
+                      pred_membership = list(row_clust_membership)
                       ))
 }
 
@@ -41,19 +41,19 @@ caster_extrap_membership <- function(long_sim_mat,
 		pred_sim_mat <- matrix(long_sim_mat$bhatt_vec,
 													 ncol = max(long_sim_mat$cluster))
     ## Temporary, use local predict_clust for debugging
-    predicted_cluster_membership <- predict_clust(
+    predicted_cluster_membership <- castcluster::predict_clust(
 				gfbootstrap_cluster$best_clust_ob[[1]],
 				pred_sim_mat,
 				aff_thres = gfbootstrap_cluster$clust[[1]]$aff_thres[
 																											gfbootstrap_cluster$best_clust],
 				type = "max")
-    predicted_cluster_probability <- predict_clust(
+    predicted_cluster_probability <- castcluster::predict_clust(
 				gfbootstrap_cluster$best_clust_ob[[1]],
 				pred_sim_mat,
 				type = "probability")
-		
+
 		max_dt <- data.table(cl = predicted_cluster_membership, cl_factor = as.factor(predicted_cluster_membership))
 		max_dt[, c(env_id_col) := env_ids]
- 		
-		return(list(max = list(max_dt), prob_cl = list(predict_cluster_probability)))
+
+		return(list(max = list(max_dt), prob_cl = list(predicted_cluster_probability)))
 }
