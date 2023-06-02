@@ -180,8 +180,9 @@ else
     Rscript -e "targets::tar_make_clustermq(gfbootstrap_combined, workers = ${WORKERS}, log_worker = TRUE)"
 
     ## S2 - single worker GPU or lots of RAM/CORES
-    ## gfbootstrap_predicted and extrapolation targets
-    Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_predicted, starts_with(cluster_env_extrapolate_)), workers = 1, log_worker = TRUE)"
+    ## gfbootstrap_predicted and extrapolation targets.
+		## Assigning sites to clusters is also memory heavy
+    Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_predicted, starts_with('cluster_env_extrapolate_'), starts_with('cluster_env_assign_cluster_')), workers = 1, log_worker = TRUE)"
 
     ## S3 - All remaining targets
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
