@@ -1,18 +1,23 @@
 plot_gfbootstrap_coverage <- function(
                                         gfbootstrap_polygons,
-                                        mpa_polygons,
+                                      mpa_polygons,
+                                      plot_description,
                                         output_folder
                                       ) {
-    pl_survey_name <- paste0(gfbootstrap_polygons[,
+    survey_specs <- gfbootstrap_polygons[,
                                                  c("env_domain",
                                                    "trophic",
                                                    "survey",
                                                    "depth_cat",
-                                                   "clust_method")],
+                                                   "clust_method")]
+    survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
+    survey_specs <- as.character(survey_specs)
+
+    pl_survey_name <- paste0(survey_specs, plot_description,
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, pl_survey_name)
-  pl_file <-  paste0(pl_file_base, "_cluster_mpa_coverage.png")
+  pl_file <-  paste0(pl_file_base, ".png")
   ### Skip failed surveys
   if (is.na(gfbootstrap_polygons$polygons)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
