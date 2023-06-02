@@ -420,6 +420,19 @@ list(
       pattern = map(gfbootstrap_cluster,
                          extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target)),
       format = "file"
+  ),
+
+  tar_target(
+      extrap_overlay_polygons_present,
+      plot_polygon_overlay(
+          extrap_polygons_present,
+          env_poly,
+          gfbootstrap_combined,
+          plot_description = "extrap_polygon_overlay",
+          output_folder
+      ),
+      pattern = map(env_poly),
+      format = "file"
   )
 
   ## tar_target(
