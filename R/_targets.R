@@ -403,7 +403,7 @@ list(
   tar_target(
       extrap_plotted_present,
       plot_gfbootstrap(
-          cluster_env_assign_cluster_present,
+          gfbootstrap_cluster,
           extrap_polygons_present,
           gfbootstrap_predicted,
           all_bio_env,
@@ -417,7 +417,7 @@ list(
           plot_sim_mat = FALSE,
           output_folder
       ),
-      pattern = map(cluster_env_assign_cluster_present,
+      pattern = map(gfbootstrap_cluster,
                          extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target)),
       format = "file"
   )
