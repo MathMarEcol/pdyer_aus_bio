@@ -34,7 +34,7 @@ assign_new_sites_to_cluster_caster <- function(
 caster_extrap_membership <- function(long_sim_mat,
 																		 gfbootstrap_cluster,
 																		 env_ids,
-																		 env_id_col){
+																		 env_id_col) {
 
 		n_cluster <- max(long_sim_mat$cluster)
 		n_new <- nrow(long_sim_mat)/n_cluster
@@ -53,7 +53,7 @@ caster_extrap_membership <- function(long_sim_mat,
 				type = "probability")
 
 		max_dt <- data.table(cl = predicted_cluster_membership, cl_factor = as.factor(predicted_cluster_membership))
-		max_dt[, c(env_id_col) := env_ids]
+		max_dt[, c(env_id_col) := env_ids[seq.int(min(long_sim_mat$new), max(long_sim_mat$new))]]
 
 		return(list(max = list(max_dt), prob_cl = list(predicted_cluster_probability)))
 }
