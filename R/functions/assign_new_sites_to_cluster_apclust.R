@@ -8,48 +8,32 @@ assign_new_sites_to_cluster_apclust <- function(
     ## Apcluster does not seem to have a function for "predict".
     ## However, an apcluster object is a set of exemplars
     ## Just need to find the nearest exemplar.
-    exemplars <- gfbootstrap_cluster$best_clust_ob@exemplars
+    exemplars <- gfbootstrap_cluster$clust[[1]]$apc_ob[[1]]@exemplars
 
-		stop("Break here for workspace")
 		## Batch over list from cluster_env_extrapolate
 		row_clust_membership <- cluster_env_extrapolate$extrap_sims[[1]][ ,
-														caster_extrap_membership(
+														by = batch_ind,
+														list(clustering = apclust_extrap_membership(
 																.SD$site_pairs[[1]],
-																gfbootstrap_cluster,
+																exemplars,
 																cluster_env_extrapolate$env_id[[1]][[env_id_col]],
-																env_id_col),
-														by = batch_ind]
-    
-    predicted_cluster_raw <- cluster_env_extrapolate$pred_mat[[1]][ , exemplars]
-    predicted_cluster_prob <- predicted_cluster_raw / rowSums(predicted_cluster_raw)
-    predicted_cluster_prob <- data.table::data.table(
-                        x_row =
-                            rep(seq_along(nrow(predicted_cluster_raw)), each = length(exemplars), ),
-                        clust = rep(seq_len(exemplars), times = nrow(predicted_cluster_raw)),
-                        aff = as.vector(predicted_cluster_prob))
-    
-    predicted_cluster_membership <- data.table::rbindlist(
-                                                     lapply(nrow(predicted_cluster_raw),
-           function(r, predicted_cluster_raw){
-               xr <- predicted_cluster_raw[r, ]
-               cl <- which.max(xr)
-               return(data.table::data.table(x_row = r, clust = cl, aff = predicted_cluster_raw[r, cl]))
-           }, predicted_cluster_raw = predicted_cluster_raw))
+																env_id_col))
+                            ]
 
-    
-    ## Have membership for each x_row
-    ## Need to create the clust_ind table for the polygons function
-    clust_ind <-  cbind(predicted_cluster_membership, cluster_env_extrapolate$env_id[[1]][, ..env_id_col])
+    ## Have membership for each x_row.
+
+    clust_ind <- data.table::rbindlist(row_clust_membership$clustering)
+
+
     clust_ind[env_domain[domain == gfbootstrap_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
               c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
 
-    clust_ind[, cl_factor := as.factor(cl)]
-    
+    clust_ind[ , c("bhatt_vec", "new", "cluster", "env_id"):= NULL]
+
     return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
-                      clust_ind = list(clust_ind),
-                      pred_membership = list(predicted_cluster_membership),
-                      pred_prob = list(predicted_cluster_prob)
+                      clust_ind = list(clust_ind)
                       ))
+
 }
 
 
@@ -58,17 +42,30 @@ apclust_extrap_membership <- function (long_sim_mat,
 																			 env_ids,
 																			 env_id_col) {
 
+    ## Drop any "cluster" sites that are not
+    ## exemplars, then
+    ## For each unique "new" site,
+    ## Find the "new" "cluster" "bhatt_vec" row
+    ## that maximises bhattacharyya coefficient.
 		max_clust <- long_sim_mat[cluster %in% exemplars,
-								 .SD[which.max(bhatt_vec),],
-								 by = new]
+								 by = new,
+								 .SD[which.max(bhatt_vec),]
+                 ]
 
-		exemplar_to_clust <- exemplars
-		max_clust <- max_clust[exemplar_to_clust]
-		
-		max_dt <- data.table(cl = predicted_cluster_membership, cl_factor = as.factor(predicted_cluster_membership))
-		max_dt[, c(env_id_col) := env_ids]
+    ## Convert to factor then take levels to clusters 1-5.
+    ## Maybe avoid factor, and go for explicit merge
+		exemplar_to_clust <- data.table::data.table(exemplars = exemplars,
+                                                cl =
+                                                    seq.int(along.with =
+                                                                exemplars))
+		max_clust <- max_clust[exemplar_to_clust,
+                           on = c(cluster = "exemplars"),
+                           nomatch = NULL]
+		setkeyv(max_clust, c("new"))
+
+    max_clust[, cl_factor := as.factor(cl)]
+		max_clust[, c(env_id_col) := env_ids[new]]
  		
-		return(list(max = list(max_dt), prob_cl = list(predict_cluster_probability)))
+		return(list(max = max_clust))
 
-		
 }
