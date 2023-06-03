@@ -10,7 +10,7 @@ extrapolate_to_env <- function(
                                ) {
 
 
-    if (any(is.na(gfbootstrap_combined$gfbootstrap[[1]]))) {
+    if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##

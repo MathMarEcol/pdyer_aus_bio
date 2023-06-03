@@ -10,7 +10,7 @@ cluster_gfbootstrap <- function(
                                 keep_all_clusts
                                 ){
 
-  if(any(is.na(gfbootstrap_predicted$sim_mat[[1]]))) {
+  if(all(is.na(gfbootstrap_predicted$sim_mat))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##

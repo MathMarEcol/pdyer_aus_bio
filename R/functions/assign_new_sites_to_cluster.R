@@ -6,7 +6,7 @@ assign_new_sites_to_cluster <- function(
                                         spatial_vars
                                         ) {
 
-    if (any(is.na(cluster_env_extrapolate$extrap_sims[[1]]))) {
+    if (all(is.na(cluster_env_extrapolate$extrap_sims))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##

@@ -6,7 +6,7 @@ fit_gf <- function(
                    gf_bins,
                    gf_corr_thres
                    ) {
-  if (is.na(all_bio_env$wide_taxa_env)) {
+  if (all(is.na(all_bio_env$wide_taxa_env))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##

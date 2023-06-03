@@ -8,7 +8,7 @@ predict_gfbootstrap <- function(
                                 depth_range
                                 ) {
 
- if (any(is.na(gfbootstrap_combined$gfbootstrap[[1]]))) {
+ if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
