@@ -19,6 +19,7 @@ cluster_raster_to_polygons <- function(
                                   cl = cluster_row$clust_ind[[1]]$cl)
     sites_clust <- sites[!is.na(sites$cl), ]
     sites_no_clust <- sites[is.na(sites$cl), ]
+    sites_no_clust$cl <- rep.int(0, nrow(sites_no_clust))
   clust_raster <- terra::rast(
             x = as.matrix(sites_clust),
             type = "xyz",
