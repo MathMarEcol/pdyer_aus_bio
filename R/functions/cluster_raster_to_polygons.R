@@ -4,7 +4,7 @@ cluster_raster_to_polygons <- function(
                                        ) {
 
 
-  if(any(is.na(cluster_row$clust_ind[[1]]))) {
+  if(all(is.na(cluster_row$clust_ind))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
