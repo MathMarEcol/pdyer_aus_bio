@@ -36,6 +36,111 @@ prepare_batch <- function(
 
 }
 
+## Process env for clustering
+
+cluster_sites_process <- function(x_rows,
+                                  env_dom,
+                                  env_biooracle_names,
+                                  gf_object,
+                                  imp_preds,
+                                  mem_max,
+                                  local_device,
+                                  extrap) {
+  predicted <- predict(
+    object = gf_object,
+    newdata = env_dom[x_rows, ..env_biooracle_names],
+    ## Just take points, and calculate full coefficient matrix from points
+    type = c("points"),
+    extrap = extrap
+  )
+  gc()
+  ## Skip casting, go straight to tensor.
+  setDT(predicted$points)
+  predicted$points[, x := NULL]
+  ## Setting key orders rows appropriately
+  ## The returned object from predict.gfbootstrap
+  ## changes along (from slowest to fastest)
+  ## gf, pred, xrow.
+  ## But tensor needs
+  ## xrow, pred, gf
+  setkeyv(predicted$points, c("x_row", "pred", "gf"))
+  ## Needed for batching
+  ## predicted$points[, x_row := NULL]
+  ## predicted$points[, pred := NULL]
+  predicted$points[, gf := NULL]
+  ## 32bit may be faster, and uses half the memory
+  ## per tensor element
+  torch_set_default_dtype(torch_float32())
+  size_dtype <- 4
+
+  n_gf <- length(gf_object$gf_list)
+  n_preds <- length(imp_preds)
+  n_x_row <- length(x_rows)
+
+  mem_per_site <- size_dtype * (
+    ## site_mean
+    n_preds +
+      ## pred_wide_tensor
+      n_gf * n_preds +
+      ## site_sigma
+      n_preds^2
+  )
+
+  ## fixed overhead by CUDA
+  overhead <- 222e6
+
+
+  pred_batches <- data.table::as.data.table(prepare_batch(
+    mem_max,
+    n_x_row,
+    overhead,
+    mem_per_site,
+    max_batch_size = 100
+  ))
+  ## These were wrong. Smaller batches processed less rows.
+  ## 5000 x 1000 7s 10s 12s 15s
+  ## 10000 x 1000  17.64s 15s
+  ## 20000 x 1000 39s 51s 51s
+
+  ## Now with 80000 rows to process.
+  ## 100 x 100 1.12m (not 1:12) 50s
+  ## 1000 x 1000 58s
+  ## 2000 x 1000 51s
+  ##   2000 x 2000 25s 59ssensitive to inner batches. Stars aligned for first run
+  ##   4000 x 2000 55s
+  ##   4000 x 4000 57s
+  ## 5000 x 1000 55s
+  ## 10000 x 1000 50s
+  ##
+
+
+  ## Need to batch this process too.
+  pred_stats_list <- pred_batches[,
+    site_stats(
+      ## Using view to fail on copy
+      torch_tensor(predicted$points[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
+      size_dtype,
+      mem_max,
+      100
+    ),
+    by = batch_ind]
+
+
+  site_sigma <- torch_cat(pred_stats_list$site_sigma, 1)
+  site_sigma_det <- torch_cat(pred_stats_list$site_sigma_det, 1)
+  site_mean <- torch_cat(pred_stats_list$site_mean, 1)
+
+  ## End batching of input matrices
+  return(list(
+    site_sigma = list(site_sigma),
+    site_sigma_det = list(site_sigma_det),
+    site_mean = list(site_mean)
+  ))
+}
+
+
+
+
 ## Load in and process new env
 ##
 ## ram_max is CPU RAM, never GPU
