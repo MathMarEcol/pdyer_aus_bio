@@ -36,10 +36,14 @@ plot_gfbootstrap <- function(
   pl_file <- c(
     no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
     samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
-    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png"),
-    sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
-    sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
+    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png")
   )
+  if (plot_sim_mat) {
+    pl_file <- c(pl_file,
+                 sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
+                 sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
+    )
+  }
   if (is.na(gfbootstrap_cluster$best_clust)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
@@ -47,8 +51,10 @@ plot_gfbootstrap <- function(
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
-    ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
-    ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
+    if (plot_sim_mat) {
+        ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
+        ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
+    }
     return(pl_file)
   }
 
@@ -203,9 +209,6 @@ plot_gfbootstrap <- function(
             ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters"))
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
-    } else {
-        ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
-        ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
     }
   return(pl_file)
 }
@@ -269,7 +272,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
                 palette = rainbow_cut) +
   tm_layout(legend.show = FALSE)
 
-    if(!is.na(no_cluster_polygons)) {
+    if(!all(is.na(no_cluster_polygons))) {
         pl_tm <- pl_tm + tm_shape(no_cluster_polygons, bbox = env_bbox) +
             tm_polygons(col = "grey")
     }
