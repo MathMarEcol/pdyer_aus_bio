@@ -185,9 +185,9 @@ else
     Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_predicted, starts_with('cluster_env_extrapolate_'), starts_with('cluster_env_assign_cluster_')), workers = 1, log_worker = TRUE)"
 
 		## S3 - Plotting can be memory intensive
-		Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_plotted, strats_with('extrap_plotted_')), workers = 3, log_worker = TRUE)"
+		Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_plotted, starts_with('extrap_plotted_')), workers = 2, log_worker = TRUE)"
 
-    ## S3 - All remaining targets
+    ## S4 - All remaining targets
    Rscript -e "targets::tar_make_clustermq(workers = ${WORKERS}, log_worker = TRUE)"
 fi
 
