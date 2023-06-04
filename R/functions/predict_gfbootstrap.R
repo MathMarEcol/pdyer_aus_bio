@@ -52,13 +52,38 @@ predict_gfbootstrap <- function(
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
 		n_preds_raw <- length(env_biooracle_names)
+    n_preds <- length(imp_preds)
 
 		mem_per_site <-
 				## x, y, x_row, pred, gf
 				n_gf * n_preds_raw * (
 						size_doubles * 3 +
 						size_int * 2
-				)
+				) +
+        ## return value site_sigma, site_mean, site_sigma_det
+				## Site mean
+			  n_preds * size_doubles +
+				## site sigma
+				n_preds ^ 2 * size_doubles +
+				## site sigma det
+				size_doubles
+
+
+    overhead <-
+      ## R background usage?
+        10e9 +
+        ## possible site stats if not using GPU
+        + n_x_row *
+        ## return value site_sigma, site_mean, site_sigma_det
+				## Site mean
+			  (n_preds * size_doubles +
+				## site sigma
+				n_preds ^ 2 * size_doubles +
+				## site sigma det
+				size_doubles) +
+      ## return value handshake rule on sites: i, j, similarity.
+      (size_int * 2 + size_doubles) * (n_x_row - 1) * (n_x_row)/2
+
     ## GPU is often faster, but is not always available.
 		if (Sys.getenv("TENSOR_DEVICE") == "CUDA") {
 				if (torch::cuda_is_available()) {
@@ -74,7 +99,7 @@ predict_gfbootstrap <- function(
 
     env_dom_batch <- data.table::as.data.table(prepare_batch(ram_max,
                                                              n_x_row,
-                                                             0,
+                                                             overhead,
                                                              mem_per_site,
                                                              ## predict.gfbootstrap has long overheads
                                                              ## and risk of OOM is much lower on CPU
@@ -158,11 +183,15 @@ predict_gfbootstrap <- function(
 														site_sigma = array(as.numeric(site_sigma$to(device = "cpu")), dim(site_sigma)),
 														site_sigma_det = as.numeric(site_sigma_det$to(device = "cpu")))
 
-		return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
-      env_pred_stats = list(predicted_stats),
-			env_id = list(env_dom[,..env_id_col]),
-      imp_preds = list(imp_preds),
-      sim_mat = list(list(sim_mat)) ##double wrap the sim mat so data.table doesn't try to print it
-    ))
+  return(data.table::setDT(list(
+    env_domain = gfbootstrap_combined$env_domain,
+    trophic = gfbootstrap_combined$trophic,
+    survey = gfbootstrap_combined$survey,
+    depth_cat = gfbootstrap_combined$depth_cat,
+    env_pred_stats = list(predicted_stats),
+    env_id = list(env_dom[, ..env_id_col]),
+    imp_preds = list(imp_preds),
+    sim_mat = list(list(sim_mat)) ## double wrap the sim mat so data.table doesn't try to print it
+  )))
 
 }
