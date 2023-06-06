@@ -48,6 +48,10 @@ extrapolate_to_env <- function(
 		n_preds_raw <- length(env_biooracle_names)
 		
 		mem_per_site <-
+        ## OS RAM usage is approx 2x larger
+        ## than size of R objects reported by object_size
+        ## mem_used
+        2 *
 				## x, y, x_row, pred, gf
 				n_gf * n_preds_raw * (
 						size_doubles * 3 +

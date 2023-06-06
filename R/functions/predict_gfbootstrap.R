@@ -55,6 +55,10 @@ predict_gfbootstrap <- function(
     n_preds <- length(imp_preds)
 
 		mem_per_site <-
+        ## OS RAM usage is approx 2x larger
+        ## than size of R objects reported by object_size
+        ## mem_used
+        2 *
 				## x, y, x_row, pred, gf
 				n_gf * n_preds_raw * (
 						size_doubles * 3 +
