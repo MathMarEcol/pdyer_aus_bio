@@ -51,23 +51,23 @@ cluster_sites_process <- function(x_rows,
     newdata = env_dom[x_rows, ..env_biooracle_names],
     ## Just take points, and calculate full coefficient matrix from points
     type = c("points"),
-    extrap = extrap
+    extrap = extrap,
+    avoid_copy  = TRUE
   )
-  gc()
   ## Skip casting, go straight to tensor.
-  setDT(predicted$points)
-  predicted$points[, x := NULL]
+  setDT(predicted)
+  predicted[, x := NULL]
   ## Setting key orders rows appropriately
   ## The returned object from predict.gfbootstrap
   ## changes along (from slowest to fastest)
   ## gf, pred, xrow.
   ## But tensor needs
   ## xrow, pred, gf
-  setkeyv(predicted$points, c("x_row", "pred", "gf"))
+  setkeyv(predicted, c("x_row", "pred", "gf"))
   ## Needed for batching
   ## predicted$points[, x_row := NULL]
   ## predicted$points[, pred := NULL]
-  predicted$points[, gf := NULL]
+  predicted[, gf := NULL]
   ## 32bit may be faster, and uses half the memory
   ## per tensor element
   torch_set_default_dtype(torch_float32())
@@ -118,7 +118,7 @@ cluster_sites_process <- function(x_rows,
   pred_stats_list <- pred_batches[,
     site_stats(
       ## Using view to fail on copy
-      torch_tensor(predicted$points[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
+      torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
       size_dtype,
       mem_max,
       NA
@@ -159,22 +159,22 @@ new_sites_process <- function(
                          newdata = env_dom[x_rows, ..env_biooracle_names],
                          ## Just take points, and calculate full coefficient matrix from points
                          type = c("points"),
-                         extrap = extrap)
-		gc()
+                         extrap = extrap,
+                         avoid_copy = TRUE)
 		## Skip casting, go straight to tensor.
-		setDT(predicted$points)
-		predicted$points[, x := NULL]
+		setDT(predicted)
+		predicted[, x := NULL]
 		## Setting key orders rows appropriately
 		## The returned object from predict.gfbootstrap
 		## changes along (from slowest to fastest)
 		## gf, pred, xrow.
 		## But tensor needs
 		## xrow, pred, gf
-		setkeyv(predicted$points, c("x_row", "pred", "gf"))
+		setkeyv(predicted, c("x_row", "pred", "gf"))
     ## Needed for batching
 		## predicted$points[, x_row := NULL]
 		## predicted$points[, pred := NULL]
-		predicted$points[, gf := NULL]
+		predicted[, gf := NULL]
 		## 32bit may be faster, and uses half the memory
 		## per tensor element
 		torch_set_default_dtype(torch_float32())
@@ -224,7 +224,7 @@ new_sites_process <- function(
 		pred_stats_list <- pred_batches[ ,
 																		site_stats(
 																				## Using view to fail on copy
-																				torch_tensor(predicted$points[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
+																				torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
 																				size_dtype,
 																				mem_max,
 																				NA),
