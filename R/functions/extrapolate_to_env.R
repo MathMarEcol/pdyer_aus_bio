@@ -45,20 +45,162 @@ extrapolate_to_env <- function(
 		size_int <- 4
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-		n_preds_raw <- length(env_biooracle_names)
-		
-		mem_per_site <-
-        ## OS RAM usage is approx 2x larger
-        ## than size of R objects reported by object_size
-        ## mem_used
-        2 *
-				## x, y, x_row, pred, gf
-				n_gf * n_preds_raw * (
-						size_doubles * 3 +
-						size_int * 2
-				) +
-        ## return value new, cluster, bhatt
-        (size_int * 2 + size_doubles) * nrow(gfbootstrap_predicted$sim_mat[[1]][[1]])
+  n_preds_raw <- length(env_biooracle_names)
+
+  ## Testing again with row 104
+  ## mem_per_site is smaller, 151168
+  ## OOMed though
+  ## targeting 10GB expected usage
+  ## 66152 rows
+  ## Pre
+  ## mem_used 869Mb
+  ## Top 1472Mb
+  ## During
+  ## top jumped to 9.8, crept up to 11.8GB, then jumped to 17.9GB at the end
+  ## The creep is expected, similarities are moved back to cpu in batches.
+  ## Creep was about 1GB larger than expected, I see I was missing the doubling.
+  ## Post
+  ## mem_used 5.97GB as expected.
+  ## top 17.9GB
+  ## top is bigger than expected.
+  ## Expectation. 1.5GB initial,
+  ## Expected 11+1.5, about 12.5GB. Bigger by 5.4GB
+  ## Explainable by a copy of the return, but size R size, not top size.
+  ## In the case of row 104, return value is much larger than memory per site.
+
+  ## predict(gf_object) creates an object. Maybe it copies it at some point
+  ## It does, it converts a list to a data.frame. Hence the x2
+  ## Fixed in gfbootstrap and extrap
+  ## Prior to fix, expected 4.9GB RAM for predict object, maybe more
+  ## predict probably makes at least one other copy.
+  ##
+
+
+  ## Trying again.
+  ## Overhead allocated 36GB for return values.
+  ## predicted object should eat 4.9GB, but be 2.45GB in R
+  ## Batch return should be 5.1GB in R, may eat 10GB RAM due to copies
+
+  ## expecting:
+  ## 1.5GB + 5GB -> 6.5GB top for predcited object
+  ## 6.5GB + 10GB for batch return value
+
+  ## Predicted object alone jumped to 11.2GB. Explained by
+  ## predicted object being 4* expected size. 3x available for GC
+  ## After using predicted object to load up GPU, gc() reclaimed
+  ## 11.2 - 8.9GB -> 2.3GB.
+
+  ## site_pairs and pair_batches are very large objects.
+  ## RAM 8.9 -> 16.1GB, 7.2GB.
+  ## Above expected 6.3GB
+  ## So peak usage. Is it
+  ## 4 * predicted scores, 4*sites*n_gf * n_preds_raw * (
+  ##   size_doubles * 3 +
+  ##     size_int * 2
+  ## )? 10GB
+  ## 2 * site_pairs and pair_batches and bhatt_list.
+  ## sites * old sites * (size_int * 5 + size_doubles)i? 17.8GB
+
+  ## New logic, find max.
+  ## currently, mem_per_site is dominated by prediction object.
+  ##
+
+  ## 17.4GB  max RAM for bhatt vec
+  ## Targeting 20GB usage
+  ## 8.9GB
+  ## 16.1GB
+
+  ## targeting 13.85GB
+  ## 1.4GB
+  ## 8.2GB with slight peak. Perfectly on 2* expected size plus prior usage
+  ## gc() to 5.4GB, 1x exprected size plus prior is 4.96
+  ## setkeyv pushed memory to 6.2GB, still within 2* expected size
+  ## gc drops to 4.2GB
+  ## pred stats pushed back to 6.84GB
+  ## dropping predicted object and related returns to 4.7GB
+  ##
+
+  ## Going into bhatt section with
+  ## 4.7GB in top
+  ## 8.2GB after site_pairs. Exactly 1x expected object size plus prior!
+  ## 13.3GB after pair_batches 1.5x expected size. Some copying?
+  ## 15GB after adding batch_ind to site_pairs. Exactly as expected.
+  ## Size is consistent with 6 copies of each int col
+  ## 1 reclaimed by GC 13.3GB
+  ## bhatt increased to 15GB, int col? Float32!
+  ## dropping batch_ind and adding new indexes took 2 int cols extra ram
+  ## gc dropped to 13.3 again.
+  ## adding the bhatt_vec jumped to 20.2GB, 6.9GB increase
+  ## Could have been 7.2, which would be 4*, float to double, then copy the doibl.
+
+  ## total useage per row
+  ## let pred size be
+  ## (
+  ##     ## x, y, x_row, pred, gf
+  ##     n_gf * n_preds_raw * (
+  ##         size_doubles * 3 +
+  ##         size_int * 2
+  ## )
+    ## let pair_col_int size be nrow(gfbootstrap_predicted$sim_mat[[1]][[1]]) * size_int
+    pred_obj_size <- n_gf * n_preds_raw * (
+          size_doubles * 3 +
+            size_int * 2
+    )
+    pair_col_int_size <- nrow(gfbootstrap_predicted$sim_mat[[1]][[1]]) * size_int
+
+    ## Trialling new mem_per_site logic. Expecting peak 32.8GB plus overhead
+    ## of one of 17GB, 14GB or 24GB.
+    ## So peak of 48, 46, 56.
+    ## peak at 22 so far in first batch
+    ## 27 at end of first batchz
+    ## 28 at start of second batch
+    ## peak of 33 at end of second batch.
+
+    ## removing Gc from new_sites_process.
+    ## started with 12
+    ## first batch peak 24
+    ## first batch end peak 31GB
+    ## second batch start peak
+    ## seond batch final peak 32GB.
+    ## No batching
+    ## 13GB to 46GB.
+    ## Hmm, fixed?
+    ## Testing on row 105
+    ## pre top 11GB
+    ## batch 1 peak at 39GB
+    ## batch 2 peak 41GB
+    ## Good. Slightly over estimated, but that is ok.
+    mem_per_site <-  pred_obj_size *
+    ## generate pred
+    (2 +
+      ## setkey and pred stats
+     1) +
+      pair_col_int_size *
+        ## site_pairs
+        (2 +
+          ## pair_batches
+          3 +
+          ## batch into site_pairs
+          1 +
+          ## returned bhatt col
+          1 +
+          ## bhatt_col into double, and copy into site_pair
+          4)
+
+    
+    ## mem_per_site <- max(
+    ##   ## OS RAM usage is approx 2x larger
+    ##   ## than size of R objects reported by object_size
+    ##   ## mem_used
+    ##   4 * (
+    ##     ## x, y, x_row, pred, gf
+    ##     n_gf * n_preds_raw * (
+    ##       size_doubles * 3 +
+    ##         size_int * 2
+    ##     )),
+    ##       ## return value new, cluster, bhatt
+    ##       (size_int * 5 + size_doubles) * nrow(gfbootstrap_predicted$sim_mat[[1]][[1]])
+    ##   )
 
     overhead <-
         ## R background usage?
