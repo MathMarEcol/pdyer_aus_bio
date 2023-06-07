@@ -95,7 +95,7 @@ cluster_sites_process <- function(x_rows,
     n_x_row,
     overhead,
     mem_per_site,
-    max_batch_size = 100
+    max_batch_size = NA
   ))
   ## These were wrong. Smaller batches processed less rows.
   ## 5000 x 1000 7s 10s 12s 15s
@@ -121,7 +121,7 @@ cluster_sites_process <- function(x_rows,
       torch_tensor(predicted$points[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
       size_dtype,
       mem_max,
-      100
+      NA
     ),
     by = batch_ind]
 
@@ -202,7 +202,7 @@ new_sites_process <- function(
 																		n_x_row,
 																		overhead,
 																		mem_per_site,
-																		max_batch_size = 100))
+																		max_batch_size = NA))
 		## These were wrong. Smaller batches processed less rows.
 		## 5000 x 1000 7s 10s 12s 15s
 		## 10000 x 1000  17.64s 15s
@@ -227,7 +227,7 @@ new_sites_process <- function(
 																				torch_tensor(predicted$points[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
 																				size_dtype,
 																				mem_max,
-																				100),
+																				NA),
 																		by = batch_ind]
 
 
@@ -327,7 +327,7 @@ new_sites_process <- function(
 																		nrow(site_pairs),
 																		overhead,
 																		mem_per_pair,
-																		max_batch_size = 30000))
+																		max_batch_size = NA))
 
 		site_pairs[ , batch_ind := pair_batches$batch_ind]
 
