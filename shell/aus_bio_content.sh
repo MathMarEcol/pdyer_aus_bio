@@ -185,7 +185,7 @@ else
     Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_predicted, starts_with('cluster_env_extrapolate_')), workers = 1, log_worker = TRUE)"
 
 		## S3 - clustering
-    Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_cluster)), workers = ${WORKERS}, log_worker = TRUE)"
+    Rscript -e "targets::tar_make_clustermq(c(gfbootstrap_cluster), workers = ${WORKERS}, log_worker = TRUE)"
 
 		## S4 - assigning clusters is big memory
 		Rscript -e "targets::tar_make_clustermq(c(starts_with('cluster_env_assign_cluster_')), workers = 2, log_worker = TRUE)"
