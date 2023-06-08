@@ -310,7 +310,7 @@ extrapolate_to_env <- function(
   ## 												site_sigma_det = as.numeric(site_sigma_det$to(device = "cpu")))
 
     gc()
-    torch::cuda_clear_cache()
+    torch::cuda_empty_cache()
     return(data.table::setDT(list(
         env_domain = gfbootstrap_combined$env_domain,
         trophic = gfbootstrap_combined$trophic,
