@@ -15,7 +15,7 @@ export TENSOR_CPU_MEM_MAX=${TENSOR_CPU_MEM_MAX:-50000000000} #Certain operations
 export TENSOR_GPU_MEM_MAX=${TENSOR_GPU_MEM_MAX:-1500000000} #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
 export TENSOR_DEVICE=${TENSOR_DEVICE:-CUDA} # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
 export CUDA_MODULE_LOADING=LAZY
-export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-"roundup_power2_divisions:[256:1,512:2,1024:4,>:8]"}
+# export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-"roundup_power2_divisions:[256:1,512:2,1024:4,>:8]"}
 echo "Checking out git branch: ${GIT_BRANCH}"
 echo "Building with [${WORKERS}] Workers under [${SCHEDULER}]"
 source ./aus_bio_content.sh
