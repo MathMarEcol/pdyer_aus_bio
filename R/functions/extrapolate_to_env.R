@@ -9,6 +9,8 @@ extrapolate_to_env <- function(
                                depth_range
                                ) {
 
+    options(torch.cuda_allocator_reserved_rate = 0.60)
+    options(torch.cuda_allocator_allocated_rate = 0.8)
 
     if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
         ## Upstream target decided survey was not usable.
@@ -307,6 +309,8 @@ extrapolate_to_env <- function(
   ## 												site_sigma = array(as.numeric(site_sigma$to(device = "cpu")), dim(site_sigma)),
   ## 												site_sigma_det = as.numeric(site_sigma_det$to(device = "cpu")))
 
+    gc()
+    torch::cuda_clear_cache()
     return(data.table::setDT(list(
         env_domain = gfbootstrap_combined$env_domain,
         trophic = gfbootstrap_combined$trophic,
