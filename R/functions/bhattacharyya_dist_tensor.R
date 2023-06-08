@@ -19,7 +19,7 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		rows_x <- row_pairs[[1]]
 		rows_y <- row_pairs[[2]]
 		joint_cov <- site_sigma_x[rows_x, , ]$add_(site_sigma_y[rows_y, , ])$mul_(0.5)
-		joint_det <- torch_slogdet(joint_cov)[[2]]
+  joint_det <- joint_cov$logdet()
 		## Peak memory usage follows formula:
 		## nrow(row_pairs) * size_dtype * (
 		##  5 ^ n_preds ^ 2 +

@@ -418,7 +418,7 @@ site_stats <- function(
 																											 pred_wide[.SD$site,,], .SD$site, n_gf, n_preds))),
 																					by = batch_ind]
 		site_sigma = torch_cat(site_sigma_list$site_sigma, 1)
-		site_sigma_det = torch_slogdet(site_sigma)[[2]]
+		site_sigma_det = torch_logdet(site_sigma)
 		site_mean = torch_mean(pred_wide, 3)
 
 		out <- list(
