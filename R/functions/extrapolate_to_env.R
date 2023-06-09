@@ -8,6 +8,18 @@ extrapolate_to_env <- function(
                                env_id_col,
                                depth_range
                                ) {
+    setwd("/para/resources/hpc_sandbox/Q1216/pdyer/pdyer_aus_bio/code/R/")
+    library(targets)
+    library(profvis)
+    Sys.setenv(
+      TENSOR_GPU_MEM_MAX = "1500000000", TENSOR_CPU_MEM_MAX = "50000000000",
+      TENSOR_DEVICE = "CUDA"
+    )
+    n <- 105
+    tar_load(gfbootstrap_combined, n)
+    tar_load(gfbootstrap_predicted, n)
+    tar_load(env_domain_plot)
+    tar_load_globals()
 
     options(torch.cuda_allocator_reserved_rate = 0.60)
     options(torch.cuda_allocator_allocated_rate = 0.8)

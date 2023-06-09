@@ -55,3 +55,69 @@ bhattacharyya_dist_tensor <- function(row_pairs,
 		}
 		return(bhattacharyya_dist)
 }
+
+jit_funcs <- jit_compile("
+def add_cov (x, y, i , j):
+  return torch.mul(torch.add(x[i,,], y[j,,]), alpha=0.5)
+
+def bhatt (
+
+
+
+
+
+
+")
+
+bhattacharyya_dist_tensor_single_loop <- function(row_pairs,
+																			site_mean_x,
+																			site_sigma_x,
+																			site_sigma_det_x,
+																			site_mean_y,
+																			site_sigma_y,
+																			site_sigma_det_y
+																			) {
+    bhatt_vec <- torch::torch_empty(nrow(row_pairs), dtype = torch_float32(), device = site_mean_x$device)
+
+    for (r in seq.int(nrow(row_pairs))) {
+      i <- row_pairs[[1]][r]
+      j <- row_pairs[[2]][r]
+
+      joint_cov <- site_sigma_x[slc(i, i), , ]$add_(site_sigma_y[slc(j, j), , ])$mul_(0.5)
+      joint_det <- joint_cov$logdet()
+      ## Peak memory usage follows formula:
+      ## nrow(row_pairs) * size_dtype * (
+      ##  5 ^ n_preds ^ 2 +
+      ## 3 * n_preds +
+      ## 12)
+      ## size_dtype will be 4 for float32 with torch
+      ## or 8 for float64.
+      ## Ignores overhead of inputs and any variables
+      ## not passed into function.
+      ## for matrices up to 30x30, standard inverse is faster
+      ## joint_cov_inv <- joint_cov$cholesky()$cholesky_inverse()
+      joint_cov_inv <- joint_cov$inverse()
+      ## Allow R to reclaim memory if needed
+      joint_mean <- site_mean_x[slc(i, i), ] - site_mean_y[slc(j, j), ]
+
+      bhatt_vec[slc(r,r)] <- torch_baddbmm(
+        (joint_det - 0.5 * (site_sigma_det_x[slc(i, i)] + site_sigma_det_y[slc(j, j)]))$unsqueeze_(-1)$unsqueeze_(-1),
+        ## Don't modify inline, tends to mess up
+        ## evaluate here, and unsqueeze just creates
+        ## a view, not a copy
+        joint_mean$unsqueeze(2),
+        torch_bmm(joint_cov_inv, joint_mean$unsqueeze(3)),
+        beta = 0.5,
+        alpha = 0.125
+      )$squeeze_()$neg_()$exp_()
+    }
+		## On CPU, which may use swap, manually GC
+		## to stay within max memory usage.
+		## GPU has no swap, so automatic GC will keep
+		## memory within limits. Also, GPU will crash if asked to
+		## use too much memory.
+		## if (bhattacharyya_dist$device == torch_device("cpu")) {
+		## 		gc()
+		## }
+		return(bhatt_vec)
+}

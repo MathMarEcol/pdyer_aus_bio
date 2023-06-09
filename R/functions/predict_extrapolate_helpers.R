@@ -118,7 +118,7 @@ cluster_sites_process <- function(x_rows,
   pred_stats_list <- pred_batches[,
     site_stats(
       ## Using view to fail on copy
-      torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
+        torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device, pin_memory = TRUE)$view(list(nrow(.SD), n_preds, n_gf)),
       size_dtype,
       mem_max,
       NA
@@ -224,7 +224,7 @@ new_sites_process <- function(
 		pred_stats_list <- pred_batches[ ,
 																		site_stats(
 																				## Using view to fail on copy
-																				torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device)$view(list(nrow(.SD), n_preds, n_gf)),
+																				torch_tensor(predicted[x_row %in% .SD$site & pred %in% imp_preds, y], device = local_device, pin_memory = TRUE)$view(list(nrow(.SD), n_preds, n_gf)),
 																				size_dtype,
 																				mem_max,
 																				NA),
@@ -252,9 +252,9 @@ new_sites_process <- function(
 		## Watching memory usage showed ~25GB usage
 		## Adding * 3 to give better accuracy
 
-		cluster_site_mean <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_mean, device = local_device)
-		cluster_site_sigma <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma, device = local_device)
-		cluster_site_sigma_det <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma_det, device = local_device)
+		cluster_site_mean <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_mean, device = local_device, pin_memory = TRUE)
+		cluster_site_sigma <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma, device = local_device, pin_memory = TRUE)
+		cluster_site_sigma_det <- torch_tensor(gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma_det, device = local_device, pin_memory = TRUE)
 
 		n_cluster_sites <- length(cluster_site_sigma_det)
 
@@ -331,6 +331,14 @@ new_sites_process <- function(
 
 		site_pairs[ , batch_ind := pair_batches$batch_ind]
 
+    bhatt_vec<-bhattacharyya_dist_tensor_single_loop(
+																					site_pairs[ , .(cluster, new)],
+																					cluster_site_mean,
+																					cluster_site_sigma,
+																					cluster_site_sigma_det,
+																					site_mean,
+																					site_sigma,
+																					site_sigma_det)
 		## reworking into a torch_cat style workflow,
 		## so GPU->CPU only happens once at the end.
 		## For very large datasets, better
