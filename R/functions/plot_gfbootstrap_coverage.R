@@ -13,7 +13,7 @@ plot_gfbootstrap_coverage <- function(
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
-    pl_survey_name <- paste0(survey_specs, plot_description,
+    pl_survey_name <- paste0(c(survey_specs, plot_description),
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, pl_survey_name)
