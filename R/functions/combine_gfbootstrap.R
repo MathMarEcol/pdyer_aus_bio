@@ -123,7 +123,7 @@ combine_gfbootstrap_p2 <- function(
   on.exit(future::plan(oplan))
 
   gfb <- gfbootstrap_combined_tmp$gfbootstrap_list[[1]]
-  if(all(is.na(gfb)) | length(gfb) < 2) {
+  if(all(is.na(gfb)) | length(gfb) < 1) {
     return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
                       gfbootstrap = list(NA))
            )
@@ -142,4 +142,3 @@ combine_gfbootstrap_p2 <- function(
 
 
 }
-
