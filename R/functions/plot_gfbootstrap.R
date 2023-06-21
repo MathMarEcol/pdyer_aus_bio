@@ -68,6 +68,19 @@ plot_gfbootstrap <- function(
       collapse = "\n"
   )
 
+
+    if (!all(c(
+      sf::st_is_valid(gfbootstrap_polygons$polygons[[1]]),
+      sf::st_is_valid(gfbootstrap_polygons$polygons_no_clust[[1]])
+    )) &
+      sf::sf_use_s2()
+    ) {
+      sf::sf_use_s2(FALSE)
+      s2_disabled <- TRUE
+    } else {
+      s2_disabled <- FALSE
+    }
+
   pl_no_samp <- plot_clust_poly(cluster_polygons = gfbootstrap_polygons$polygons[[1]],
                                 gfbootstrap_polygons$polygons_no_clust[[1]],
                                 spatial_vars = spatial_vars,
@@ -210,6 +223,8 @@ plot_gfbootstrap <- function(
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
     }
+
+    if(s2_disabled) sf::sf_use_s2(TRUE)
   return(pl_file)
 }
 
