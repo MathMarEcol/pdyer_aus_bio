@@ -132,6 +132,25 @@ predict_gfbootstrap <- function(
 
 		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite()$to(device = "cpu"))
 
+    ## If all sites have determinant 0, cannot use.
+    ## Not clear why, indicates matrix is not invertible
+    ## Matrices do not have obvious problems like col of 0
+    ## or eigs of 0, but some eigs are complex.
+    ## Problem is likely computational, and I had some
+    ## success inverting sigma with linalg_eigh,
+    ## and calculating det from the eigh eigenvalues,
+    ## but case is rare enough to leave for now.
+    if (any(non_singular_det_sites == FALSE)) {
+        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+                          env_pred_stats = list(NA),
+                          env_id = list(NA),
+                          imp_preds = list(NA),
+                          sim_mat = list(NA)
+    ))
+
+
+    }
+
 
 		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[nonsingular_det_sites], j = seq.int(n_x_row)[nonsingular_det_sites])
 		row_pairs_filtered <- row_pairs[ i < j, ]
