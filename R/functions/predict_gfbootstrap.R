@@ -90,6 +90,9 @@ predict_gfbootstrap <- function(
       ## return value handshake rule on sites: i, j, similarity.
       (size_int * 2 + size_doubles) * (n_x_row - 1) * (n_x_row)/2
 
+    torch_set_default_dtype(torch_float32())
+		size_dtype <- 4
+
     ## GPU is often faster, but is not always available.
 		if (Sys.getenv("TENSOR_DEVICE") == "CUDA") {
 				if (torch::cuda_is_available()) {
@@ -133,8 +136,6 @@ predict_gfbootstrap <- function(
 		row_pairs <- data.table::CJ(i = seq.int(n_x_row)[nonsingular_det_sites], j = seq.int(n_x_row)[nonsingular_det_sites])
 		row_pairs_filtered <- row_pairs[ i < j, ]
 
-    torch_set_default_dtype(torch_float32())
-		size_dtype <- 4
 
 		overhead <-
 				## CUDA module overhead
