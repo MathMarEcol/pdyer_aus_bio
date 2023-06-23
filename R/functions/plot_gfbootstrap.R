@@ -70,13 +70,12 @@ plot_gfbootstrap <- function(
 
 
     if (sf::sf_use_s2() &&
-        any(c(
-            !is.na(gfbootstrap_polygons$polygons) &&
-            !all(sf::st_is_valid(gfbootstrap_polygons$polygons[[1]])),
-            !is.na(gfbootstrap_polygons$polygons_no_clust) &&
-            !all(sf::st_is_valid(gfbootstrap_polygons$polygons_no_clust[[1]]))
-        )))
-    ) {
+      any(c(
+        !is.na(gfbootstrap_polygons$polygons) &&
+          !all(sf::st_is_valid(gfbootstrap_polygons$polygons[[1]])),
+        !is.na(gfbootstrap_polygons$polygons_no_clust) &&
+          !all(sf::st_is_valid(gfbootstrap_polygons$polygons_no_clust[[1]]))
+      ))) {
       sf::sf_use_s2(FALSE)
       s2_disabled <- TRUE
     } else {
