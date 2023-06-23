@@ -140,15 +140,13 @@ predict_gfbootstrap <- function(
     ## success inverting sigma with linalg_eigh,
     ## and calculating det from the eigh eigenvalues,
     ## but case is rare enough to leave for now.
-    if (any(non_singular_det_sites == FALSE)) {
+    if (all(non_singular_det_sites == FALSE)) {
         return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
                           env_pred_stats = list(NA),
                           env_id = list(NA),
                           imp_preds = list(NA),
                           sim_mat = list(NA)
-    ))
-
-
+                          ))
     }
 
 
