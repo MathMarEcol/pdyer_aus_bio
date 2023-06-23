@@ -349,7 +349,7 @@ new_sites_process <- function(
 																					site_sigma_det)$to(device = "cpu"))),
 														 by = batch_ind]
 		site_pairs[, batch_ind := NULL]
-		site_pairs[, new := x_rows[new[nonsingular_det_sites]]]
+		site_pairs[, new := x_rows[new]]
 		site_pairs[, bhatt_vec := as.numeric(torch_cat(bhatt_list$bhatt_dist))]
 		data.table::setkeyv(site_pairs, c("cluster", "new"))
 		return(site_pairs)
