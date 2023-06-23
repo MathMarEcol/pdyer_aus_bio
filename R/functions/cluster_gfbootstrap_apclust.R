@@ -150,6 +150,7 @@ apclust_optimise <- function(
   assertthat::assert_that(min_tol > 0)
 
     pref_range <-  preferenceRange(s = sim_mat, exact = TRUE)
+    pref_range <- c(max(min(pref_range), -10), max(pref_range))
   ##begin recursion
   ret <- apclust_opt_recurse(sim_mat = sim_mat,
                          pref_range = pref_range,
