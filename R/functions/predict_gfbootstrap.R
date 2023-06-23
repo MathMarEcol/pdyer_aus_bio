@@ -190,6 +190,8 @@ predict_gfbootstrap <- function(
 											 by = batch_ind]
 
 		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
+    bhatt_vec$nan_to_num_(0)
+
 
 		sim_mat <- torch_sparse_coo_tensor(t(as.matrix(row_pairs_filtered[,.(i,j)])),
 																				 bhatt_vec,

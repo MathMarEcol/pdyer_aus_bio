@@ -350,7 +350,7 @@ new_sites_process <- function(
 														 by = batch_ind]
 		site_pairs[, batch_ind := NULL]
 		site_pairs[, new := x_rows[new]]
-		site_pairs[, bhatt_vec := as.numeric(torch_cat(bhatt_list$bhatt_dist))]
+  site_pairs[, bhatt_vec := as.numeric(torch_cat(bhatt_list$bhatt_dist)$nan_to_num_(0))]
 		data.table::setkeyv(site_pairs, c("cluster", "new"))
 		return(site_pairs)
 }
