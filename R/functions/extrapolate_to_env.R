@@ -12,11 +12,11 @@ extrapolate_to_env <- function(
     options(torch.cuda_allocator_reserved_rate = 0.60)
     options(torch.cuda_allocator_allocated_rate = 0.8)
 
-    if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
+    if (all(is.na(gfbootstrap_predicted$env_id))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+        return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat)],
 													env_pred_stats = list(NA),
 													env_id = list(NA),
 													imp_preds = list(NA),
