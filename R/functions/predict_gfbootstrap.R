@@ -178,16 +178,36 @@ predict_gfbootstrap <- function(
 
 		row_pairs_filtered[ , batch_ind := pair_batches$batch_ind]
 
-		bhatt_list <- row_pairs_filtered[ ,
-											 list(bhatt_dist = list(bhattacharyya_dist_tensor(
+		bhatt_list <-
+        row_pairs_filtered[ ,
+                           list(bhatt_dist = list(tryCatch(
+                                    bhattacharyya_dist_tensor(
 													 .SD[ , .(i, j)],
 													 site_mean,
 													 site_sigma,
 													 site_sigma_det,
 													 site_mean,
 													 site_sigma,
-													 site_sigma_det)$to(device = "cpu"))),
-											 by = batch_ind]
+													 site_sigma_det)$to(device = "cpu"),
+                           error = function(e) e))),
+                           by = batch_ind]
+
+    ## Sometimes each site has det != 0 but
+    ## the joint covariance matrix does have det == 0.
+    ## Do not use branch if this is the case.
+    if (!all(vapply(
+             bhatt_list$bhatt_dist,
+             function(x) {
+                 inherits(x, "torch_tensor")
+             },
+             logical(1)))) {
+        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+                          env_pred_stats = list(NA),
+                          env_id = list(NA),
+                          imp_preds = list(NA),
+                          sim_mat = list(NA)
+      ))
+    }
 
 		bhatt_vec <- torch_cat(bhatt_list$bhatt_dist)
     bhatt_vec$nan_to_num_(0)
