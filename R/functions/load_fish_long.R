@@ -14,6 +14,7 @@ load_fish_long <- function(
                           fish_taxon_file,
                           fish_data_dir,
                           fish_years,
+                          description_to_survey,
                           spatial_vars,
                           depth_names,
                           depth_range,
@@ -76,10 +77,14 @@ fish_taxon_depth <-
                    ),
                 on = c(TaxonName = "Species")]
 
+    fish_taxon_sp[description_to_survey,
+                  trophic := trophic,
+                  on = "Descript"]
+
   fish_taxon_sp[, which(
       !(colnames(fish_taxon_sp) %in%
         c("TaxonKey", "TaxonName",
-          "DepthRangeShallow", "DepthRangeDeep")
+          "DepthRangeShallow", "DepthRangeDeep", "trophic")
       )
   ) := NULL]
 
@@ -106,7 +111,7 @@ fish_taxon_depth <-
   fish_taxon_sp_depth[, which(
       !(colnames(fish_taxon_sp_depth) %in%
         c("TaxonKey", "TaxonName",
-          "depth_cat")
+          "depth_cat", "trophic")
       )
   ) := NULL]
   fish_taxon_sp_depth[, depth := sapply(depth_cat, function(x){depth_range[[x]][1]})]
@@ -132,11 +137,12 @@ fish_taxon_depth <-
  fish_long <- fish_taxon_sp_depth[fish_catch_mean,
                      allow.cartesian=TRUE, nomatch = NULL, on = "TaxonKey"]
   rm(fish_catch_mean)
-  fish_long[, `:=` (TaxonKey = NULL,
-                    TaxonName = NULL,
-                    taxon = TaxonName,
-                    survey = "watson",
-                    trophic = "fish")]
+  fish_long[, `:=`(
+    TaxonKey = NULL,
+    TaxonName = NULL,
+    taxon = TaxonName,
+    survey = "watson"
+  )]
   ## fish_long[, c(spatial_vars[1]) := (.SD %% 360), .SDcols = spatial_vars[1]]
   ## Fish are sampled globally
   ##

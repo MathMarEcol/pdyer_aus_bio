@@ -170,6 +170,7 @@ list(
       fish_taxon_file,
       fish_data_dir,
       fish_years,
+      description_to_survey,
       spatial_vars,
       depth_names,
       depth_range,

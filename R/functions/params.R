@@ -98,6 +98,40 @@ zoo_matching = list(
 #' Reg fish dataset params
 fish_years = 2007:2017
 
+description_to_survey =
+  data.table::setDT(tibble::tribble(
+    ~Descript, ~trophic,
+    "bathydemersal 30 - 90 cm", "demersal",
+    "bathydemersal <30 cm", "demersal",
+    "bathydemersal >=90 cm", "demersal",
+    "bathypelagic 30 - 90 cm", "pelagic",
+    "bathypelagic <30 cm", "pelagic",
+    "bathypelagic >=90 cm", "pelagic",
+    "benthopelagic 30 - 90 cm", "pelagic",
+    "benthopelagic <30 cm", "pelagic",
+    "benthopelagic >=90 cm", "pelagic",
+    "cephalopods", "cephalopods",
+    "demersal 30 - 90 cm", "demersal",
+    "demersal <30 cm", "demersal",
+    "demersal >=90 cm", "demersal",
+    "demersal mollusc", "demersal",
+    "flatfish <90 cm", "demersal",
+    "flatfish >=90 cm", "demersal",
+    "krill", "arthropod",
+    "lobsters crab", "arthropod",
+    "pelagic 30 - 90 cm", "pelagic",
+    "pelagic <30 cm", "pelagic",
+    "pelagic >=90 cm", "pelagic",
+    "rays <90 cm", "shark_ray",
+    "rays >=90 cm", "shark_ray",
+    "reef-associated 30 - 90 cm", "demersal",
+    "reef-associated <30 cm", "demersal",
+    "reef-associated >=90 cm", "demersal",
+    "shark <90 cm", "shark_ray",
+    "shark >=90 cm", "shark_ray",
+    "shrimp", "arthropod"
+  ))
+
 #' Depth filtering params
 
 depth_names = c(
