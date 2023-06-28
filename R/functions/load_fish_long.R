@@ -186,7 +186,7 @@ fish_taxon_depth <-
                         {
                           obs <- data.table::copy(.SD)
                           ## sites <- data.table(fish_sites,  depth = depth_range[[.BY$depth_cat]][1])
-                          sites <- bathy_sites[[.BY$depth_cat]]
+                          sites <- data.table::copy(bathy_sites[[.BY$depth_cat]])
                           sites[, depth := depth_range[[.BY$depth_cat]][1]]
                           obs[sites, site_id := i.site_id, on = c(spatial_vars)]
                           obs[, c(spatial_vars, "depth") := NULL]
