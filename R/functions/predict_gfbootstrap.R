@@ -29,6 +29,16 @@ predict_gfbootstrap <- function(
   }
 
     imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
+
+    if (sum(imp) == 0) {
+      ## GF bootstrap object is broken
+      return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+        env_pred_stats = list(NA),
+        env_id = list(NA),
+        imp_preds = list(NA),
+        sim_mat = list(NA)
+      ))
+    }
     if (pred_importance_top >= 1) {
         imp_preds <- names(imp)[seq.int(1,min(length(imp), pred_importance_top))]
     } else {
