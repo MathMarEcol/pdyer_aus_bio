@@ -32,7 +32,7 @@ assign_new_sites_to_cluster_caster <- function(
                                    cl = rep(NA, sum(missing_env_rows)),
                                    cl_factor = rep(NA, sum(missing_env_rows))
                                )
-    missing_env[[env_id_col]] <- env_ids[missing_env_rows]
+    missing_env[[env_id_col]] <- cluster_env_extrapolate$env_id[[1]][[env_id_col]][missing_env_rows]
     clust_ind <- rbind(clust_ind, missing_env)
 
 
