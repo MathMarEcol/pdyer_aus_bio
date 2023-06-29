@@ -27,19 +27,20 @@ assign_new_sites_to_cluster_caster <- function(
     ## Sites after dropping due to depth are in cluster_env_extrapolate$env_id
     ## Want all sites from cluster_env_extrapolate$env_id, with
     ## det == 0 sites set to cluster NA.
-    missing_env_rows <- !(cluster_env_extrapolate$env_id[[1]][[env_id_col]] %in% clust_ind[[env_id_col]])
+    env_ids <- cluster_env_extrapolate$env_id[[1]][[env_id_col]]
+    missing_env_rows <- !(env_ids %in% clust_ind[[env_id_col]])
     missing_env <- data.table::data.table(
                                    cl = rep(NA, sum(missing_env_rows)),
                                    cl_factor = rep(NA, sum(missing_env_rows))
                                )
-    missing_env[[env_id_col]] <- cluster_env_extrapolate$env_id[[1]][[env_id_col]][missing_env_rows]
+    missing_env[[env_id_col]] <- env_ids[missing_env_rows]
     clust_ind <- rbind(clust_ind, missing_env)
 
 
 
     pred_clust_prob_full <- matrix(0,
       nrow = length(env_ids),
-      ncol = n_cluster
+      ncol = length(gfbootstrap_cluster$best_clust_ob[[1]])
       )
 
     for (r in seq.int(nrow(cluster_env_extrapolate$extrap_sims[[1]]))) {
