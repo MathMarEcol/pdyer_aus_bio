@@ -23,7 +23,7 @@ get_mpa_polys <- function(
     country_mpa_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_sub))
     ## country_mpa_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_clean_sub))
   ## aus_mpa is already an sf object
-    return(data.table(
+    return(data.table::data.table(
         iucn_categories = list(iucn_categories),
         mpa_polys = list(country_mpa_dissolved)
     ))
