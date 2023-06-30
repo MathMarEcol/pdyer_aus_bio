@@ -428,7 +428,6 @@ list(
       plot_polygon_overlay(
           extrap_polygons_present,
           env_poly,
-          gfbootstrap_combined,
           plot_description = "extrap_polygon_overlay",
           output_folder
       ),
