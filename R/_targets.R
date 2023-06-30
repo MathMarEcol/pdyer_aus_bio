@@ -363,7 +363,7 @@ list(
       gfbootstrap_mpa_plots,
       plot_gfbootstrap_mpa(
           gfbootstrap_cluster,
-          gfbootstrap_polygons,
+          extrap_polygons_present,
           gfbootstrap_predicted,
           env_poly,
           mpa_polygons,
@@ -375,7 +375,7 @@ list(
           output_folder
       ),
       pattern = cross(mpa_polygons, map(gfbootstrap_cluster,
-                    gfbootstrap_polygons, cross(gfbootstrap_predicted, clust_methods_target))),
+                    extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target))),
       format = "file"
   ),
 
