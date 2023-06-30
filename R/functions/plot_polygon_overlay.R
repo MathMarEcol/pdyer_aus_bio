@@ -30,7 +30,7 @@ plot_polygon_overlay <- function(
     depth_cat_levels$any <- c(unique(extrap_polygons$depth_cat))
     clust_method_levels <- lapply(unique(extrap_polygons$clust), c)
     clust_method_levels$any <- c(unique(extrap_polygons$clust))
-    env_domain_levels <- lapply(unique(extrap_polygons$env_domain), c)
+    env_domain_levels <- lapply(unique(env_poly$name), c)
 
     depth_cat_levels <- lapply(depth_cat_levels, as.character)
 
