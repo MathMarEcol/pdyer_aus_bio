@@ -47,7 +47,7 @@ plot_gfbootstrap_coverage <- function(
   clust_area_table <- data.table::data.table(clust_id = clust_poly_sf_trans$clustering,
                                              area =  as.numeric(clust_area_frac))
 
-  data.table::setorder(clust_area_table, "area")
+  data.table::setorder(clust_area_table, "-area")
   clust_area_table[, "plot_order" := seq_along(clust_area_table$clust_id)]
 
   pl_clust_coverage <- ggplot2::ggplot(clust_area_table, ggplot2::aes(x = reorder(clust_id, area), y = area)) +
