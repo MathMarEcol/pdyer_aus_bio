@@ -50,13 +50,13 @@ plot_gfbootstrap_coverage <- function(
   data.table::setorder(clust_area_table, -area)
   clust_area_table[, "plot_order" := seq_along(clust_area_table$clust_id)]
 
-  pl_clust_coverage <- ggplot2::ggplot(clust_area_table, ggplot2::aes(x = reorder(clust_id, area), y = area)) +
-    ggplot2::scale_x_discrete("Cluster") +
-    ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
-    ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster")) +
-    ggplot2::geom_col() +
-    ggplot2::geom_hline(yintercept = c(0.1, 0.3)) +
-    ggthemes::theme_tufte()
+    pl_clust_coverage <- ggplot2::ggplot(clust_area_table, ggplot2::aes(x = plot_order, y = area)) +
+      geom_col() +
+      ggplot2::scale_x_continuous(name = "Cluster", breaks = 1:20, labels = clust_area_table$clust_id) +
+        ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
+        ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster")) +
+        ggplot2::geom_hline(yintercept = c(0.1, 0.3)) +
+        ggthemes::theme_tufte()
 
   ggsave_wrapper(filename = pl_file, plot = pl_clust_coverage)
     sf::sf_use_s2(s2_used)
