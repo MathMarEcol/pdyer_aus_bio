@@ -45,7 +45,7 @@ plot_polygon_overlay <- function(
 
     ## For each row in poly_groups, get the subset of
     ## extrap_polygons that match.
-    furrr::future_walk(seq.int(nrow(poly_groups)),
+    purrr::walk(seq.int(nrow(poly_groups)),
                        function(r, poly_groups, extrap_polygons, env_poly, output_folder, plot_description) {
                            polys <- extrap_polygons[
                                env_domain %in% poly_groups$env_domain[r][[1]] &
@@ -56,7 +56,6 @@ plot_polygon_overlay <- function(
                                !is.na(polygons),
                                ]
                            if (nrow(polys) > 1) {
-                               print(nrow(polys))
                                poly_name <- make_poly_name(poly_groups[r,], output_folder, plot_description)
                                save_polys_overlays(polys, env_poly, poly_name)
                            }
