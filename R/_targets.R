@@ -346,8 +346,10 @@ list(
     get_mpa_polys(
       country_code,
       iucn_categories,
-      marine_categories
-      )
+      marine_categories,
+      mpa_folder
+    ),
+    pattern = map(iucn_categories)
    ),
 
   tar_target(
@@ -358,7 +360,7 @@ list(
       plot_description = "_cluster_mpa_coverage",
       output_folder
     ),
-    pattern =  map(gfbootstrap_polygons),
+    pattern =  cross(gfbootstrap_polygons, mpa_polygons),
     format = "file"
   ),
 

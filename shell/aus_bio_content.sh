@@ -66,6 +66,8 @@ rsync -irc $ROOT_STORE_DIR/Q1215/ShapeFiles/World_EEZ_v8 $TMP_DATA_DIR/ShapeFile
 mkdir -p $TMP_DATA_DIR/Watson_Fisheries_Catch_Data/Version5/Output
 rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/Annual_TotalCatchSpecies $TMP_DATA_DIR/Watson_Fisheries_Catch_Data/Version5/Output
 rsync -irc $ROOT_STORE_DIR/Q1215/Watson_Fisheries_Catch_Data/Version5/Output/TaxonomicData.rds $TMP_DATA_DIR/Watson_Fisheries_Catch_Data/Version5/Output
+mkdir -p $TMP_DATA_DIR/MPAs_v2020
+rsync -irc $ROOT_STORE_DIR/Q1215/MPAs_v2020/ $TMP_DATA_DIR/MPAs_v2020
 
 #Set up the output directory
 #I put in current outputs, in order to avoid replotting. Update, I want to replot. Update, I don't want to replot

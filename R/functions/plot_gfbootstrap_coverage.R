@@ -13,7 +13,7 @@ plot_gfbootstrap_coverage <- function(
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
-    pl_survey_name <- paste0(c(survey_specs, plot_description),
+    pl_survey_name <- paste0(c(survey_specs, mpa_polygons$iucn_categories$name, plot_description),
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, pl_survey_name)
@@ -31,8 +31,8 @@ plot_gfbootstrap_coverage <- function(
   clust_poly_sf <- gfbootstrap_polygons$polygons[[1]]
   ## st_intersection should give us the polygons covering both clusters and MPAs.
   ## Need to project both polygon sets into the same CRS, but details of CRS are not critical?
-  clust_poly_sf_trans <- sf::st_transform(clust_poly_sf, sf::st_crs(mpa_polygons))
-  clust_mpa_intersect <- sf::st_intersection(clust_poly_sf_trans,  mpa_polygons)
+  clust_poly_sf_trans <- sf::st_transform(clust_poly_sf, sf::st_crs(mpa_polygons$mpa_polys))
+  clust_mpa_intersect <- sf::st_intersection(clust_poly_sf_trans,  mpa_polygons$mpa_polys)
 
   clust_area_covered <- sf::st_area(clust_mpa_intersect)
   clust_area_total <- sf::st_area(clust_poly_sf_trans)

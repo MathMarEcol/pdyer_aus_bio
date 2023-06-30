@@ -51,7 +51,11 @@ file_inputs <- function() {
       biooracle_folder,
       "./data/bioORACLE",
       format = "file"
+    ),
+    tar_target(
+      mpa_folder,
+      "./data/MPAs_v2020",
+      format = "file"
     )
-
   )
 }
