@@ -4,6 +4,9 @@ plot_gfbootstrap_coverage <- function(
                                       plot_description,
                                         output_folder
                                       ) {
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
+
     survey_specs <- gfbootstrap_polygons[,
                                                  c("env_domain",
                                                    "trophic",
@@ -56,5 +59,6 @@ plot_gfbootstrap_coverage <- function(
     ggthemes::theme_tufte()
 
   ggsave_wrapper(filename = pl_file, plot = pl_clust_coverage)
+    sf::sf_use_s2(s2_used)
   return(pl_file)
 }
