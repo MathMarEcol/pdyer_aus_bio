@@ -341,6 +341,13 @@ list(
     pattern = map(gfbootstrap_cluster)
   ),
 
+
+  tar_target(
+    iucn_cat_target,
+    iucn_categories,
+    iteration = "vector"
+  ),
+
   tar_target(
     mpa_polygons,
     get_mpa_polys(
@@ -349,7 +356,7 @@ list(
       marine_categories,
       mpa_folder
     ),
-    pattern = map(iucn_categories)
+    pattern = map(iucn_cat_target)
    ),
 
   tar_target(
