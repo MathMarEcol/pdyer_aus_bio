@@ -62,7 +62,7 @@ plot_gfbootstrap_mpa <- function(
                                                      "{pred_string}"),
                         main.title.size = 0.5) +
             tmap::tm_shape(mpa_polygons$mpa_polys[[1]]) +
-            tm_polygons(col = "grey", alpha = 0.6, border.col = "grey", border.alpha = 0.9)
+            tm_polygons(col = "grey", alpha = 0.7, border.col = "grey", border.alpha = 0.9)
 
     ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
     tmap_save_wrapper(tm = pl_no_samp, filename = pl_file, scale = 0.1, dpi = 1200)
