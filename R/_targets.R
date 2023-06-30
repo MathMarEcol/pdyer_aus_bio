@@ -357,7 +357,27 @@ list(
       mpa_folder
     ),
     pattern = map(iucn_cat_target)
-   ),
+  ),
+
+  tar_target(
+      gfbootstrap_mpa_plots,
+      plot_gfbootstrap_mpa(
+          gfbootstrap_cluster,
+          gfbootstrap_polygons,
+          gfbootstrap_predicted,
+          env_poly,
+          mpa_polygons,
+          spatial_vars,
+          regrid_resolution$grid_res_cluster,
+          marine_map,
+          plot_clust_labels,
+          plot_description = "clustering_mpas",
+          output_folder
+      ),
+      pattern = cross(mpa_polygons, map(gfbootstrap_cluster,
+                    gfbootstrap_polygons, cross(gfbootstrap_predicted, clust_methods_target))),
+      format = "file"
+  ),
 
   tar_target(
     gfbootstrap_coverage_plots,
