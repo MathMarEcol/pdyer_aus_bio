@@ -352,7 +352,7 @@ list(
     mpa_polygons,
     get_mpa_polys(
       country_code,
-      iucn_categories,
+      iucn_cat_target,
       marine_categories,
       mpa_folder
     ),
