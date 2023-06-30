@@ -13,7 +13,7 @@ plot_gfbootstrap_coverage <- function(
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
-    pl_survey_name <- paste0(c(survey_specs, mpa_polygons$iucn_categories$name, plot_description),
+    pl_survey_name <- paste0(c(survey_specs, mpa_polygons$iucn_categories[[1]]$name, plot_description),
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, pl_survey_name)
@@ -31,8 +31,8 @@ plot_gfbootstrap_coverage <- function(
   clust_poly_sf <- gfbootstrap_polygons$polygons[[1]]
   ## st_intersection should give us the polygons covering both clusters and MPAs.
   ## Need to project both polygon sets into the same CRS, but details of CRS are not critical?
-  clust_poly_sf_trans <- sf::st_transform(clust_poly_sf, sf::st_crs(mpa_polygons$mpa_polys))
-  clust_mpa_intersect <- sf::st_intersection(clust_poly_sf_trans,  mpa_polygons$mpa_polys)
+  clust_poly_sf_trans <- sf::st_transform(clust_poly_sf, sf::st_crs(mpa_polygons$mpa_polys[[1]]))
+  clust_mpa_intersect <- sf::st_intersection(clust_poly_sf_trans, mpa_polygons$mpa_polys[[1]])
 
   clust_area_covered <- sf::st_area(clust_mpa_intersect)
   clust_area_total <- sf::st_area(clust_poly_sf_trans)
@@ -47,11 +47,12 @@ plot_gfbootstrap_coverage <- function(
   data.table::setorder(clust_area_table, "area")
   clust_area_table[, "plot_order" := seq_along(clust_area_table$clust_id)]
 
-  pl_clust_coverage <- ggplot2::ggplot(clust_area_table ,  ggplot2::aes(x = reorder(clust_id, area), y = area)) +
+  pl_clust_coverage <- ggplot2::ggplot(clust_area_table, ggplot2::aes(x = reorder(clust_id, area), y = area)) +
     ggplot2::scale_x_discrete("Cluster") +
-    ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits =  c(0, 1), breaks = seq(0, 1, 0.1 )) +
-    ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster") ) +
+    ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
+    ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster")) +
     ggplot2::geom_col() +
+    ggplot2::geom_hline(yintercept = c(0.1, 0.3)) +
     ggthemes::theme_tufte()
 
   ggsave_wrapper(filename = pl_file, plot = pl_clust_coverage)
