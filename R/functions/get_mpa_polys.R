@@ -4,6 +4,8 @@ get_mpa_polys <- function(
                           marine_categories,
                           mpa_folder
                           ) {
+    using_s2 <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
   ## This line is sensitive to internet quality in wdpar version 1.3.1.3
   ## country_mpa <- wdpar::wdpa_fetch(country_code, wait = TRUE)
     world_mpas <- sf::st_read(mpa_folder)
@@ -22,6 +24,7 @@ get_mpa_polys <- function(
   ## not individual MPA identities
     country_mpa_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_sub))
     ## country_mpa_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_clean_sub))
+    sf::sf_use_s2(using_s2)
   ## aus_mpa is already an sf object
     return(data.table::data.table(
         iucn_categories = list(iucn_cat_target),
