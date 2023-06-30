@@ -52,7 +52,7 @@ plot_gfbootstrap_coverage <- function(
 
     pl_clust_coverage <- ggplot2::ggplot(clust_area_table, ggplot2::aes(x = plot_order, y = area)) +
       geom_col() +
-      ggplot2::scale_x_continuous(name = "Cluster", breaks = 1:20, labels = clust_area_table$clust_id) +
+      ggplot2::scale_x_continuous(name = "Cluster", breaks = seq_along(clust_area_table$clust_id), labels = clust_area_table$clust_id) +
         ggplot2::scale_y_continuous("MPA Coverage (Fraction of total cluster area)", limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
         ggplot2::ggtitle(paste0(pl_survey_name, " MPA coverage by cluster")) +
         ggplot2::geom_hline(yintercept = c(0.1, 0.3)) +
