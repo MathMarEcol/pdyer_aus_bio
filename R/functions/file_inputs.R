@@ -54,7 +54,7 @@ file_inputs <- function() {
     ),
     tar_target(
       mpa_folder,
-      "./data/MPAs_v2020",
+      "./data/mpa_poly_june_2023",
       format = "file"
     )
   )
