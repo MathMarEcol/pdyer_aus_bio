@@ -4,8 +4,8 @@ get_mpa_polys <- function(
                           marine_categories,
                           mpa_folder
                           ) {
-    ## no_take succeeds only with s2 on
-    ##
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
     country_mpa <- rbind(
       sf::st_read(paste0(mpa_folder, "/aus_mpa_0")),
       sf::st_read(paste0(mpa_folder, "/aus_mpa_1")),
@@ -19,7 +19,7 @@ get_mpa_polys <- function(
     ## slow, definitely worth spinning out into a separate target
     # country_mpa_clean <- wdpar::wdpa_clean(country_mpa, erase_overlaps = FALSE)
     # data.table::setDT(country_mpa_clean)
-    country_mpa_sub <- country_mpa[country_mpa$IUCN_CAT %in% iucn_cat_target$categories[[1]], ]
+    country_mpa_sub <- country_mpa[country_mpa$IUCN_CAT %in% iucn_cat_target$categories[[1]] & country_mpa$MARINE != 0, ]
     ## country_mpa_sub <- country_mpa_clean[IUCN_CAT %in% iucn_categories,]
     ## country_mpa_clean_sub <- country_mpa_clean[IUCN_CAT %in% iucn_categories,] ## could also look at NO_TAKE
   #country_mpa_clean_sub <- country_mpa_clean_sub[MARINE %in% marine_categories,]
@@ -30,6 +30,7 @@ get_mpa_polys <- function(
   ## not individual MPA identities
     country_mpa_dissolved <- sf::st_union(country_mpa_sub)
     ## country_mpa_dissolved <- wdpar::wdpa_dissolve(sf::st_as_sf(country_mpa_clean_sub))
+    sf::sf_use_s2(s2_used)
   ## aus_mpa is already an sf object
     return(data.table::data.table(
         iucn_categories = list(iucn_cat_target),
