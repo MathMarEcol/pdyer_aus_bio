@@ -65,7 +65,7 @@ plot_gfbootstrap_mpa <- function(
             tm_polygons(col = "grey", alpha = 0.3, border.col = "grey", border.alpha = 0.7)
 
     ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
-    tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1, dpi = 1200)
+    tmap_save_wrapper(tm = pl_no_samp, filename = pl_file, scale = 0.1, dpi = 1200)
 
     sf::sf_use_s2(s2_used)
     return(pl_file)
