@@ -181,7 +181,7 @@ env_bounds = list(
 
 #' MPA polygon params
 country_code <- "AUS"
-iucn_categories <- data.table(name = c("no_take", "all"),
+iucn_categories <- data.table::data.table(name = c("no_take", "all"),
                               categories = list(
                                   c("Ia", "Ib", "II"),
                                   c("Ia", "Ib", "II", "III", "IV", "V", "VI")))
