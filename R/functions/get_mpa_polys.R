@@ -9,9 +9,9 @@ get_mpa_polys <- function(
     world_mpas <- sf::st_read(mpa_folder)
     country_mpa <- world_mpas[world_mpas$PARENT_ISO == country_code, ]
     ## slow, definitely worth spinning out into a separate target
-  #country_mpa_clean <- wdpar::wdpa_clean(country_mpa, erase_overlaps = FALSE)
-  #data.table::setDT(country_mpa_clean)
-    country_mpa_sub <- country_mpa[country_mpa$IUCN_CAT %in% iucn_cat_target$categories,]
+    # country_mpa_clean <- wdpar::wdpa_clean(country_mpa, erase_overlaps = FALSE)
+    # data.table::setDT(country_mpa_clean)
+    country_mpa_sub <- country_mpa[country_mpa$IUCN_CAT %in% iucn_cat_target$categories[[1]], ]
     ## country_mpa_sub <- country_mpa_clean[IUCN_CAT %in% iucn_categories,]
     ## country_mpa_clean_sub <- country_mpa_clean[IUCN_CAT %in% iucn_categories,] ## could also look at NO_TAKE
   #country_mpa_clean_sub <- country_mpa_clean_sub[MARINE %in% marine_categories,]
