@@ -366,7 +366,7 @@ keep_all_clusts = FALSE
 ## go down as number of predictors goes up.
 ## 20 predictors is slightly below typical selection from my existing
 ## datasets.
-pred_importance_top = 20
+pred_importance_top = Inf
 
 is_targets_project <- rprojroot::root_criterion(function(path){
   testfile <- file.path(path,"_targets.R")
