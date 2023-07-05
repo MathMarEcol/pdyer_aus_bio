@@ -384,7 +384,7 @@ list(
     plot_gfbootstrap_coverage(
       gfbootstrap_polygons,
       mpa_polygons,
-      plot_description = "_cluster_mpa_coverage",
+      plot_description = "cluster_mpa_coverage",
       output_folder
     ),
     pattern =  cross(gfbootstrap_polygons, mpa_polygons),
