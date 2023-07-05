@@ -359,8 +359,14 @@ keep_all_clusts = FALSE
 # important predictors are used first, in for clustering.
 # If in range (0,1) then take as many predictors as needed to include that
 # fraction of the importance. eg 0.8 maens keep 80% of importance.
-# To include all predictors, set to Inf
-pred_importance_top = 0.8
+                                        # To include all predictors, set to Inf
+## Do not take n predictors to cover X amount of importance.
+## This can easily obscure differences between surveys, because
+## more predictors means more dimensions, in general similarity will
+## go down as number of predictors goes up.
+## 20 predictors is slightly below typical selection from my existing
+## datasets.
+pred_importance_top = 20
 
 is_targets_project <- rprojroot::root_criterion(function(path){
   testfile <- file.path(path,"_targets.R")
