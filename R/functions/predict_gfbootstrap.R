@@ -192,7 +192,8 @@ predict_gfbootstrap <- function(
         row_pairs_filtered[ ,
                            list(bhatt_dist = list(tryCatch(
                                     bhattacharyya_dist_tensor_compiled(
-													 .SD[ , .(i, j)],
+                                        .SD[ , .(i, j)],
+                                        local_device,
 													 site_mean,
 													 site_sigma,
 													 site_sigma_det,

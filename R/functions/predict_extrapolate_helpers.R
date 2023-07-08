@@ -341,6 +341,7 @@ new_sites_process <- function(
 														 list(bhatt_dist = list(
 																			bhattacharyya_dist_tensor_compiled(
 																					.SD[ , .(cluster, new)],
+                                          local_device,
 																					cluster_site_mean,
 																					cluster_site_sigma,
 																					cluster_site_sigma_det,

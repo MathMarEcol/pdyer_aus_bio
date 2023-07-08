@@ -140,6 +140,7 @@ def test (joint_det,
 ## site_sigma is a matrix per site, dim(site, pred, pred).
 ## site_sigma_det is a numeric per site, dim(site).
 bhattacharyya_dist_tensor_compiled <- function(row_pairs,
+                                               local_device,
 																			site_mean_x,
 																			site_sigma_x,
 																			site_sigma_det_x,
