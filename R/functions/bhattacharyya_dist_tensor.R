@@ -1,5 +1,26 @@
-# Compiled torchscript
-compiled <- torch::jit_compile("
+
+
+## Tensor batch calculation of the
+## bhattacharyya coefficient
+## @param row_pairs is an n x 2 matrix or equivalent
+## where each row is the indicies of the sites being
+## compared
+## @param site_mean, site_sigma and site_sigma_det are torch
+## tensor arrays, where the first dim is the index of the
+## site. site_mean is a vector per site, dim(site, pred).
+## site_sigma is a matrix per site, dim(site, pred, pred).
+## site_sigma_det is a numeric per site, dim(site).
+bhattacharyya_dist_tensor_compiled <- function(row_pairs,
+                                               local_device,
+																			site_mean_x,
+																			site_sigma_x,
+																			site_sigma_det_x,
+																			site_mean_y,
+																			site_sigma_y,
+																			site_sigma_det_y
+																			) {
+    ## Compiled torchscript
+    compiled <- torch::jit_compile("
 #def bhatt_single (site_mean_x,
 #											site_sigma_x,
 #											site_sigma_det_x,
@@ -129,25 +150,6 @@ def test (joint_det,
   return bhatt_coeff
 ")
 
-## Tensor batch calculation of the
-## bhattacharyya coefficient
-## @param row_pairs is an n x 2 matrix or equivalent
-## where each row is the indicies of the sites being
-## compared
-## @param site_mean, site_sigma and site_sigma_det are torch
-## tensor arrays, where the first dim is the index of the
-## site. site_mean is a vector per site, dim(site, pred).
-## site_sigma is a matrix per site, dim(site, pred, pred).
-## site_sigma_det is a numeric per site, dim(site).
-bhattacharyya_dist_tensor_compiled <- function(row_pairs,
-                                               local_device,
-																			site_mean_x,
-																			site_sigma_x,
-																			site_sigma_det_x,
-																			site_mean_y,
-																			site_sigma_y,
-																			site_sigma_det_y
-																			) {
     ## Compiled torchscript is offset indexed (0-indexed)
     ## R code is count indexed (1-indexed)
 		rows_x <- torch::torch_tensor(row_pairs[[1]]-1,
