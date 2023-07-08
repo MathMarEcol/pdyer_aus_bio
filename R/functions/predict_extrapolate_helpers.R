@@ -339,7 +339,7 @@ new_sites_process <- function(
 		## using all the GPU memory storing previous batch results.
 		bhatt_list <- site_pairs[ ,
 														 list(bhatt_dist = list(
-																			bhattacharyya_dist_tensor(
+																			bhattacharyya_dist_tensor_compiled(
 																					.SD[ , .(cluster, new)],
 																					cluster_site_mean,
 																					cluster_site_sigma,
