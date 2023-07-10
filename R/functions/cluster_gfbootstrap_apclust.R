@@ -95,7 +95,7 @@ apclust_opt_recurse <- function(sim_mat,
                                  }
                                  return(out)
                              }
-                         },  sim_mat = sim_mat, rec_depth = rec_depth, rec_data = rec_data)
+                         },  sim_mat = sim_mat, rec_depth = rec_depth, rec_data = rec_data, future.seed = TRUE)
   )
 
   ## Find the best gamma score
