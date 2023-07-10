@@ -14,7 +14,7 @@ cluster_gfbootstrap_apclust <- function(
         plan(future.callr::callr, workers = min(nworkers, m))
     }
 
-     ap_clust <-  data.table::setDT(apclust_optimise(gfbootstrap_predicted$sim_mat[[1]][[1]], m = m, min_range = min_range, min_tol = min_tol, return_full = keep_all_clusts))
+     ap_clust <- data.table::setDT(apclust_optimise(log(gfbootstrap_predicted$sim_mat[[1]][[1]]), m = m, min_range = min_range, min_tol = min_tol, return_full = keep_all_clusts))
 
 
   best_clust <- which.max(ap_clust$gamma)
@@ -87,7 +87,7 @@ apclust_opt_recurse <- function(sim_mat,
 
                                  } else {
                                      mem_mat <- castcluster::membership_mat(apc@clusters)
-                                     h <- castcluster::hubert_gamma(sim_mat, mem_mat, norm_z = TRUE)
+                                     h <- castcluster::hubert_gamma(exp(sim_mat), mem_mat, norm_z = TRUE)
                                      out <- data.frame(pref = pref, gamma = h,
                                              k = length(apc@clusters),
                                              apc_ob = I(list(apc)),
