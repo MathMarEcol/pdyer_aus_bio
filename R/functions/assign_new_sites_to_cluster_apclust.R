@@ -30,10 +30,13 @@ assign_new_sites_to_cluster_apclust <- function(
 
     clust_ind[ , c("env_id"):= NULL]
 
-    return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
-                      clust_ind = list(clust_ind),
-                      pred_membership = list(row_clust_membership)))
-                      ))
+    return(data.table(
+        gfbootstrap_cluster[,
+                    .(env_domain, trophic, survey, depth_cat, clust_method)],
+        clust_ind = list(clust_ind),
+        pred_membership = list(row_clust_membership)
+      )
+    )
 
 }
 
