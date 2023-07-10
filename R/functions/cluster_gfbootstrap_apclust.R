@@ -51,7 +51,7 @@ apclust_opt_recurse <- function(sim_mat,
     ## mem_mat is clustering in format needed for hubert_gamma
     ## gamma is our target metric
       ## Check for errors in recursion logic, or bad inputs
-  assertthat::assert_that(diff(pref_range)[1] > min_range)
+  ## assertthat::assert_that(diff(pref_range)[1] > min_range)
     ##first iteration, set up empty data.frame
     if(is.null(rec_data)){
         rec_data <- data.frame(pref = double(),
@@ -74,7 +74,7 @@ apclust_opt_recurse <- function(sim_mat,
                                  return(out)
                                          
                              } else {
-                                 apc <- apcluster(s = sim_mat, p = pref)
+                                 apc <- apcluster(s = sim_mat, q = pref)
                                  ##May not return a well formed cluster
                                  ## if apclust does not converge.
                                  if(length(apc@clusters) < 2) {
@@ -154,8 +154,7 @@ apclust_optimise <- function(
   assertthat::assert_that(m >= 4)
   assertthat::assert_that(min_tol > 0)
 
-    pref_range <-  preferenceRange(s = sim_mat, exact = TRUE)
-    pref_range <- c(max(min(pref_range), -10), max(pref_range))
+    pref_range <- c(0, 1)
   ##begin recursion
   ret <- apclust_opt_recurse(sim_mat = sim_mat,
                          pref_range = pref_range,
