@@ -453,6 +453,21 @@ list(
   ),
 
   tar_target(
+    extrap_confidence_plot_present,
+    plot_confidence(cluster_env_assign_cluster_present,
+                           env_domain_plot,
+                           env_poly,
+                           marine_map,
+                           max_clust_prob_plot,
+                           env_id_col,
+                           spatial_vars,
+                           plot_description = "cluster_confidence",
+                           output_folder),
+    pattern = map(cluster_env_assign_cluster_present),
+    format = "file"
+  ),
+
+  tar_target(
       extrap_overlay_polygons_present,
       plot_polygon_overlay(
           extrap_polygons_present,

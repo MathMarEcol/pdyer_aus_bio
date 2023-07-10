@@ -375,3 +375,5 @@ is_targets_project <- rprojroot::root_criterion(function(path){
 
 plot_clust_labels <- FALSE
 output_folder <- file.path(rprojroot::find_root(is_targets_project), "..", "..", "outputs")
+
+max_clust_prob_plot <- 30
