@@ -63,7 +63,7 @@ apclust_opt_recurse <- function(sim_mat,
   ## Calculate Hubert's \Gamma statistic for each partition
     pref_parts <- seq(min(pref_range), max(pref_range), length.out = m)
   gamma_score <- do.call(rbind,
-                         lapply(pref_parts, function(pref, sim_mat, rec_depth, rec_data) {
+                         future.apply::future_lapply(pref_parts, function(pref, sim_mat, rec_depth, rec_data) {
                              if(pref %in% rec_data$pref) {
                                         #already calculated, reuse
                                  reuse_data <- rec_data[match(pref, rec_data$pref), ]
