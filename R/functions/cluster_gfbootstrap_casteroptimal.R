@@ -1,4 +1,4 @@
-cluster_gfbootstrap_caster <- function(
+cluster_gfbootstrap_casteroptimal <- function(
                                        clust_methods,
                                        gfbootstrap_predicted,
                                        env_domain,

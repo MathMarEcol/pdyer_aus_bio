@@ -348,7 +348,7 @@ clara_correct.d = TRUE
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
-clust_methods = c("caster", "apclust")
+clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefault")
 clust_m = 4
 min_gamma_tol = 0.005
 min_range_tol = 0.001

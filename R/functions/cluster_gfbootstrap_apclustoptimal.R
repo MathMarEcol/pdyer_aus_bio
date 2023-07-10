@@ -1,4 +1,4 @@
-cluster_gfbootstrap_apclust <- function(
+cluster_gfbootstrap_apclustoptimal <- function(
                                         clust_methods,
                                         gfbootstrap_predicted,
                                 env_domain,

@@ -21,7 +21,8 @@ assign_new_sites_to_cluster <- function(
     ## Here, we find the cluster that is most similar to each pred_sim_mat
 		clust_methods <- gfbootstrap_cluster$clust_method
     out <- switch(clust_methods,
-                  "caster" = {
+                  "casterdefault" =,
+                  "casteroptimal" = {
                       assign_new_sites_to_cluster_caster(
                           cluster_env_extrapolate,
                           gfbootstrap_cluster,
@@ -30,7 +31,8 @@ assign_new_sites_to_cluster <- function(
                           spatial_vars
                       )
                   },
-                  "apclust" = {
+                  "apclustdefault" =,
+                  "apclustoptimal" = {
                       assign_new_sites_to_cluster_apclust(
                           cluster_env_extrapolate,
                           gfbootstrap_cluster,

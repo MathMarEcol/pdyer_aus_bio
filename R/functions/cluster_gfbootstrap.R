@@ -24,8 +24,8 @@ cluster_gfbootstrap <- function(
   }
 
     out <- switch(clust_methods,
-           "caster" = {
-               cluster_gfbootstrap_caster(
+           "casteroptimal" = {
+               cluster_gfbootstrap_casteroptimal(
                    clust_methods,
                    gfbootstrap_predicted,
                    env_domain,
@@ -37,8 +37,26 @@ cluster_gfbootstrap <- function(
                    keep_all_clusts
                )
            },
-           "apclust" = {
-               cluster_gfbootstrap_apclust(
+           "casterdefault" = {
+               cluster_gfbootstrap_casterdefault(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars
+               )
+           },
+           "apclustdefault" = {
+               cluster_gfbootstrap_apclustdefault(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars
+               )
+           },
+           "apclustoptimal" = {
+               cluster_gfbootstrap_apclustoptimal(
                    clust_methods,
                    gfbootstrap_predicted,
                    env_domain,

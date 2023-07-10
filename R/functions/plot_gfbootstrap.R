@@ -201,7 +201,7 @@ plot_gfbootstrap <- function(
             survey == gfbootstrap_cluster$survey &
             trophic == gfbootstrap_cluster$trophic &
             env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
-        is_caster <- gfbootstrap_cluster$clust_method == "caster"
+        is_caster <- grepl("^caster", gfbootstrap_cluster$clust_method)
         aff_thres_local <- if(is_caster){
                                gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
                            } else {
