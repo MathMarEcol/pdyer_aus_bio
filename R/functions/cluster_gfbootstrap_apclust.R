@@ -118,8 +118,8 @@ apclust_opt_recurse <- function(sim_mat,
       new_range[1] <- min(new_range) - diff(pref_parts)[1] / 2
       new_range[2] <- max(new_range) + diff(pref_parts)[1] / 2
   }
-  #new_range[new_range < 0] <- 0
-  #new_range[new_range > 1] <- 1
+  new_range[new_range < 0] <- 0
+  new_range[new_range > 1] <- 1
     ## Check whether to keep narrowing, or return
     if(all(is.nan(gamma_score$gamma))){
         stop("cluster_gfbootstrap_apclust.R: All gamma scores were errors")
