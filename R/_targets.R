@@ -265,6 +265,21 @@ list(
   ),
 
   tar_target(
+    gfbootstrap_diagnostics,
+    gfbootstrap_diagnostic_stats(gfbootstrap_combined,
+                                 gfbootstrap_predicted),
+    pattern = map(gfbootstrap_combined, gfbootstrap_predicted)
+  ),
+  tar_target(
+      gfbootstrap_diagnostics_plots,
+      gfbootstrap_diagnostic_plots(gfbootstrap_combined,
+                                         gfbootstrap_diagnostics,
+                                         plot_description = "gf_diagnostics",
+                                         output_folder),
+      pattern = map(gfbootstrap_combined, gfbootstrap_diagnostics),
+      format = "file"
+  ),
+  tar_target(
     gf_survey,
     fit_gf(
       all_bio_env,
