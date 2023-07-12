@@ -1,5 +1,7 @@
 gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
-                                         gfbootstrap_predicted
+                                         gfbootstrap_predicted,
+                                         env_domain_cluster #
+
                                          ) {
   if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
     ## Upstream target decided survey was not usable.
@@ -24,6 +26,9 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       sd_spheq = list(NA),
       sd_spheq_mean = NA,
       sd_spheq_sd = NA,
+      extrap_score = list(NA),
+      extrap_score_mean = NA,
+      extrap_score_sd = NA,
       cumimp_magnitude = NA,
       cumimp_magnitude_sd = NA,
       mean_similarity = NA
@@ -40,7 +45,8 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
     apply(
       gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma,
       1, \(sigma){
-        prod(diag(sigma))^(1 / nrow(sigma))
+          ## Get nthroot(diag(sigma)
+          prod(diag(sigma))^(1 / nrow(sigma))
       }
     )
 
@@ -57,7 +63,59 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
   sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
   mean_similarity <- mean(sim_mat[upper.tri(sim_mat)])
 
-      ## Get nthroot(diag(sigma)
+
+
+  ## Get degree of extrapolation
+  ## A score of 1 indicates that all predictors at a site were extrapolated
+  ## A score of 0 indicates no predictors were extrapolated.
+  ## Extrapolated means the site is outside the range of samples seen during fitting.
+  env_dom <- env_domain_cluster[domain ==  gfbootstrap_combined$env_domain, data][[1]]
+  if (gfbootstrap_combined$depth_cat !=  "all" ) {
+			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
+  }
+    imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
+
+  if (sum(imp) == 0) {
+      ## GF bootstrap object is broken
+      return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+                        env_pred_stats = list(NA),
+                        env_id = list(NA),
+                        imp_preds = list(NA),
+                        sim_mat = list(NA)
+                        ))
+  }
+  if (pred_importance_top >= 1) {
+      imp_preds <- names(imp)[seq.int(1,min(length(imp), pred_importance_top))]
+  } else {
+      imp_explained <- cumsum(imp)/sum(imp)
+      ## Take all predictors below threshold, then one more
+      n_preds <- sum(imp_explained < pred_importance_top) + 1
+      imp_preds <- names(imp)[seq.int(1,n_preds)]
+  }
+  predicted <- predict(
+    object = gfbootstrap_combined$gfbootstrap[[1]],
+    newdata = env_dom[, ..env_biooracle_names],
+    ## Just take points, and calculate full coefficient matrix from points
+    type = c("points"),
+    extrap = NA,
+    avoid_copy  = TRUE
+  )
+  setDT(predicted)
+
+  ## Need to average over each gf object created by bootstrapping
+  ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
+  ## Also average over number of predictors
+  npreds <- length(imp_preds)
+  ## Important to know the number of sites
+  nsites <- nrow(env_dom)
+
+  extrap_score <- predicted[,
+    by = x_row,
+    list(extrap_score = sum(is.na(y))/(ngf*npreds))
+  ]
+
+  extrap_score_mean <- mean(extrap_score$extrap_score)
+  extrap_score_sd <- sd(extrap_score$extrap_score)
 
 
 
@@ -166,6 +224,9 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
         sd_spheq = list(sqrt(var_spheq)),
         sd_spheq_mean = mean(sqrt(var_spheq)),
         sd_spheq_sd = sd(sqrt(var_spheq)),
+        extrap_score = list(extrap_score),
+        extrap_score_mean = extrap_score_mean,
+        extrap_score_sd = extrap_score_sd,
         cumimp_magnitude = mean(cumimp_magnitude),
         cumimp_magnitude_sd = sd(cumimp_magnitude),
         mean_similarity = mean_similarity
