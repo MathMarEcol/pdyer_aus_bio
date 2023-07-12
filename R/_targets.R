@@ -267,7 +267,8 @@ list(
   tar_target(
     gfbootstrap_diagnostics,
     gfbootstrap_diagnostic_stats(gfbootstrap_combined,
-                                 gfbootstrap_predicted),
+                                 gfbootstrap_predicted,
+                                 env_domain_cluster),
     pattern = map(gfbootstrap_combined, gfbootstrap_predicted)
   ),
   tar_target(

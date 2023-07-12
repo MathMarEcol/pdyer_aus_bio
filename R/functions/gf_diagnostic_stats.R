@@ -1,7 +1,6 @@
 gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
                                          gfbootstrap_predicted,
                                          env_domain_cluster #
-
                                          ) {
   if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
     ## Upstream target decided survey was not usable.
