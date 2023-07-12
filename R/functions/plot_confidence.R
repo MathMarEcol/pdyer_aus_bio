@@ -36,7 +36,7 @@ plot_confidence <- function(cluster_env_assign_cluster,
 
     pl_file_base <- file.path(output_folder, paste0(survey_specs, collapse = "_"))
 
-    file_names <- character(length(unique(cluster_prob_long$clust)))
+    file_names <- character(min(length(unique(cluster_prob_long$clust)), max_clust_prob_plot))
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob_long$prob)
