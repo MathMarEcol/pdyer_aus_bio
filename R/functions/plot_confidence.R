@@ -36,7 +36,7 @@ plot_confidence <- function(cluster_env_assign_cluster,
 
     pl_file_base <- file.path(output_folder, paste0(survey_specs, collapse = "_"))
 
-    file_names <- character(seq.int(max(cluster_prob_long$clust)))
+    file_names <- character(length(unique(cluster_prob_long$clust)))
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob_long$prob)
@@ -54,14 +54,14 @@ plot_confidence <- function(cluster_env_assign_cluster,
 
             if (cluster_env_assign_cluster$env_domain != "aus_eez") {
                 pl_conf <- pl_conf + tmap::tm_shape(marine_map, bbox = env_bbox) +
-                                       tmap::tm_borders(lwd = 2)
+                                       tmap::tm_borders(lwd = 1)
             }
             pl_conf <- pl_conf + tmap::tm_shape(env_poly_local, bbox = env_bbox) +
-                tmap::tm_borders(lwd = 2)
+                tmap::tm_borders(lwd = 1)
 
-        pl_file <- paste0(c(pl_file_base, paste0(c("cl", cl), collapse = "_"), plot_description, ".png"), collapse = "_")
+        pl_file <- paste0(paste0(c(pl_file_base, paste0(c("cl", cl), collapse = ""), plot_description), collapse = "_"), ".png")
         file_names[cl] <- pl_file
-        tmap_save_wrapper(tm = pl_conf, filename = pl_file, scale = 0.1, dpi = 1200)
+        tmap_save_wrapper(tm = pl_conf, filename = pl_file, scale = 0.8, dpi = 1200)
         }
    return(file_names)
 }
