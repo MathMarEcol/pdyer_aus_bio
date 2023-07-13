@@ -1,12 +1,14 @@
 gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
                                          gfbootstrap_predicted,
-                                         env_domain_cluster #
+                                         env_domain_cluster,
+                                         pred_importance_top
+
                                          ) {
   if (all(is.na(gfbootstrap_predicted$imp_preds))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
       ##
-      fail <- data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+      fail <- data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       species_total = NA,
       species_mean = NA,
       species_mean_sd = NA,
@@ -95,7 +97,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
   if (sum(imp) == 0) {
       ## GF bootstrap object is broken
-      return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+      return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
                         env_pred_stats = list(NA),
                         env_id = list(NA),
                         imp_preds = list(NA),
@@ -118,7 +120,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
     extrap = NA,
     avoid_copy  = TRUE
   )
-  setDT(predicted)
+  data.table::setDT(predicted)
 
   ## Need to average over each gf object created by bootstrapping
   stats$ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
@@ -405,8 +407,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
   stats_dt <- data.table::setDT(stats)
 
-  ret <- data.table(stats_dt, gfbootstrap_combined[, .(env_domain, trophic, sur
-                                                           vey, depth_cat)])
+  ret <- data.table::data.table(stats_dt, gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)])
   data.table::setcolorder(ret, sort(names(ret)))
   return(ret)
 
