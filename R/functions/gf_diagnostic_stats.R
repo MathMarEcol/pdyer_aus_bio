@@ -2,17 +2,19 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
                                          gfbootstrap_predicted,
                                          env_domain_cluster #
                                          ) {
-  if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
+  if (all(is.na(gfbootstrap_predicted$imp_preds))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
-    ##
-    return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+      ##
+      fail <- data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
       species_total = NA,
       species_mean = NA,
       species_mean_sd = NA,
-      nsites_total = NA,
-      nsites_mean = NA,
-      nsites_sd = NA,
+      n_sample_sites_total = NA,
+      n_sample_sites_mean = NA,
+      n_sample_sites_sd = NA,
+      n_extrap_sites = NA,
+      spec_r2_total = NA,
       spec_r2_median = NA,
       spec_r2_mean = NA,
       spec_r2_sd = NA,
@@ -28,39 +30,56 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       extrap_score = list(NA),
       extrap_score_mean = NA,
       extrap_score_sd = NA,
-      cumimp_magnitude = NA,
+      cumimp_magnitude = list(NA),
+      cumimp_magnitude_mean = NA,
       cumimp_magnitude_sd = NA,
-      mean_similarity = NA
-    ))
+      mean_similarity = NA,
+      ngf = NA,
+      npreds = NA,
+      type = NA
+      )
+      data.table::setcolorder(fail, sort(names(fail)))
+    return(fail)
   }
 
   gf_list <- gfbootstrap_combined$gfbootstrap[[1]]$gf_list
 
+  stats <- list()
+
   ## Variance at each env site in "sph"erical "eq"uivalent
   ## Essentially a comparable measure that represents volume of the
   ## variance
-  var_spheq <-
+  stats$var_spheq <- list(
     ## Get variance matrix at each env site
     apply(
       gfbootstrap_predicted$env_pred_stats[[1]]$site_sigma,
       1, \(sigma){
-          ## Get nthroot(diag(sigma)
-          prod(diag(sigma))^(1 / nrow(sigma))
+        ## Get nthroot(diag(sigma)
+        prod(diag(sigma))^(1 / nrow(sigma))
       }
     )
+  )
+  stats$var_spheq_mean = mean(stats$var_spheq[[1]])
+  stats$var_spheq_sd = sd(stats$var_spheq[[1]])
+  stats$sd_spheq = list(sqrt(stats$var_spheq[[1]]))
+  stats$sd_spheq_mean = mean(sqrt(stats$var_spheq[[1]]))
+  stats$sd_spheq_sd = sd(sqrt(stats$var_spheq[[1]]))
+  mean_similarity = mean_similarity
 
   ## Position of a site in compositional turnover space
   ## is manhattan.
-  cumimp_magnitude <- apply(
-      gfbootstrap_predicted$env_pred_stats[[1]]$site_mean,
-      1, \(cumimp){
-          sum(cumimp)
-      }
-  )
+  stats$cumimp_magnitude <- list(apply(
+    gfbootstrap_predicted$env_pred_stats[[1]]$site_mean,
+    1, \(cumimp){
+      sum(cumimp)
+    }
+  ))
+  stats$cumimp_magnitude_mean = mean(stats$cumimp_magnitude[[1]])
+  stats$cumimp_magnitude_sd = sd(stats$cumimp_magnitude[[1]])
 
 
   sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
-  mean_similarity <- mean(sim_mat[upper.tri(sim_mat)])
+  stats$mean_similarity <- mean(sim_mat[upper.tri(sim_mat)])
 
 
 
@@ -102,136 +121,294 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
   setDT(predicted)
 
   ## Need to average over each gf object created by bootstrapping
-  ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
+  stats$ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
   ## Also average over number of predictors
-  npreds <- length(imp_preds)
+  stats$npreds <- length(imp_preds)
   ## Important to know the number of sites
-  nsites <- nrow(env_dom)
+  stats$n_extrap_sites <- nrow(env_dom)
 
-  extrap_score <- predicted[,
+  stats$extrap_score <- list(predicted[,
     by = x_row,
-    list(extrap_score = sum(is.na(y))/(ngf*npreds))
-  ]
+    list(extrap_score = sum(is.na(y)) / (stats$ngf * stats$npreds))
+  ][, extrap_score])
 
-  extrap_score_mean <- mean(extrap_score$extrap_score)
-  extrap_score_sd <- sd(extrap_score$extrap_score)
+  stats$extrap_score_mean <- mean(stats$extrap_score[[1]])
+  stats$extrap_score_sd <- sd(stats$extrap_score[[1]])
+
+  if (inherits(gf_list[[1]], "combinedGradientForest")) {
+      stats$type <- "combinedGradientForest"
+
+      ## Number of species
+      ## total of all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$species_total = mean(vapply(
+          gf_list, \(gf){
+              sum(gf$nspec)
+          },
+          numeric(1)
+      ))
 
 
+      ## mean of all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$species_mean = mean(vapply(
+          gf_list, \(gf){
+              mean(gf$nspec)
+          },
+          numeric(1)
+      ))
+
+      ## sd of species counts in
+      ## combinedGF
+      ## Average across bootstraps
+      stats$species_mean_sd = mean(vapply(
+          gf_list, \(gf){
+              sd(gf$nspec)
+          },
+          numeric(1)
+      ))
+
+      ## Number of sites
+      ## total of all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$n_sample_sites_total = mean(vapply(
+          gf_list, \(gf){
+              sum(vapply(
+                  gf$X, \(x){
+                      nrow(x)
+                  },
+                  numeric(1)
+              ))
+          },
+          numeric(1)
+      ))
+      ## mean number of sites across all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$n_sample_sites_mean = mean(vapply(
+          gf_list, \(gf){
+              mean(vapply(
+                  gf$X, \(x){
+                      nrow(x)
+                  },
+                  numeric(1)
+              ))
+          },
+          numeric(1)
+      ))
+            ## sd number of sites of all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$n_sample_sites_sd = mean(vapply(
+          gf_list, \(gf){
+              sd(vapply(
+                  gf$X, \(x){
+                      nrow(x)
+                  },
+                  numeric(1)
+              ))
+          },
+          numeric(1)
+      ))
+
+      ## Species R^2
+      ## total of all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$spec_r2_total = mean(vapply(
+        gf_list, \(gf){
+          sum(gf$rsq)
+        },
+        numeric(1)
+      ))
+      ## Species R^2 median across all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$spec_r2_median = mean(vapply(
+          gf_list, \(gf){
+              median(gf$rsq)
+          },
+          numeric(1)
+      ))
+      ## Species R^2 mean across all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$spec_r2_mean = mean(vapply(
+          gf_list, \(gf){
+              mean(gf$rsq)
+          },
+          numeric(1)
+      ))
+      ## Species R^2 sd across all surveys
+      ## in combinedGF
+      ## Average across bootstraps
+      stats$spec_r2_sd = mean(vapply(
+          gf_list, \(gf){
+              sd(gf$rsq) ## TODO
+          },
+          numeric(1)
+      ))
+      ## Survey R^2
+      ## Survey R^2 of combinedGF
+      ## Average across bootstraps
+      stats$survey_r2_mean = mean(vapply(
+          gf_list, \(gf){
+              sum(importance(gf))
+          },
+          numeric(1)
+      ))
+      ## Survey R^2
+      ## in combinedGF
+      ## sd across bootstraps
+      stats$survey_r2_sd = sd(vapply(
+          gf_list, \(gf){
+              sum(importance(gf))
+          },
+          numeric(1)
+      ))
+
+      ## Number of surveys
+      stats$nsurveys = mean(vapply(
+          gf_list, \(gf){
+              length(gf$X)
+          },
+          numeric(1)
+      ))
+
+  } else if (inherits(gf_list[[1]], "gradientForest")) {
+
+    stats$type <- "gradientForest"
+    ## Number of species
+    ## Single survey, here number of species
+    ## is just mean of bootstrapping selection
+    ## Average across bootstraps
+    stats$species_total <- mean(vapply(
+      gf_list, \(gf){
+        gf$species.pos.rsq
+      },
+      numeric(1)
+    ))
 
 
-      stats <- data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
-        ## Number of species
-        ## total of all surveys
-        species_total = mean(vapply(
-          gf_list, \(gf){
-            sum(gf$nspec)
-          },
-          numeric(1)
-        )),
-        ## mean of all surveys
-        species_mean = mean(vapply(
-          gf_list, \(gf){
-            mean(gf$nspec)
-          },
-          numeric(1)
-        )),
-        species_mean_sd = mean(vapply(
-          gf_list, \(gf){
-            sd(gf$nspec)
-          },
-          numeric(1)
-        )),
+    ## mean of all surveys
+    ## for single survey,
+    ## identical to species_total (n=1)
+    ## Average across bootstraps
+    stats$species_mean = mean(vapply(
+        gf_list, \(gf){
+            gf$species.pos.rsq
+        },
+        numeric(1)
+    ))
+    ## SD in species
+    ## Here SD of bootstrapping
+    stats$species_mean_sd = sd(vapply(
+        gf_list, \(gf){
+            gf$species.pos.rsq
+        },
+        numeric(1)
+    ))
 
-        ## Number of sites
-        nsites_total = mean(vapply(
+      ## Number of sites
+      ## for single survey,
+      ## identical to n_sample_sites_mean (n=1)
+      ## Average across bootstraps
+      stats$n_sample_sites_total = mean(vapply(
           gf_list, \(gf){
-            sum(vapply(
-              gf$X, \(x){
-                nrow(x)
-              },
-              numeric(1)
-            ))
+              nrow(gf$X)
           },
           numeric(1)
-        )),
-        nsites_mean = mean(vapply(
+      ))
+      ## mean number of sites across all surveys
+      ## for single survey,
+      ## identical to n_sample_sites_total (n=1)
+      ## Average across bootstraps
+      stats$n_sample_sites_mean = mean(vapply(
           gf_list, \(gf){
-            mean(vapply(
-              gf$X, \(x){
-                nrow(x)
-              },
-              numeric(1)
-            ))
+              nrow(gf$X)
           },
           numeric(1)
-        )),
-        nsites_sd = mean(vapply(
+      ))
+      ## sd number of sites of all surveys
+      ## sd across bootstraps, should be 0
+      stats$n_sample_sites_sd = sd(vapply(
           gf_list, \(gf){
-            sd(vapply(
-              gf$X, \(x){
-                nrow(x)
-              },
-              numeric(1)
-            ))
+              nrow(gf$X)
           },
           numeric(1)
-        )),
+      ))
 
-        ## Species R^2
-        spec_r2_median = mean(vapply(
+      ## Species R^2
+      ## total of all species in single survey
+      ## Average across bootstraps
+      stats$spec_r2_total = mean(vapply(
           gf_list, \(gf){
-            median(gf$rsq)
+              sum(gf$result)
           },
           numeric(1)
-        )),
-        spec_r2_mean = mean(vapply(
+      ))
+      ## Species R^2
+      ## median across all species in survey
+      ## Average across bootstraps
+      stats$spec_r2_median = mean(vapply(
           gf_list, \(gf){
-            mean(gf$rsq)
+              median(gf$result)
           },
           numeric(1)
-        )),
-        spec_r2_sd = mean(vapply(
+      ))
+      ## Species R^2
+      ## mean across all species in survey
+      ## Average across bootstraps
+      stats$spec_r2_mean = mean(vapply(
           gf_list, \(gf){
-            sd(gf$rsq)
+              mean(gf$result)
           },
           numeric(1)
-        )),
-        ## Survey R^2
-        survey_r2_mean = mean(vapply(
+      ))
+      ## Species R^2
+      ## sd across all species in survey
+      ## Average across bootstraps
+      stats$spec_r2_sd = mean(vapply(
           gf_list, \(gf){
-            sum(importance(gf))
+              sd(gf$result)
           },
           numeric(1)
-        )),
-        survey_r2_sd = sd(vapply(
+      ))
+      ## Survey R^2
+      ## Survey R^2 of survey
+      ## Average across bootstraps
+      stats$survey_r2_mean = mean(vapply(
           gf_list, \(gf){
-            sum(importance(gf))
+              sum(importance(gf))
           },
           numeric(1)
-        )),
+      ))
+      ## Survey R^2
+      ## sd across bootstraps
+      stats$survey_r2_sd = sd(vapply(
+          gf_list, \(gf){
+              sum(importance(gf))
+          },
+          numeric(1)
+      ))
 
-        ## Number of surveys
-        nsurveys = mean(vapply(
-          gf_list, \(gf){
-            length(gf$X)
-          },
-          numeric(1)
-        )),
-        var_spheq = list(var_spheq),
-        var_spheq_mean = mean(var_spheq),
-        var_spheq_sd = sd(var_spheq),
-        sd_spheq = list(sqrt(var_spheq)),
-        sd_spheq_mean = mean(sqrt(var_spheq)),
-        sd_spheq_sd = sd(sqrt(var_spheq)),
-        extrap_score = list(extrap_score),
-        extrap_score_mean = extrap_score_mean,
-        extrap_score_sd = extrap_score_sd,
-        cumimp_magnitude = mean(cumimp_magnitude),
-        cumimp_magnitude_sd = sd(cumimp_magnitude),
-        mean_similarity = mean_similarity
-        )
+      ## Number of surveys
+      stats$nsurveys = 1
 
-  return(stats)
+  } else {
+      stop("Unknown GF type in gf_diagnostic_stats.R")
+  }
+
+
+  stats_dt <- data.table::setDT(stats)
+
+  ret <- data.table(stats_dt, gfbootstrap_combined[, .(env_domain, trophic, sur
+                                                           vey, depth_cat)])
+  data.table::setcolorder(ret, sort(names(ret)))
+  return(ret)
 
 }
 
