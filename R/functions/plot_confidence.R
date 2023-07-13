@@ -17,6 +17,16 @@ plot_confidence <- function(cluster_env_assign_cluster,
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
+    pl_file_base <- file.path(output_folder, paste0(survey_specs, collapse = "_"))
+
+    if (all(is.na(cluster_env_assign_cluster$clust_ind))) {
+        no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
+          ggplot2::geom_point() +
+          ggplot2::ggtitle(paste0(paste0(c(survey_specs, plot_description), collapse = "_"),  " has not successfully clustered"))
+        file_names <- paste0(pl_file_base, "_", plot_description, ".png")
+        ggsave_wrapper(filename = file_names, plot = no_plot)
+        return(file_names)
+    }
 
     cluster_prob <- data.table::rbindlist(lapply(seq_along(cluster_env_assign_cluster$pred_membership),
                                      function(i, cluster_env_assign_cluster){
@@ -34,9 +44,8 @@ plot_confidence <- function(cluster_env_assign_cluster,
     cluster_prob_long[env_domain_plot[domain == cluster_env_assign_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
               c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
 
-    pl_file_base <- file.path(output_folder, paste0(survey_specs, collapse = "_"))
-
     file_names <- character(min(length(unique(cluster_prob_long$clust)), max_clust_prob_plot))
+
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob_long$prob)
