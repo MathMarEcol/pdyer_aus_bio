@@ -27,6 +27,8 @@ plot_confidence <- function(cluster_env_assign_cluster,
         ggsave_wrapper(filename = file_names, plot = no_plot)
         return(file_names)
     }
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
 
     cluster_prob <- data.table::rbindlist(lapply(seq_along(cluster_env_assign_cluster$pred_membership),
                                      function(i, cluster_env_assign_cluster){
@@ -72,5 +74,6 @@ plot_confidence <- function(cluster_env_assign_cluster,
         file_names[cl] <- pl_file
         tmap_save_wrapper(tm = pl_conf, filename = pl_file, scale = 0.8, dpi = 1200)
         }
-   return(file_names)
+    sf::sf_use_s2(s2_used)
+    return(file_names)
 }

@@ -4,8 +4,6 @@ plot_gfbootstrap_coverage <- function(
                                       plot_description,
                                         output_folder
                                       ) {
-    s2_used <- sf::sf_use_s2()
-    sf::sf_use_s2(FALSE)
 
     survey_specs <- gfbootstrap_polygons[,
                                                  c("env_domain",
@@ -29,6 +27,8 @@ plot_gfbootstrap_coverage <- function(
     ggsave_wrapper(filename = pl_file, plot = no_plot)
     return(pl_file)
   }
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
 
   ### Calculate overlap
   clust_poly_sf <- gfbootstrap_polygons$polygons[[1]]

@@ -12,8 +12,6 @@ plot_gfbootstrap_mpa <- function(
                             output_folder
                             ) {
 
-        s2_used <- sf::sf_use_s2()
-    sf::sf_use_s2(FALSE)
 
     survey_specs <- gfbootstrap_cluster[,
                                         c("env_domain",
@@ -37,6 +35,8 @@ plot_gfbootstrap_mpa <- function(
         return(pl_file)
     }
 
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
     k <- gfbootstrap_cluster$clust[[1]]$k[gfbootstrap_cluster$best_clust]
     imp_preds <- gfbootstrap_predicted$imp_preds[[1]]
     pred_string <- paste(
