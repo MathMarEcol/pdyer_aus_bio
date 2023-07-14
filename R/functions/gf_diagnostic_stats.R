@@ -570,7 +570,10 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
                                 plot_description,
                                 pl_type
                                 ) {
-  imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
+
+    imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
   if (pred_importance_top >= 1) {
     imp_preds <- names(imp)[seq.int(1, min(length(imp), pred_importance_top))]
   } else {
@@ -653,5 +656,6 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
 
   pl_file <- paste0(paste0(c(pl_file_base, paste0("extrap", pl_type), plot_description), collapse = "_"), ".png")
   tmap_save_wrapper(tm = pl_extrap, filename = pl_file, scale = 0.8, dpi = 1200)
+    sf::sf_use_s2(s2_used)
   return(pl_file)
 }
