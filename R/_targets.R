@@ -269,6 +269,7 @@ list(
     gfbootstrap_diagnostic_stats(gfbootstrap_combined,
                                  gfbootstrap_predicted,
                                  env_domain_cluster,
+                                 gfbootstrap_cluster,
                                  pred_importance_top),
     pattern = map(gfbootstrap_combined, gfbootstrap_predicted)
   ),

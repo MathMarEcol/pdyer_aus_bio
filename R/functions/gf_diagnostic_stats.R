@@ -1,6 +1,7 @@
 gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
                                          gfbootstrap_predicted,
                                          env_domain_cluster,
+                                         gfbootstrap_cluster,
                                          pred_importance_top
 
                                          ) {
@@ -38,7 +39,15 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       mean_similarity = NA,
       ngf = NA,
       npreds = NA,
-      type = NA
+      type = NA,
+      clust_count = list(NA),
+      clust_count_mean = NA,
+      clust_count_sd = NA,
+      clust_count_best = NA,
+      clust_score = list(NA),
+      clust_score_mean = NA,
+      clust_score_sd = NA,
+      clust_score_best = NA
       )
       data.table::setcolorder(fail, sort(names(fail)))
     return(fail)
@@ -46,7 +55,46 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
   gf_list <- gfbootstrap_combined$gfbootstrap[[1]]$gf_list
 
+
+
   stats <- list()
+
+  ## Get cluster counts
+  clusterings <- gfbootstrap_cluster[gfbootstrap_predicted,
+                                     on = .NATURAL]
+  ## There should always be some matching rows,
+  ## even if the clustering failed for some reason.
+  stopifnot(nrow(clusterings) > 0)
+
+  stats$clust_count <- list(vapply(
+    clusterings$clust,
+    \(x){
+      x$k
+    }, integer(1)
+  ))
+  names(stats$clust_count[[1]]) <- clusterings$clust_method
+
+
+  stats$clust_count_mean <- mean(stats$clust_count[[1]])
+
+  stats$clust_count_sd <- sd(stats$clust_count[[1]])
+
+
+  stats$clust_score <- list(vapply(
+    clusterings$clust,
+    \(x){
+      x$gamma
+    }, numeric(1)
+  ))
+  names(stats$clust_score[[1]]) <- clusterings$clust_method
+
+  stats$clust_score_mean <- mean(stats$clust_score[[1]])
+
+  stats$clust_score_sd <- sd(stats$clust_score[[1]])
+
+  stats$clust_score_best <- max(stats$clust_score[[1]])
+
+  stats$clust_count_best <- stats$clust_count[[1]][which.max(stats$clust_score[[1]])]
 
   ## Variance at each env site in "sph"erical "eq"uivalent
   ## Essentially a comparable measure that represents volume of the
@@ -66,7 +114,6 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
   stats$sd_spheq = list(sqrt(stats$var_spheq[[1]]))
   stats$sd_spheq_mean = mean(sqrt(stats$var_spheq[[1]]))
   stats$sd_spheq_sd = sd(sqrt(stats$var_spheq[[1]]))
-  mean_similarity = mean_similarity
 
   ## Position of a site in compositional turnover space
   ## is manhattan.
