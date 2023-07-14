@@ -276,8 +276,14 @@ list(
   tar_target(
       gfbootstrap_diagnostics_plots,
       gfbootstrap_diagnostic_plots(gfbootstrap_combined,
-                                         gfbootstrap_diagnostics,
-                                         plot_description = "gf_diagnostics",
+                                   gfbootstrap_diagnostics,
+                                   env_domain_plot,
+                                   env_domain_cluster,
+                                   env_poly,
+                                   marine_map,
+                                   env_id_col,
+                                   env_biooracle_names,
+                                         plot_description = "gfdiagnostics",
                                          output_folder),
       pattern = map(gfbootstrap_combined, gfbootstrap_diagnostics),
       format = "file"

@@ -2,6 +2,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
                                          gfbootstrap_predicted,
                                          env_domain_cluster,
                                          gfbootstrap_cluster,
+                                         env_biooracle_names,
                                          pred_importance_top
 
                                          ) {
@@ -467,6 +468,12 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
 gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                                          gfbootstrap_diagnostics,
+                                         env_domain_plot,
+                                         env_domain_cluster,
+                                         env_poly,
+                                         marine_map,
+                                         env_id_col,
+                                         env_biooracle_names,
                                          plot_description,
                                          output_folder) {
   survey_specs <- gfbootstrap_combined[
@@ -505,5 +512,138 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
     ggsave_wrapper(filename = file_names, plot = no_plot)
+    return(file_names)
   }
+
+  ##
+
+  ## Plot extrapolation scores
+  ## At clustering resolution and plotting resolutionx
+
+  file_names <- c(
+    file_names,
+    gf_diag_plot_helper(gfbootstrap_combined,
+                                gfbootstrap_diagnostics,
+                                env_domain_cluster,
+                                env_poly,
+                        marine_map,
+                        env_id_col,
+                        env_biooracle_names,
+                        pl_type = "clustering"
+                        )
+  )
+
+  file_names <- c(
+      file_names,
+    gf_diag_plot_helper(gfbootstrap_combined,
+                        gfbootstrap_diagnostics,
+                        env_domain_plot,
+                        env_poly,
+                        marine_map,
+                        env_id_col,
+                        env_biooracle_names,
+                        pl_type = "plotting"
+                        )
+  )
+
+  return(file_names)
+
+}
+
+
+gf_diag_plot_helper <- function(gfbootstrap_combined,
+                                gfbootstrap_diagnostics,
+                                env_domain,
+                                env_poly,
+                                marine_map,
+                                env_id_col,
+                                env_biooracle_names,
+                                pl_type
+                                ) {
+  imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
+  if (pred_importance_top >= 1) {
+    imp_preds <- names(imp)[seq.int(1, min(length(imp), pred_importance_top))]
+  } else {
+    imp_explained <- cumsum(imp) / sum(imp)
+    ## Take all predictors below threshold, then one more
+    n_preds <- sum(imp_explained < pred_importance_top) + 1
+    imp_preds <- names(imp)[seq.int(1, n_preds)]
+  }
+
+
+  env_dom <- env_domain[domain == gfbootstrap_combined$env_domain, data][[1]]
+
+  if (gfbootstrap_combined$depth_cat != "all") {
+    env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
+  }
+
+
+  ## Predict if we are not in the clustering env domain
+  if (nrow(env_dom) == length(gfbootstrap_diagnostics$extrap_score[[1]])) {
+    cluster_res_data <- data.table::data.table(
+      extrap_score = gfbootstrap_diagnostics[, extrap_score][[1]],
+      env_dom[, ..env_id_col]
+    )
+  } else {
+    predicted <- predict(
+      object = gfbootstrap_combined$gfbootstrap[[1]],
+      newdata = env_dom[, ..env_biooracle_names],
+      ## Just take points, and calculate full coefficient matrix from points
+      type = c("points"),
+      extrap = NA,
+      avoid_copy = TRUE
+    )
+    data.table::setDT(predicted)
+    ## Need to average over each gf object created by bootstrapping
+    ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
+    ## Also average over number of predictors
+    npreds <- length(imp_preds)
+    ## Important to know the number of sites
+    n_extrap_sites <- nrow(env_dom)
+
+    extrap_score <- predicted[,
+      by = x_row,
+      list(extrap_score = sum(is.na(y)) / (ngf * npreds))
+    ][, extrap_score]
+
+    cluster_res_data <- data.table::data.table(
+                                        extrap_score = extrap_score,
+                                        env_dom[, ..env_id_col]
+                                    )
+
+  }
+
+
+  cluster_res_data[env_domain[domain == gfbootstrap_diagnostics$env_domain[[1]], data][[1]],
+    on = c(env_id_col),
+    c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
+  ]
+
+  plot_cols <- c(spatial_vars, "extrap_score")
+
+  clust_raster <- terra::rast(
+    x = as.matrix(cluster_res_data[, ..plot_cols]),
+    type = "xyz",
+    crs = "+proj=longlat +datum=WGS84"
+  )
+
+  env_poly_local <- env_poly[name == gfbootstrap_diagnostics$env_domain[[1]], data][[1]]
+
+  env_bbox <- sf::st_bbox(env_poly_local,
+    crs = "+proj=longlat +datum=WGS84"
+  )
+
+  pl_extrap <- tmap::tm_shape(clust_raster, bbox = env_bbox) +
+    tmap::tm_raster("extrap_score", palette = "seq", style = "cont", breaks = c(0, 1))
+
+  if (gfbootstrap_diagnostics$env_domain != "aus_eez") {
+    pl_extrap <- pl_extrap + tmap::tm_shape(marine_map, bbox = env_bbox) +
+      tmap::tm_borders(lwd = 1)
+  }
+  pl_extrap <- pl_extrap + tmap::tm_shape(env_poly_local, bbox = env_bbox) +
+    tmap::tm_borders(lwd = 1)
+
+  pl_file <- paste0(paste0(c(pl_file_base, paste0("extrap", pl_type), plot_description), collapse = "_"), ".png")
+  tmap_save_wrapper(tm = pl_extrap, filename = pl_file, scale = 0.8, dpi = 1200)
+  return(pl_file)
 }
