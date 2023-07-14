@@ -270,6 +270,7 @@ list(
                                  gfbootstrap_predicted,
                                  env_domain_cluster,
                                  gfbootstrap_cluster,
+                                 env_biooracle_names,
                                  pred_importance_top),
     pattern = map(gfbootstrap_combined, gfbootstrap_predicted)
   ),
