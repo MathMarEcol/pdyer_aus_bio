@@ -474,6 +474,7 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                                          marine_map,
                                          env_id_col,
                                          env_biooracle_names,
+                                         pred_importance_top,
                                          plot_description,
                                          output_folder) {
   survey_specs <- gfbootstrap_combined[
@@ -529,6 +530,9 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                         marine_map,
                         env_id_col,
                         env_biooracle_names,
+                        pred_importance_top,
+                        pl_file_base,
+                        plot_description,
                         pl_type = "clustering"
                         )
   )
@@ -542,6 +546,9 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                         marine_map,
                         env_id_col,
                         env_biooracle_names,
+                        pred_importance_top,
+                        pl_file_base,
+                        plot_description,
                         pl_type = "plotting"
                         )
   )
@@ -558,6 +565,9 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
                                 marine_map,
                                 env_id_col,
                                 env_biooracle_names,
+                                pred_importance_top,
+                                pl_file_base,
+                                plot_description,
                                 pl_type
                                 ) {
   imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
@@ -598,8 +608,6 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
     ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
     ## Also average over number of predictors
     npreds <- length(imp_preds)
-    ## Important to know the number of sites
-    n_extrap_sites <- nrow(env_dom)
 
     extrap_score <- predicted[,
       by = x_row,

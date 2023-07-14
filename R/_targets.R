@@ -283,7 +283,8 @@ list(
                                    marine_map,
                                    env_id_col,
                                    env_biooracle_names,
-                                         plot_description = "gfdiagnostics",
+                                   pred_importance_top,
+                                   plot_description = "gfdiagnostics",
                                          output_folder),
       pattern = map(gfbootstrap_combined, gfbootstrap_diagnostics),
       format = "file"
