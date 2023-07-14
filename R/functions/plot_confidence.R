@@ -38,22 +38,24 @@ plot_confidence <- function(cluster_env_assign_cluster,
                                          out[, c(env_id_col) := cluster_env_assign_cluster$pred_membership[[1]]$max[[i]][[env_id_col]]]
 
                                      }, cluster_env_assign_cluster = cluster_env_assign_cluster))
-    cluster_prob_long <- data.table::melt(cluster_prob, id.vars = env_id_col, value.name = "prob", variable.name = "clust")
 
-    ## Preserves cluster membership, may lose cluster id
-    cluster_prob_long[, clust := as.integer(clust)]
-
-    cluster_prob_long[env_domain_plot[domain == cluster_env_assign_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
-              c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
-
-    file_names <- character(min(length(unique(cluster_prob_long$clust)), max_clust_prob_plot))
+    file_names <- character(min(sum(grepl("prob_cl.", names(cluster_prob))), max_clust_prob_plot))
 
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob_long$prob)
     for (cl in seq.int(length(file_names))) {
+        clust_col <- paste0("prob_cl.", cl)
+        cluster_prob_long <- data.table::melt(cluster_prob, id.vars = env_id_col, value.name = "prob", variable.name = "clust", measure.vars = c(clust_col))
+
+        ## Preserves cluster membership, may lose cluster id
+        cluster_prob_long[, clust := NULL]
+
+        cluster_prob_long[env_domain_plot[domain == cluster_env_assign_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
+                          c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
+
         clust_raster <- terra::rast(
-            x = as.matrix(cluster_prob_long[clust == cl, ..plot_cols]),
+            x = as.matrix(cluster_prob_long[, ..plot_cols]),
             type = "xyz",
             crs = "+proj=longlat +datum=WGS84")
 
