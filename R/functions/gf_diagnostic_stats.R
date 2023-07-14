@@ -598,29 +598,56 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
       env_dom[, ..env_id_col]
     )
   } else {
-    predicted <- predict(
-      object = gfbootstrap_combined$gfbootstrap[[1]],
-      newdata = env_dom[, ..env_biooracle_names],
-      ## Just take points, and calculate full coefficient matrix from points
-      type = c("points"),
-      extrap = NA,
-      avoid_copy = TRUE
-    )
-    data.table::setDT(predicted)
-    ## Need to average over each gf object created by bootstrapping
-    ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-    ## Also average over number of predictors
-    npreds <- length(imp_preds)
+    ## Batch to avoid memory explosion
+      mem_max <- as.numeric(Sys.getenv("TENSOR_CPU_MEM_MAX", ""))/10
+      n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
+      n_preds_raw <- length(env_biooracle_names)
+      size_doubles <- 8
+      size_int <- 4
+      pred_obj_size <- n_gf * n_preds_raw * (
+          size_doubles * 3 +
+          size_int * 2
+      )
+      mem_per_site <-  pred_obj_size *
+    ## generate pred
+        (2 +
+         ## setkey and pred stats
+         1)
+      env_dom_batch <- data.table::as.data.table(prepare_batch(mem_max,
+        nrow(env_dom),
+        2e9,
+        mem_per_site,
+        max_batch_size = NA
+      ))
 
-    extrap_score <- predicted[,
-      by = x_row,
-      list(extrap_score = sum(is.na(y)) / (ngf * npreds))
-    ][, extrap_score]
+      extrap_score <- env_dom_batch[,
+                                    by = batch_ind,
+                                    {
+                                      predicted <- predict(
+                                        object = gfbootstrap_combined$gfbootstrap[[1]],
+                                        newdata = env_dom[.SD$site, env_biooracle_names, with = FALSE],
+                                        ## Just take points, and calculate full coefficient matrix from points
+                                        type = c("points"),
+                                        extrap = NA,
+                                        avoid_copy = TRUE
+                                      )
+                                      data.table::setDT(predicted)
+                                      ## Need to average over each gf object created by bootstrapping
+                                      ngf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
+                                      ## Also average over number of predictors
+                                      npreds <- length(imp_preds)
 
-    cluster_res_data <- data.table::data.table(
-                                        extrap_score = extrap_score,
-                                        env_dom[, ..env_id_col]
-                                    )
+                                      list(extrap_score = predicted[,
+                                        by = x_row,
+                                        list(extrap_score = sum(is.na(y)) / (ngf * npreds))
+                                      ][, extrap_score])
+                                    }
+                                    ]
+
+      cluster_res_data <- data.table::data.table(
+                                          extrap_score = extrap_score[, extrap_score],
+                                          env_dom[, ..env_id_col]
+                                      )
 
   }
 
