@@ -30,7 +30,7 @@ plot_confidence <- function(cluster_env_assign_cluster,
     s2_used <- sf::sf_use_s2()
     sf::sf_use_s2(FALSE)
 
-    cluster_prob <- data.table::rbindlist(lapply(seq_along(cluster_env_assign_cluster$pred_membership),
+    cluster_prob <- data.table::rbindlist(lapply(seq_along(cluster_env_assign_cluster$pred_membership[[1]]$max),
                                      function(i, cluster_env_assign_cluster){
                                          out <- data.table::data.table(
                                            prob_cl = cluster_env_assign_cluster$pred_membership[[1]]$prob_cl[[i]]
