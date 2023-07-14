@@ -44,8 +44,9 @@ plot_confidence <- function(cluster_env_assign_cluster,
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob[, -..env_id_col])
+    col_name_base <- if (grepl("prob_cl.V", names(cluster_prob)[1])) "prob_cl.V" else "prob_cl."
     for (cl in seq.int(length(file_names))) {
-        clust_col <- paste0("prob_cl.V", cl)
+        clust_col <- paste0(col_name_base, cl)
         cluster_prob_long <- data.table::melt(cluster_prob, id.vars = env_id_col, value.name = "prob", variable.name = "clust", measure.vars = clust_col)
 
         ## Preserves cluster membership, may lose cluster id
