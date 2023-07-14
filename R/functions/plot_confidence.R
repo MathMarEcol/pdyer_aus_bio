@@ -51,7 +51,7 @@ plot_confidence <- function(cluster_env_assign_cluster,
     env_poly_local <- env_poly[name == cluster_env_assign_cluster$env_domain[[1]], data][[1]]
     plot_cols <- c(spatial_vars, "prob")
     max_prob <- max(cluster_prob_long$prob)
-    for (cl in unique(cluster_prob_long$clust)[seq.int(max_clust_prob_plot)]) {
+    for (cl in seq.int(length(file_names))) {
         clust_raster <- terra::rast(
             x = as.matrix(cluster_prob_long[clust == cl, ..plot_cols]),
             type = "xyz",
