@@ -505,7 +505,7 @@ list(
       pattern = map(env_poly),
       format = "file"
   ),
-  tar_targets(
+  tar_target(
     indicator_species,
     find_indicator_species(
         extrap_polygons_present,
