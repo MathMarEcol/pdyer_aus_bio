@@ -69,7 +69,7 @@ find_indicator_species <- function(
   site_sp_wide[site_sp_wide < 0] <- 0
 
   site_sp_wide <- site_sp_wide[keep_rows, ]
-
+  site_sp_wide <- site_sp_wide[samp_id %in% bio_clustering$samp_id]
   clust_to_samp <- data.table::as.data.table(bio_clustering[, c("samp_id", "clustering")])
   clust_to_samp[, geometry := NULL]
   setkey(clust_to_samp, samp_id)
