@@ -47,12 +47,12 @@ find_indicator_species <- function(
   bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons_present$polygons[[1]])
 
   ## Plot to demonstrate alignment of clusters and samples
-  env_bbox <- sf::st_bbox(extrap_polygons_present$polygons[[1]])
+  ## env_bbox <- sf::st_bbox(extrap_polygons_present$polygons[[1]])
 
-  tmap::tm_shape(extrap_polygons_present$polygons[[1]], bbox = env_bbox) +
-    tmap::tm_polygons(col = "clustering", style = "cont") +
-    tmap::tm_shape(bio_clustering) +
-    tmap::tm_symbols(col = "clustering", style = "cont", border.col = "green")
+  ## tmap::tm_shape(extrap_polygons_present$polygons[[1]], bbox = env_bbox) +
+  ##   tmap::tm_polygons(col = "clustering", style = "cont") +
+  ##   tmap::tm_shape(bio_clustering) +
+  ##   tmap::tm_symbols(col = "clustering", style = "cont", border.col = "green")
 
   ## Apply indicspecies
 
