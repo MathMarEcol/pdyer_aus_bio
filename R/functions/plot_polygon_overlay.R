@@ -41,6 +41,8 @@ plot_polygon_overlay <- function(
                                   env_domain = env_domain_levels,
                                   sorted = FALSE)
 
+    s2_used <- sf::sf_use_s2()
+    sf::sf_use_s2(FALSE)
 
 
     ## For each row in poly_groups, get the subset of
@@ -60,7 +62,8 @@ plot_polygon_overlay <- function(
                              save_polys_overlays(polys, env_poly, poly_name)
                              return(poly_name$file_out)
                            } else {
-                             return(NA)
+                               sf::sf_use_s2(s2_used)
+                               return(NA)
                            }
                        }, poly_groups = poly_groups,
                            extrap_polygons = extrap_polygons,
@@ -68,6 +71,7 @@ plot_polygon_overlay <- function(
                        output_folder = output_folder,
                        plot_description = plot_description)
     plot_files <- plot_files[!is.na(plot_files)]
+    sf::sf_use_s2(s2_used)
 
     return(plot_files)
 }
