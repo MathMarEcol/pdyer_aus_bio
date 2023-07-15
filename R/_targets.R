@@ -59,6 +59,7 @@ tar_option_set(
     "lutz", # needed for loading phy and zoo
     "lubridate", # needed for loading phy and zoo
     "rfishbase",
+    "indicspecies",
 		"float",
 		"torch"
   ),
@@ -503,7 +504,17 @@ list(
       ),
       pattern = map(env_poly),
       format = "file"
-  )
+  ),
+  tar_targets(
+    indicator_species,
+    find_indicator_species(
+        extrap_polygons_present,
+        all_bio_long,
+        spatial_vars
+    ),
+    pattern =
+        cross(all_bio_long, extrap_polygons_present)
+    )
 
   ## tar_target(
   ##   gfbootstrap_coverage,
