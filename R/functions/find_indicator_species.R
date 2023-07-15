@@ -14,7 +14,7 @@ find_indicator_species <- function(
     all_bio_long$depth_cat == extrap_polygons_present$depth_cat
 
 
-  if(all(is.na(extrap_polygons_present)) ||
+  if(all(is.na(extrap_polygons_present$polygons[[1]])) ||
        all(is.na(all_bio_long$samps))) {
          return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
                                                                matched = matched,
