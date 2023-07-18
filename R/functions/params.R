@@ -374,7 +374,7 @@ surveys_for_cluster_compare <- list()
 
 surveys_for_cluster_compare$all <- list(
     descriptions = data.table::data.table(
-      compare_group = "universal",
+      compare_group = "universal"
       ),
     matches = data.table::CJ(
                               ## Simplest way to match all rows
