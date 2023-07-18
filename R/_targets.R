@@ -35,6 +35,7 @@ tar_option_set(
     "gradientForest",
     "castcluster",
     "apcluster",
+    "planktonr",
     "qs",
     "sf",
     "terra",

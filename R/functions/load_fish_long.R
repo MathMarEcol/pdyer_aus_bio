@@ -80,6 +80,10 @@ fish_taxon_depth <-
     fish_taxon_sp[description_to_survey,
                   trophic := trophic,
                   on = "Descript"]
+    fish_taxon_sp[is.na(DepthRangeShallow), "DepthRangeShallow" := -Inf]
+    fish_taxon_sp[is.na(DepthRangeDeep), "DepthRangeDeep" := -Inf]
+
+
 
   fish_taxon_sp[, which(
       !(colnames(fish_taxon_sp) %in%
@@ -95,26 +99,46 @@ fish_taxon_depth <-
   ## keep species that have depth info
   fish_taxon_sp <- fish_taxon_sp[is.finite(DepthRangeShallow), ]
 
-  for (d in depth_names) {
-    fish_taxon_sp[, c(d) := (max(depth_range[[d]]) >= DepthRangeShallow) &
-                    (min(depth_range[[d]]) <= DepthRangeDeep)
-                ]
-    }
+  fish_taxon_sp[,
+                c("depth_cat") :=
+                     .({
+                         in_depth <- sapply(depth_range,
+                                            \(x, depth){
+                                                depth >= min(x) & depth < max(x)
+                                            },
+                                            depth = DepthRangeShallow
+                                            )
+                         depth_out <- depth_names[apply(in_depth, 1, \(x){
+                             min(which(x))
+                         })]
+                     })
+                 ]
+
+    fish_taxon_sp[, `:=`(
+      DepthRangeShallow = NULL,
+      DepthRangeDeep = NULL
+    )]
+
+  ## for (d in depth_names) {
+  ##   fish_taxon_sp[, c(d) := (max(depth_range[[d]]) >= DepthRangeShallow) &
+  ##                   (min(depth_range[[d]]) <= DepthRangeDeep)
+  ##               ]
+  ##   }
 
   ## convert is.<depth> to long form
-  fish_taxon_sp_depth <- data.table::melt(fish_taxon_sp,
-                                       measure.vars =  depth_names,
-                                       variable.name = "depth_cat",
-                                       value.name = "depth_keep"
-                                      )[depth_keep == TRUE]
-  data.table::setkey(fish_taxon_sp_depth, "TaxonKey")
-  fish_taxon_sp_depth[, which(
-      !(colnames(fish_taxon_sp_depth) %in%
-        c("TaxonKey", "TaxonName",
-          "depth_cat", "trophic")
-      )
-  ) := NULL]
-  fish_taxon_sp_depth[, depth := sapply(depth_cat, function(x){depth_range[[x]][1]})]
+  ## fish_taxon_sp_depth <- data.table::melt(fish_taxon_sp,
+  ##                                      measure.vars =  depth_names,
+  ##                                      variable.name = "depth_cat",
+  ##                                      value.name = "depth_keep"
+  ##                                     )[depth_keep == TRUE]
+  ## data.table::setkey(fish_taxon_sp_depth, "TaxonKey")
+  ## fish_taxon_sp_depth[, which(
+  ##     !(colnames(fish_taxon_sp_depth) %in%
+  ##       c("TaxonKey", "TaxonName",
+  ##         "depth_cat", "trophic")
+  ##     )
+  ## ) := NULL]
+  ## fish_taxon_sp_depth[, depth := sapply(depth_cat, function(x){depth_range[[x]][1]})]
 
 ## have the taxon keys, but not spatial vars or abundances
   ## Local function with closure over fish_data_dir
@@ -134,7 +158,7 @@ fish_taxon_depth <-
   rm(fish_catch)
   data.table::setkey(fish_catch_mean, "TaxonKey")
 
- fish_long <- fish_taxon_sp_depth[fish_catch_mean,
+ fish_long <- fish_taxon_sp[fish_catch_mean,
                      allow.cartesian=TRUE, nomatch = NULL, on = "TaxonKey"]
   rm(fish_catch_mean)
   fish_long[, `:=`(
@@ -189,7 +213,8 @@ fish_taxon_depth <-
                           sites <- data.table::copy(bathy_sites[[.BY$depth_cat]])
                           sites[, depth := depth_range[[.BY$depth_cat]][1]]
                           obs[sites, site_id := i.site_id, on = c(spatial_vars)]
-                          obs[, c(spatial_vars, "depth") := NULL]
+                          obs[, c(spatial_vars) := NULL]
+                          obs <- obs[!is.na(obs$site_id), ]
 
                         taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
                         taxa[ , taxon_id := seq.int(1, nrow(taxa))]

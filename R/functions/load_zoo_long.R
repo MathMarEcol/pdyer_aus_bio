@@ -19,73 +19,305 @@ load_zoo_long <- function(
                           depth_names,
                           depth_range
                           ) {
-  source(zoo_load_script)
-  zoo_raw <- load_zoo_data(zoo_data_dir)
-  setDT(zoo_raw)
-  for (surv in zoo_names) {
-    zoo_raw[ProjectNumber %in% zoo_matching[[surv]],
-            survey := surv]
-  }
-  zoo_raw <- zoo_raw[survey %in% zoo_names,]
-  new_names <- tibble::tribble(
-                       ~old, ~new,
-                       "Longitude", spatial_vars[1],
-                       "Latitude",spatial_vars[2],
-                       "Species", "taxon",
-                       "ZAbund_m3", "abund"
-                       )
-  setnames(zoo_raw,
-              new_names$old,
-              new_names$new
+    source(zoo_load_script)
+
+    ## CPR
+
+    zoo_planktonr <- planktonr::pr_get_CPRData("Z", "abundance", "raw")
+    ## Clean up
+    ## Keep Longitute, Latitude, SampleTime_UTC
+    sample_data <- zoo_planktonr[,
+                                 c("Latitude",
+                                   "Longitude",
+                                   "SampleTime_UTC",
+                                   "SampleVolume_m3")]
+
+    data.table::setDT(sample_data)
+    ## Filter species data
+    species_data <- data.table::setDT(zoo_planktonr[, -(1:16)])
+
+    ## Resolve to species level, drop spp. and genus only
+
+    ## Simplest way to filter is by converting to
+    ## species by site data.table, then
+    ## filtering and grouping rows
+    sp_data_t <- data.table::transpose(species_data,keep.names = "species")
+
+    sp_name_clip <- function(x) {
+        stringr::str_remove(x, " gravid$") |>
+          stringr::str_remove(" \\(.*\\)") |>
+          stringr::str_remove(" f$") |>
+          stringr::str_remove(" m$") |>
+          stringr::str_remove(" j$") |>
+          stringr::str_remove(" agg$") |>
+          stringr::str_remove(" sol$") |>
+            stringr::str_remove(" larva$") |>
+            stringr::str_remove(" larvae$") |>
+            stringr::str_remove(" protozoea$") |>
+            stringr::str_remove(" i$") |>
+                    stringr::str_remove(" cf. ") |>
+            stringr::str_remove(" zoea$")-> y
+    }
+
+    sp_names <- sp_name_clip(sp_data_t$species)
+
+    sp_names_drop_spp <- !grepl("spp.|spp", sp_names)
+    sp_names_drop_genus <- grepl(" ", sp_names)
+    ## \\b means word boundary, so the following matches
+    ## body or shell or ... but not "somebody"
+    sp_names_drop_descriptors <- !grepl(
+                                      "\\bbody\\b|\\bshell\\b|\\b[Ee]ggs*\\b|\\bagg\\b|\\bCalanid\\b|\\bdamaged\\b|\\bunidentified\\b|\\b[Ff]ish\\b|\\bnectophore\\b|\\binvert\\b|\\bworm\\b|\\bcrab\\b|\\bdecapod\\b|\\bRadiolarian\\b|\\bForam\\b|\\bamphipod\\b|\\bGrp[1-9]\\b|\\b[Cc]yclopoid\\b|\\badult\\b", sp_names)
+
+    sp_keep <- sp_names_drop_spp &
+        sp_names_drop_genus &
+        sp_names_drop_descriptors
+
+    sp_data_t[, sp_names_new := make.names(sp_names)]
+
+    sp_data_t <- sp_data_t[sp_keep,]
+    sp_data_t[, species := NULL]
+
+    sp_data_t <- sp_data_t[,
+      by = sp_names_new,
+      lapply(.SD, sum)
+      ]
+
+sp_data <- data.table::transpose(sp_data_t, make.names = "sp_names_new")
+
+sp_data_m3 <- sp_data/sample_data$SampleVolume_m3
+sample_data[, SampleVolume_m3 := NULL]
+## Merge cols
+
+zoo_cpr <- cbind(sample_data, sp_data_m3)
+zoo_cpr_long <- data.table::melt(zoo_cpr,
+                                 id.vars = c(
+                                   "Latitude",
+                                   "Longitude",
+                                   "SampleTime_UTC"
+                                 ),
+  variable.name = "taxon",
+  value.name = "abund"
+)
+zoo_cpr_long[, survey := "cpr"]
+new_names <- tibble::tribble(
+                         ~old, ~new,
+                         "Longitude", spatial_vars[1],
+                         "Latitude",spatial_vars[2]
+                     )
+setnames(zoo_cpr_long,
+         new_names$old,
+         new_names$new
+         )
+
+zoo_cpr_long[,
+        c("trophic", "depth", "depth_cat") :=
+            .("zoo",
+              0,
+              depth_names[1]  ## all samples are epipelagic
               )
+        ]
 
-  zoo_raw[,
-          c("trophic", "depth", "depth_cat") :=
-               .("zoo",
-                 0,
-                 depth_names[1]  ## all samples are epipelagic
-               )
-          ]
-  zoo_raw[, `:=`(
-            TaxonGroup = NULL,
-            ProjectNumber = NULL)]
+## NRS
+
+zoo_planktonr <- planktonr::pr_get_NRSData("Z", "abundance", "raw")
+## Clean up
+## Keep Longitute, Latitude, SampleTime_UTC
+sample_data <- data.table::setDT(zoo_planktonr[
+  ,
+  c(
+    "Latitude",
+    "Longitude",
+    "SampleTime_Local",
+    "SampleDepth_m"
+  )
+])
+sample_data[, SampleTime_UTC :=
+                  lubridate::with_tz(lubridate::force_tzs(
+    SampleTime_Local,
+    lutz::tz_lookup_coords(Latitude, Longitude, method = "fast")
+  ), "UTC")]
+
+sample_data[, SampleTime_Local := NULL]
+
+## Filter species data
+species_data <- data.table::setDT(zoo_planktonr[, -(1:18)])
+
+## Resolve to species level, drop spp. and genus only
+
+## Simplest way to filter is by converting to
+## species by site data.table, then
+## filtering and grouping rows
+sp_data_t <- data.table::transpose(species_data,keep.names = "species")
+
+sp_name_clip <- function(x) {
+    stringr::str_remove(x, " gravid$") |>
+      stringr::str_remove(" \\(.*\\)") |>
+      stringr::str_remove(" f$") |>
+      stringr::str_remove(" m$") |>
+      stringr::str_remove(" j$") |>
+      stringr::str_remove(" agg$") |>
+      stringr::str_remove(" sol$") |>
+      stringr::str_remove(" larva$") |>
+      stringr::str_remove(" larvae$") |>
+      stringr::str_remove(" protozoea$") |>
+        stringr::str_remove(" i$") |>
+        stringr::str_remove(" complex$") |>
+        stringr::str_remove(" cf. ") |>
+        stringr::str_remove(" gp$") |>
+
+        stringr::str_remove(" [Zz]oea$")-> y
+}
+
+sp_names <- sp_name_clip(sp_data_t$species)
+
+sp_names_drop_spp <- !grepl("spp.|spp", sp_names)
+sp_names_drop_genus <- grepl(" ", sp_names)
+## \\b means word boundary, so the following matches
+## body or shell or ... but not "somebody"
+sp_names_drop_descriptors <- !grepl(
+                                  "\\bbody\\b|\\bshell\\b|\\b[Ee]ggs*\\b|\\bagg\\b|\\bCalanid\\b|\\bdamaged\\b|\\bunidentified\\b|\\b[Ff]ish\\b|\\bnectophore\\b|\\binvert\\b|\\bworm\\b|\\bcrab\\b|\\bdecapod\\b|\\bRadiolarian\\b|\\bForam\\b|\\bamphipod\\b|\\bGrp[1-9]\\b|\\b[Cc]yclopoid\\b|\\badult\\b|\\bascidian\\b|\\bterrestrial\\b", sp_names)
+
+sp_keep <- sp_names_drop_spp &
+    sp_names_drop_genus &
+    sp_names_drop_descriptors
+
+sp_data_t[, sp_names_new := make.names(sp_names)]
+
+sp_data_t <- sp_data_t[sp_keep,]
+sp_data_t[, species := NULL]
+
+sp_data_t <- sp_data_t[,
+                       by = sp_names_new,
+                       lapply(.SD, sum)
+                       ]
+
+sp_data <- data.table::transpose(sp_data_t, make.names = "sp_names_new")
 
 
-    obs <- data.table::copy(zoo_raw)
-  obs[is.na(abund), abund := 0]
-  samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleDateUTC"), with=FALSE])
-  samps[ , samp_id := seq.int(1, nrow(samps))]
-  obs[samps, samp_id := i.samp_id, on = c(spatial_vars, "depth", "depth_cat", "SampleDateUTC")]
-  obs[, c(spatial_vars, "depth", "SampleDateUTC") := NULL]
+## Merge cols
 
-  taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
-  taxa[ , taxon_id := seq.int(1, nrow(taxa))]
-  obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
-  obs[ , taxon := NULL]
+zoo_nrs <- cbind(sample_data, sp_data)
+zoo_nrs_long <- data.table::melt(zoo_nrs,
+                                 id.vars = c(
+                                     "Latitude",
+                                     "Longitude",
+                                     "SampleTime_UTC",
+                                     "SampleDepth_m"
+                                 ),
+                                 variable.name = "taxon",
+                                 value.name = "abund"
+                                 )
+zoo_nrs_long[, survey := "nrs"]
+new_names <- tibble::tribble(
+                         ~old, ~new,
+                         "Longitude", spatial_vars[1],
+                         "Latitude",spatial_vars[2],
+                         "SampleDepth_m", "depth"
 
-  zoo_out <- obs[, {
-    obs_local <- .SD
-    samps_local <- samps[samp_id %in% unique(obs_local$samp_id)]
-    samps_local[, depth_cat := NULL]
-    taxa_local <- taxa[taxon_id %in% unique(obs_local$taxon_id)]
-    data.table::data.table(samps = list(samps_local),
-                    taxa = list(taxa_local),
-                    obs = list(obs_local)
-                    )
+                     )
+setnames(zoo_nrs_long,
+         new_names$old,
+         new_names$new
+         )
+
+    zoo_nrs_long[, depth := as.numeric(depth)]
+
+
+zoo_nrs_long[,
+             c("trophic", "depth_cat") :=
+               .("zoo", {
+                 in_depth <- sapply(depth_range,
+                   \(x, depth){
+                     depth >= min(x) & depth < max(x)
+                   },
+                   depth = depth
+                 )
+                 depth_out <- depth_names[apply(in_depth, 1, \(x){
+                   min(which(x))
+                 })]
+               })
+             ]
+
+    ## Other datasets
+##zoo_raw <- load_zoo_data(zoo_data_dir)
+zoo_raw <- zoo_process_other(zoo_data_dir)
+
+    setDT(zoo_raw)
+    for (surv in zoo_names) {
+        zoo_raw[ProjectNumber %in% zoo_matching[[surv]],
+                survey := surv]
+    }
+    zoo_raw <- zoo_raw[survey %in% zoo_names,]
+    new_names <- tibble::tribble(
+                             ~old, ~new,
+                             "Longitude", spatial_vars[1],
+                             "Latitude",spatial_vars[2],
+                             "Species", "taxon",
+                             "ZAbund_m3", "abund",
+                             "SampleDateUTC", "SampleTime_UTC"
+                         )
+    setnames(zoo_raw,
+             new_names$old,
+             new_names$new
+             )
+
+    zoo_raw[,
+            c("trophic", "depth", "depth_cat") :=
+                .("zoo",
+                  0,
+                  depth_names[1]  ## all samples are epipelagic
+                  )
+            ]
+    zoo_raw[, `:=`(
+      TaxonGroup = NULL,
+      ProjectNumber = NULL,
+      taxon = make.names(taxon)
+    )]
+
+## Merge all surveys
+
+    zoo_raw_all <- rbindlist(use.names = TRUE,
+                             list(
+  zoo_raw,
+  zoo_cpr_long,
+  zoo_nrs_long
+))
+
+    obs <- data.table::copy(zoo_raw_all)
+    obs[is.na(abund), abund := 0]
+    samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleTime_UTC"), with=FALSE])
+    samps[ , samp_id := seq.int(1, nrow(samps))]
+    obs[samps, samp_id := i.samp_id, on = c(spatial_vars, "depth", "depth_cat", "SampleTime_UTC")]
+    obs[, c(spatial_vars, "depth", "SampleTime_UTC") := NULL]
+
+    taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
+    taxa[ , taxon_id := seq.int(1, nrow(taxa))]
+    obs[taxa, taxon_id := i.taxon_id, on = "taxon"]
+    obs[ , taxon := NULL]
+
+    zoo_out <- obs[, {
+        obs_local <- .SD
+        samps_local <- samps[samp_id %in% unique(obs_local$samp_id)]
+        samps_local[, depth_cat := NULL]
+        taxa_local <- taxa[taxon_id %in% unique(obs_local$taxon_id)]
+        data.table::data.table(samps = list(samps_local),
+                               taxa = list(taxa_local),
+                               obs = list(obs_local)
+                               )
     },
     by = c("survey", "trophic", "depth_cat")]
 
 
-  ## Temporary fix for rows that appear duplicated in McKinnon Survey
-  zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs <- list(zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs[[1]][, .(abund = sum(abund)), by = c("samp_id", "taxon_id")])
+    ## Temporary fix for rows that appear duplicated in McKinnon Survey
+    zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs <- list(zoo_out[survey == "mckinnon" & depth_cat == "epi",]$obs[[1]][, .(abund = sum(abund)), by = c("samp_id", "taxon_id")])
 
 
-## SampleDateUTC = NULL,
-##   zoo_rows <- zoo_raw[,
-##                       normalise_bio(.SD, spatial_vars),
-##                       by = c("survey", "trophic",  "depth_cat")]
+    ## SampleDateUTC = NULL,
+    ##   zoo_rows <- zoo_raw[,
+    ##                       normalise_bio(.SD, spatial_vars),
+    ##                       by = c("survey", "trophic",  "depth_cat")]
 
-  return(zoo_out)
+    return(zoo_out)
 }
   ## ##do this for global list
   ## zoo_raw[ , .(Species := clean_sp_names(Species))]
