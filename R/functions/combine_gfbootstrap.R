@@ -1,6 +1,6 @@
 combine_gfbootstrap_p1 <- function(
-                                gfbootstrap_survey
-                                ) {
+                                   gfbootstrap_survey,
+                                   custom_combinations) {
 
   surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
 
@@ -107,7 +107,20 @@ combine_gfbootstrap_p1 <- function(
                 by = c("env_domain")]
   )
   out <- gfboot_combined[fraction_valid, on = c(surv_cols, "is_combined")]
-    out[sapply(out$gfbootstrap, is.null), gfbootstrap := NA]
+  out[sapply(out$gfbootstrap, is.null), gfbootstrap := NA]
+
+  out <- rbindlist(use.names = TRUE,
+    list(out,
+    rbindlist(lapply(
+      custom_combinations,
+      \(x, gfbootstrap_survey){
+        custom_combinations_helper(x, gfbootstrap_survey)
+      },
+      gfbootstrap_survey = gfbootstrap_survey
+    )
+  )
+  ))
+
 
     out[, surv_full_name := apply(.SD, 1, function(x){paste0(x, collapse = "__")}), .SDcols = surv_cols]
     out <- out[vapply(out$gfbootstrap, length, integer(1)) > 1 & frac_valid > 0,]
@@ -116,12 +129,10 @@ combine_gfbootstrap_p1 <- function(
   return(out)
 }
 
-combine_gfbootstrap_p2 <- function(
-                                   gfbootstrap_combined_tmp,
+combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
                                    gf_bins,
-                                   gf_bootstrap_combinations
-                                   ) {
-  #Recommended way to modify plan locally
+                                   gf_bootstrap_combinations) {
+  # Recommended way to modify plan locally
   # combinedBootstrapGF will look for a future plan. I had issues with mixing anything other than sequential with clustermq
   oplan <- future::plan(future::sequential)
   on.exit(future::plan(oplan))
@@ -151,4 +162,51 @@ combine_gfbootstrap_p2 <- function(
       )
     )
   }
+}
+
+## combine_gfbootstrap_p2 expects a data.table that has
+## the description columns and a list of gf objects to combine.
+
+## The custom combinations should have a clear description for the
+## description column (eg survey == "imos" for all phy and zoo datasets)
+## and a set of character vectors for matching gf objects.
+## Character vectors that are NA will match all values.
+
+## Two data.tables.
+## one data.table is the descriptions.
+## The other data.table is the matching sets.
+## Use CJ to get all combinations
+
+
+
+## Provide a data.table that can be matched
+
+## Takes a list of character vectors `gf_custom' where
+## names(gf_custom) -> c("trophic", "depth_cat", "survey")
+## For each vector, specify the
+custom_combinations_helper <- function(
+                                       custom_row,
+                                       gfboostrap_survey
+                                       ) {
+    print(custom_row)
+
+    gf_combined_pre <- gfbootstrap_survey[,
+                                          by = env_domain, {
+              gf_obs <- .SD[custom_row$matches, on = .NATURAL, nomatch = NULL]
+              frac_valid <- sum(!is.na(gf_obs$gfbootstrap)) / length(gf_obs$gfbootstrap)
+
+              if (length(gf_obs$gfbootstrap) > 1) {
+                  is_combined <- TRUE
+              } else {
+                  is_combined <- FALSE
+              }
+              data.table::data.table(custom_row$descriptions,
+                                     gfbootstrap = list(gf_obs$gfbootstrap),
+                                     is_combined = is_combined,
+                                     frac_valid = frac_valid
+                                     )
+
+                                          }
+              ]
+
 }

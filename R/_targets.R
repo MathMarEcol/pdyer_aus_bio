@@ -252,7 +252,8 @@ list(
   tar_target(
     gfbootstrap_combined_tmp,
     combine_gfbootstrap_p1(
-      gfbootstrap_survey
+        gfbootstrap_survey,
+        custom_combinations
     )
     ## Do NOT map over gfbootstrap_survey
   ),
@@ -515,7 +516,14 @@ list(
     ),
     pattern =
         cross(all_bio_long, extrap_polygons_present)
-    )
+  ),
+
+  tar_target(
+    comparable_clusters,
+    compare_clusters(surveys_for_cluster_compare,
+                     cluster_compare_methods,
+                     gfbootstrap_combined)
+  )
 
   ## tar_target(
   ##   gfbootstrap_coverage,

@@ -331,6 +331,78 @@ gf_corr_thres = 0.5
 gf_compact = FALSE
 extrap = 1 / 4
 
+
+## Specific survey combinations for creating
+## combined gfbootstrap objects
+## not covered by combining all surveys
+## along each "dimension" of trophic level,
+## survey and depth.
+## env_domains will always be mapped over
+## and should not be specified here.
+custom_combinations <- list()
+
+## IMOS datasets
+custom_combinations$imos <- list(
+    descriptions = data.table::data.table(
+      trophic = "plankton",
+      depth_cat = "all",
+      survey = "imos"
+      ),
+    ## Use CJ to avoid having to balance lengths
+    ## Impossible combinations will be excluded
+    ## by failing to match
+    ## If CJ creates unwanted combinations, then just
+    ## use data.table directly.
+    matches = data.table::CJ(
+      trophic = c("zoo", "phy"),
+      survey = c("nrs", "cpr")
+      )
+)
+
+
+
+## Survey combinations to compare cluster counts
+## As for `custom_combinations` needs a `matches`
+## data.table. Matches are found from gfbootstrap_combined
+## so custom surveys from `custom_combinations` and `all`
+## are allowed for match.
+## Also needs `descriptions`, but only set `compare_group`
+## Env domains will always be mapped over
+cluster_compare_methods = c("apclustdefault", "casterdefault")
+
+surveys_for_cluster_compare <- list()
+
+surveys_for_cluster_compare$all <- list(
+    descriptions = data.table::data.table(
+      compare_group = "universal",
+      ),
+    matches = data.table::CJ(
+                              ## Simplest way to match all rows
+      depth_cat = c(depth_names, "all")
+    ))
+
+
+surveys_for_cluster_compare$best_epi <- list(
+    descriptions = data.table::data.table(
+                                   compare_group = "best_epi"
+                               ),
+    matches = data.table::CJ(
+                              survey = c("bac", "watson", "cpr"),
+                              trophic = c("microbe", "pelagic", "zoo", "phy"),
+                              depth_cat = c("epi")
+                          ))
+
+surveys_for_cluster_compare$best_all_depths <- list(
+    descriptions = data.table::data.table(
+                                   compare_group = "best_all_depths"
+                               ),
+    matches = data.table::CJ(
+                              survey = c("bac", "watson", "cpr"),
+                              trophic = c("microbe", "pelagic", "zoo", "phy")
+                          ))
+
+
+
 #' K-medoids params
 min_clust_thres = 0.01
 
