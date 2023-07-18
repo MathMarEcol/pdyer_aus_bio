@@ -516,14 +516,14 @@ list(
     ),
     pattern =
         cross(all_bio_long, extrap_polygons_present)
-  ),
-
-  tar_target(
-    comparable_clusters,
-    compare_clusters(surveys_for_cluster_compare,
-                     cluster_compare_methods,
-                     gfbootstrap_combined)
   )
+
+  ## tar_target(
+  ##   comparable_clusters,
+  ##   compare_clusters(surveys_for_cluster_compare,
+  ##                    cluster_compare_methods,
+  ##                    gfbootstrap_combined)
+  ## )
 
   ## tar_target(
   ##   gfbootstrap_coverage,
