@@ -274,7 +274,7 @@ load_phy_long <- function(
     }, SampleDateUTC, Longitude, Latitude, SIMPLIFY = FALSE))]
     date_UTC <- rbindlist(date_UTC[[1]])
     phy_other[, `:=`(
-        SampleDate_UTC = date_UTC$SampleDate_UTC,
+        SampleTime_UTC = date_UTC$SampleDate_UTC,
         SampleDateUTC = NULL
     )]
 
@@ -282,7 +282,7 @@ load_phy_long <- function(
     
     phy_brett <- phyto_process_brett(phy_data_dir)
     data.table::setDT(phy_brett)
-    setnames(phy_brett, old = "SampleDateUTC", new = "SampleDate_UTC")
+    setnames(phy_brett, old = "SampleDateUTC", new = "SampleTime_UTC")
 
     phy_raw <- rbindlist(use.names = TRUE,
       list(
@@ -328,10 +328,10 @@ load_phy_long <- function(
     
     obs <- data.table::copy(phy_raw_all)
     obs[is.na(abund), abund := 0]
-    samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleDate_UTC"), with=FALSE])
+    samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleTime_UTC"), with=FALSE])
     samps[ , samp_id := seq.int(1, nrow(samps))]
-    obs[samps, samp_id := i.samp_id, on = c(spatial_vars, "depth", "depth_cat", "SampleDate_UTC")]
-    obs[, c(spatial_vars, "depth", "SampleDate_UTC") := NULL]
+    obs[samps, samp_id := i.samp_id, on = c(spatial_vars, "depth", "depth_cat", "SampleTime_UTC")]
+    obs[, c(spatial_vars, "depth", "SampleTime_UTC") := NULL]
 
     taxa <- data.table::data.table(taxon = unique(obs[, taxon]))
     taxa[ , taxon_id := seq.int(1, nrow(taxa))]
