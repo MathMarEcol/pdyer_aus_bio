@@ -315,7 +315,18 @@ load_phy_long <- function(
         taxon = make.names(stringr::str_remove(taxon, "\xb5m")),
         ProjectNumber = NULL)]
 
-    obs <- data.table::copy(phy_raw)
+    phy_raw_all <- rbindlist(
+      use.names = TRUE,
+      list(
+        phy_raw,
+        phy_cpr_long,
+        phy_nrs_long
+      )
+    )
+
+
+    
+    obs <- data.table::copy(phy_raw_all)
     obs[is.na(abund), abund := 0]
     samps <- unique(obs[, c(spatial_vars, "depth", "depth_cat", "SampleDate_UTC"), with=FALSE])
     samps[ , samp_id := seq.int(1, nrow(samps))]
