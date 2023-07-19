@@ -11,6 +11,7 @@ extrapolate_to_env <- function(
 
     options(torch.cuda_allocator_reserved_rate = 0.60)
     options(torch.cuda_allocator_allocated_rate = 0.8)
+    gfbootstrap_combined$gfbootstrap[[1]] <- qs::qread(gfbootstrap_combined$gfbootstrap[[1]])
 
     if (all(is.na(gfbootstrap_predicted$env_id))) {
         ## Upstream target decided survey was not usable.
