@@ -137,13 +137,16 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
   oplan <- future::plan(future::sequential)
   on.exit(future::plan(oplan))
 
-    gfb <- lapply(gfbootstrap_combined_tmp$gfbootstrap[[1]],
-                  \(gf_file) {
-                      if (is.na(gf_file)) {
-                        return(NA)
-                      } else {
-                        return(qs::qread(gf_file))
-                      })
+    gfb <- lapply(
+      gfbootstrap_combined_tmp$gfbootstrap[[1]],
+      \(gf_file) {
+        if (is.na(gf_file)) {
+          return(NA)
+        } else {
+          return(qs::qread(gf_file))
+        }
+      }
+    )
 
   if (all(is.na(gfb))) {
     return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
