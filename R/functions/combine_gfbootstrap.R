@@ -211,9 +211,8 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
 ## For each vector, specify the
 custom_combinations_helper <- function(
                                        custom_row,
-                                       gfboostrap_survey
+                                       gfbootstrap_survey
                                        ) {
-    print(custom_row)
 
     gf_combined_pre <- gfbootstrap_survey[,
                                           by = env_domain, {
