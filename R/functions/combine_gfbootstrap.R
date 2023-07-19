@@ -2,7 +2,7 @@ combine_gfbootstrap_p1 <- function(
                                    gfbootstrap_survey,
                                    custom_combinations) {
 
-  surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+    surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
 
   gfboot_surv <- data.table::copy(gfbootstrap_survey)
 
@@ -137,10 +137,17 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
   oplan <- future::plan(future::sequential)
   on.exit(future::plan(oplan))
 
-  gfb <- gfbootstrap_combined_tmp$gfbootstrap[[1]]
+    gfb <- lapply(gfbootstrap_combined_tmp$gfbootstrap[[1]],
+                  \(gf_file) {
+                      if (is.na(gf_file)) {
+                        return(NA)
+                      } else {
+                        return(qs::qread(gf_file))
+                      })
+
   if (all(is.na(gfb))) {
     return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
-      gfbootstrap = list(NA)
+      gfbootstrap = NA
     ))
   } else if (gfbootstrap_combined_tmp$is_combined) {
     combine_args <- c(
@@ -152,8 +159,23 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
     for (i in seq_along(out$gf_list)) {
       out$gf_list[[i]]$call <- NULL
     }
+
+    ## save the gfbootstrap objects into the targets cache
+    ## To make operating over all gfbootstrap objects more
+    ## managable from a memory perspective.
+    hashed <- stringr::str_sub(digest::digest(out), 1, 8)
+    outdir <- file.path(targets::tar_path_store(), "gfbootstraps")
+    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+    surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+    surv_full_names <- apply(gfbootstrap_combined_tmp[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
+
+    outfile <- file.path(outdir, paste0("combinedgfbootstrap_", hashed, "___", surv_full_names, ".qs"))
+
+    qs::qsave(out, outfile, "high")
+
+
     return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
-      gfbootstrap = list(out)
+      gfbootstrap = outfile
     ))
   } else {
     return(
