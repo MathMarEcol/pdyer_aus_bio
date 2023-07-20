@@ -15,7 +15,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
         clustermq.defaults = list(log_file = "cmq_worker_%i.log"),
         clustermq.scheduler = scheduler
       )
-      future::plan(list(tweak(future_plan, workers = as.numeric(Sys.getenv("WORKERS", "1"))), tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
+      future::plan(list(future::tweak(future_plan, workers = as.numeric(Sys.getenv("WORKERS", "1"))), future::tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
    },
   "pbs" = {
       options(
