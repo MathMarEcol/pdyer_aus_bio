@@ -5,6 +5,8 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
   ## will add if there is.
   ## future::plan(future_plan)
 
+  scheduler <- Sys.getenv("SCHEDULER")
+
 
   switch(scheduler,
          "multiprocess" = {
