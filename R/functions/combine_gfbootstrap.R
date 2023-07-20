@@ -163,6 +163,8 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
       gfb
     )
     out <- do.call(gfbootstrap::combinedBootstrapGF, combine_args)
+    rm(combine_args)
+    rm(gfb)
     for (i in seq_along(out$gf_list)) {
       out$gf_list[[i]]$call <- NULL
     }
