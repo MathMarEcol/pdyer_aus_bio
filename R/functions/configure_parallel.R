@@ -5,27 +5,19 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
   ## will add if there is.
   ## future::plan(future_plan)
 
-  scheduler <- Sys.getenv("SCHEDULER")
-  if (scheduler != "") {
-      options(
-        clustermq.scheduler = scheduler
-      )
-  } else {
-      options(
-        clustermq.scheduler = "LOCAL"
-      )
-  }
-
 
   switch(scheduler,
- "multiprocess" = {
+         "multiprocess" = {
+             ## Either local clustermq or local R futures
       options(
-        clustermq.defaults = list(log_file = "cmq_worker_%i.log")
+        clustermq.defaults = list(log_file = "cmq_worker_%i.log"),
+        clustermq.scheduler = scheduler
       )
-			future::plan(future_plan, workers = as.numeric(Sys.getenv("WORKERS", "1")))
+      future::plan(list(tweak(future_plan, workers = as.numeric(Sys.getenv("WORKERS", "1"))), tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
    },
   "pbs" = {
       options(
+          clustermq.scheduler = scheduler,
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
         clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl"),
         clustermq.defaults = list(work_dir =  getwd(),
@@ -38,6 +30,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
 
   "slurm" = {
       options(
+          clustermq.scheduler = scheduler,
         ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
         clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl"),
         clustermq.defaults = list(work_dir =  getwd(),
@@ -47,7 +40,13 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
                                   runtime =  Sys.getenv("WORKER_RUNTIME", "7-00:00:00"))
       )
   },
- NA
+  {
+      ## sequential processing. Allow branches to use future workers though.
+    options(
+      clustermq.scheduler = "LOCAL"
+    )
+    future::plan(list(tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
+  }
  )
 
 }

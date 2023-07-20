@@ -132,10 +132,13 @@ combine_gfbootstrap_p1 <- function(
 combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
                                    gf_bins,
                                    gf_bootstrap_combinations) {
-  # Recommended way to modify plan locally
-  # combinedBootstrapGF will look for a future plan. I had issues with mixing anything other than sequential with clustermq
-  oplan <- future::plan(future::sequential)
-  on.exit(future::plan(oplan))
+
+    if (inherits(future::plan(), "sequential")) {
+      ## We are in a tar_make_clustermq worker
+      ## which has not propagated the future plan
+      oplan <- future::plan(future.callr::callr, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))
+      on.exit(future::plan(oplan))
+    }
 
     gfb <- lapply(
       gfbootstrap_combined_tmp$gfbootstrap[[1]],

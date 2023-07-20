@@ -11,7 +11,7 @@ sapply(source_files, source)
 source("./functions/params.R") ##might be redundant, probably sourced above
 
 ## Set global R options, mostly clustermq
-configure_parallel(default_clustermq = TRUE,
+future_plan <- configure_parallel(default_clustermq = TRUE,
                    future_plan = future.callr::callr)
 
 ## Set targets options
