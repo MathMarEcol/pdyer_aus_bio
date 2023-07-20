@@ -47,7 +47,7 @@ configure_parallel <- function(default_clustermq = TRUE, future_plan = future.ca
     options(
       clustermq.scheduler = "LOCAL"
     )
-    future::plan(list(tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
+    future::plan(list(future::tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
   }
  )
 
