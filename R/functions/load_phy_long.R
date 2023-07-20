@@ -98,11 +98,10 @@ load_phy_long <- function(
 
     sp_data <- data.table::transpose(sp_data_t, make.names = "sp_names_new")
 
-    sp_data_m3 <- sp_data/sample_data$SampleVolume_m3
     sample_data[, SampleVolume_m3 := NULL]
     ## Merge cols
 
-    phy_cpr <- cbind(sample_data, sp_data_m3)
+    phy_cpr <- cbind(sample_data, sp_data)
     phy_cpr_long <- data.table::melt(phy_cpr,
                                      id.vars = c(
                                          "Latitude",
