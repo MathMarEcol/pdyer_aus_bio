@@ -156,7 +156,8 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
       gfbootstrap = NA
     ))
   } else if (gfbootstrap_combined_tmp$is_combined) {
-    combine_args <- c(
+      gfb <- gfb[!is.na(gfb)]
+      combine_args <- c(
       nbin = gf_bins,
       n_samp = gf_bootstrap_combinations,
       gfb
