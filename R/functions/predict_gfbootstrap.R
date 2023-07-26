@@ -9,7 +9,6 @@ predict_gfbootstrap <- function(
                                 ) {
     options(torch.cuda_allocator_reserved_rate = 0.60)
     options(torch.cuda_allocator_allocated_rate = 0.8)
-    gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
 
 
  if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
@@ -23,6 +22,7 @@ predict_gfbootstrap <- function(
       sim_mat = list(NA)
     ))
  }
+    gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
 
   env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
 
