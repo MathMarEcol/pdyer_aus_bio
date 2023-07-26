@@ -493,7 +493,9 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, paste0(survey_specs, collapse = "_"))
-  gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
+  if (any(!is.na(gfbootstrap_combined$gfbootstrap))) {
+    gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
+  }
 
   if (inherits(gfbootstrap_combined$gfbootstrap[[1]], "combinedBootstrapGF")) {
     gg_plots <- gfbootstrap::gg_combined_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]])
