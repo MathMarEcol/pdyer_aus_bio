@@ -103,24 +103,48 @@ plot_gfbootstrap <- function(
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
   grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain")
-  use_vars <- gfbootstrap_cluster[, ..grouping_vars]
-  use_vars <- grouping_vars[use_vars != "all"]
-  bio_env_merge <- all_bio_env[gfbootstrap_cluster, on = use_vars]
+  custom_grouping_vars <- c("trophic", "survey", "depth_cat")
+  ## Check for custom combination
+  custom_group_matches <- vapply(custom_combinations, function(x) {
+    all(x$descriptions[, ..custom_grouping_vars] == gfbootstrap_cluster[, ..custom_grouping_vars])
+  }, logical(1))
+  if (sum(custom_group_matches > 1)) {
+    stop("plot_gfbootstrap.R: Multiple custom groups have matched")
+  }
+
+  if (any(custom_group_matches)) {
+    ## Using a custom combination
+    use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
+    use_vars <- grouping_vars[use_vars != "all"]
+    match_table <- custom_combinations[[custom_group_matches]]$matches
+    match_table[["env_domain"]] <- rep(gfbootstrap_cluster$env_domain, nrow(match_table))
+  } else {
+    ## Using a "default" combination
+    use_vars <- gfbootstrap_cluster[, ..grouping_vars]
+    use_vars <- grouping_vars[use_vars != "all"]
+    match_table <- gfbootstrap_cluster[, ..use_vars]
+  }
+
+
+
+  bio_env_merge <- all_bio_env[match_table, on = use_vars]
   fit_grids <- unique(data.table::rbindlist(
-                              lapply(bio_env_merge$wide_taxa_env,
-                                    function(x, spatial_vars){
-                                      if(all(class(x) == c("data.table",  "data.frame"))) {
-                                        return(x[,..spatial_vars])
-                                      } else {
-                                        if(length(x) == 1 & is.na(x)) {
-                                          return(NULL)
-                                        } else {
-                                          stop("Unexpected object while getting grid locations")
-                                        }
-                                      }
-                                    }, spatial_vars = spatial_vars
-                                    )
-                            ))
+    lapply(bio_env_merge$wide_taxa_env,
+           function(x, spatial_vars) {
+             if (all(class(x) == c("data.table", "data.frame"))) {
+               return(x[, ..spatial_vars])
+             } else {
+               if (length(x) == 1 & is.na(x)) {
+                 return(NULL)
+               } else {
+                 stop("Unexpected object while getting grid locations")
+               }
+             }
+           },
+           spatial_vars = spatial_vars
+           )
+  ))
+
   fit_grids <- fit_grids[complete.cases(fit_grids)]
   ## fit_grids <- sf::st_as_sf(fit_grids,
   ##                        coords = spatial_vars,
@@ -129,7 +153,7 @@ plot_gfbootstrap <- function(
   if(length(use_vars) == 0) {
     bio_merge <- all_bio_long
   } else {
-    bio_merge <- all_bio_long[gfbootstrap_cluster, on = use_vars]
+    bio_merge <- all_bio_long[match_table, on = use_vars]
   }
   fit_samples <- unique(data.table::rbindlist(
                               lapply(bio_merge$samps,
