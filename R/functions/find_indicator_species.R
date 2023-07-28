@@ -46,16 +46,6 @@ find_indicator_species <- function(
 
     bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons_present$polygons[[1]])
 
-    ## Sometimes there is no overlap between biological samples and
-    ## clustered region.
-    if (nrow(bio_clustering) < 2) {
-      sf::sf_use_s2(s2_used)
-      return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
-        matched = matched,
-        spec_ind = list(NA),
-        spec_ind_solo = list(NA)
-      ))
-    }
   ## Plot to demonstrate alignment of clusters and samples
   ## env_bbox <- sf::st_bbox(extrap_polygons_present$polygons[[1]])
 
@@ -83,6 +73,18 @@ find_indicator_species <- function(
   clust_to_samp <- data.table::as.data.table(bio_clustering[, c("samp_id", "clustering")])
   clust_to_samp[, geometry := NULL]
   setkey(clust_to_samp, samp_id)
+
+  ## Sometimes there is no overlap between biological samples and
+  ## clustered region, or the samples all fall in one bioregion.
+
+  if (length(unique(clust_to_samp$clustering)) < 2) {
+      sf::sf_use_s2(s2_used)
+      return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+                                    matched = matched,
+                                    spec_ind = list(NA),
+                                    spec_ind_solo = list(NA)
+                                    ))
+  }
 
   ## samp_id matches between site species matrix and cluster vector
   ## sum(clust_to_samp$samp_id == site_sp_wide$samp_id)
