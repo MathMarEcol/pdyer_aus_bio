@@ -44,8 +44,18 @@ find_indicator_species <- function(
   ## Find clustering of each sample
   bio_as_sf <- sf::st_as_sf(all_bio_long$samps[[1]][keep_rows], coords = spatial_vars, crs = sf::st_crs(extrap_polygons_present$polygons[[1]]))
 
-  bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons_present$polygons[[1]])
+    bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons_present$polygons[[1]])
 
+    ## Sometimes there is no overlap between biological samples and
+    ## clustered region.
+    if (nrow(bio_clustering) == 0) {
+      sf::sf_use_s2(s2_used)
+      return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+        matched = matched,
+        spec_ind = list(NA),
+        spec_ind_solo = list(NA)
+      ))
+    }
   ## Plot to demonstrate alignment of clusters and samples
   ## env_bbox <- sf::st_bbox(extrap_polygons_present$polygons[[1]])
 
