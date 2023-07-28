@@ -225,45 +225,20 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       ## total of all surveys
       ## in combinedGF
       ## Average across bootstraps
-      stats$n_sample_sites_total = mean(vapply(
-          gf_list, \(gf){
-              sum(vapply(
-                  gf$X, \(x){
-                      nrow(x)
-                  },
-                  numeric(1)
-              ))
-          },
-          numeric(1)
-      ))
+      stats$n_sample_sites_total = sum(vapply(
+          gfbootstrap_combined$gfbootstrap[[1]]$X, nrow, integer(1)))
+
       ## mean number of sites across all surveys
       ## in combinedGF
       ## Average across bootstraps
       stats$n_sample_sites_mean = mean(vapply(
-          gf_list, \(gf){
-              mean(vapply(
-                  gf$X, \(x){
-                      nrow(x)
-                  },
-                  numeric(1)
-              ))
-          },
-          numeric(1)
-      ))
+          gfbootstrap_combined$gfbootstrap[[1]]$X, nrow, integer(1)))
+
             ## sd number of sites of all surveys
       ## in combinedGF
       ## Average across bootstraps
-      stats$n_sample_sites_sd = mean(vapply(
-          gf_list, \(gf){
-              sd(vapply(
-                  gf$X, \(x){
-                      nrow(x)
-                  },
-                  numeric(1)
-              ))
-          },
-          numeric(1)
-      ))
+      stats$n_sample_sites_sd = sd(vapply(
+          gfbootstrap_combined$gfbootstrap[[1]]$X, nrow, integer(1)))
 
       ## Species R^2
       ## total of all surveys
@@ -367,30 +342,16 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       ## for single survey,
       ## identical to n_sample_sites_mean (n=1)
       ## Average across bootstraps
-      stats$n_sample_sites_total = mean(vapply(
-          gf_list, \(gf){
-              nrow(gf$X)
-          },
-          numeric(1)
-      ))
+      stats$n_sample_sites_total = sum(nrow(gfbootstrap_combined$gfbootstrap[[1]]$X))
+
       ## mean number of sites across all surveys
       ## for single survey,
       ## identical to n_sample_sites_total (n=1)
       ## Average across bootstraps
-      stats$n_sample_sites_mean = mean(vapply(
-          gf_list, \(gf){
-              nrow(gf$X)
-          },
-          numeric(1)
-      ))
+      stats$n_sample_sites_mean = mean(nrow(gfbootstrap_combined$gfbootstrap[[1]]$X))
       ## sd number of sites of all surveys
       ## sd across bootstraps, should be 0
-      stats$n_sample_sites_sd = sd(vapply(
-          gf_list, \(gf){
-              nrow(gf$X)
-          },
-          numeric(1)
-      ))
+      stats$n_sample_sites_sd = sd(nrow(gfbootstrap_combined$gfbootstrap[[1]]$X))
 
       ## Species R^2
       ## total of all species in single survey
