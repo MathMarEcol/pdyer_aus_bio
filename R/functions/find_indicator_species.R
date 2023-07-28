@@ -48,7 +48,7 @@ find_indicator_species <- function(
 
     ## Sometimes there is no overlap between biological samples and
     ## clustered region.
-    if (nrow(bio_clustering) == 0) {
+    if (nrow(bio_clustering) < 2) {
       sf::sf_use_s2(s2_used)
       return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
         matched = matched,
