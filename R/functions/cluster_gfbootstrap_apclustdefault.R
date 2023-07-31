@@ -3,12 +3,13 @@ cluster_gfbootstrap_apclustdefault <- function(
                                         gfbootstrap_predicted,
                                 env_domain,
                                 env_id_col,
-                                spatial_vars
+                                spatial_vars,
+                                q
                                 ) {
 
     ## q = 0.5 means select the median similarity.
     ## Recommended default that tends towards more clusters.
-    apc <- apcluster(s = gfbootstrap_predicted$sim_mat[[1]][[1]], q = 0.5)
+    apc <- apcluster(s = gfbootstrap_predicted$sim_mat[[1]][[1]], q = q)
     ##May not return a well formed cluster
     ## if apclust does not converge.
     if(length(apc@clusters) < 2) {

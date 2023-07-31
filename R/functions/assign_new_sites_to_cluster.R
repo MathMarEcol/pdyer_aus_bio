@@ -31,7 +31,8 @@ assign_new_sites_to_cluster <- function(
                           spatial_vars
                       )
                   },
-                  "apclustdefault" =,
+                  "apclustdefaultmedian" =,
+                  "apclustdefaultmin" =,
                   "apclustoptimal" = {
                       assign_new_sites_to_cluster_apclust(
                           cluster_env_extrapolate,

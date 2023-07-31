@@ -46,13 +46,24 @@ cluster_gfbootstrap <- function(
                    spatial_vars
                )
            },
-           "apclustdefault" = {
+           "apclustdefaultmedian" = {
                cluster_gfbootstrap_apclustdefault(
                    clust_methods,
                    gfbootstrap_predicted,
                    env_domain,
                    env_id_col,
-                   spatial_vars
+                   spatial_vars,
+                   q = 0.5
+               )
+           },
+           "apclustdefaultmin" = {
+               cluster_gfbootstrap_apclustdefault(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   q = 0
                )
            },
            "apclustoptimal" = {
