@@ -297,12 +297,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
       ))
 
       ## Number of surveys
-      stats$nsurveys = mean(vapply(
-          gf_list, \(gf){
-              length(gf$X)
-          },
-          numeric(1)
-      ))
+      stats$nsurveys = length(gfbootstrap_combined$gfbootstrap[[1]]$X)
 
   } else if (inherits(gf_list[[1]], "gradientForest")) {
 
