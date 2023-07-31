@@ -329,7 +329,7 @@ gf_bootstrap_combinations = 2000
 gf_bins = 201
 gf_corr_thres = 0.5
 gf_compact = FALSE
-extrap = 1 / 4
+extrap = 0
 
 
 ## Specific survey combinations for creating
@@ -420,7 +420,7 @@ clara_correct.d = TRUE
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
-clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefault")
+clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefaultmedian", "apclustdefaultmin")
 clust_m = 4
 min_gamma_tol = 0.005
 min_range_tol = 0.001
