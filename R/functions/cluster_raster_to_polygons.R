@@ -29,7 +29,7 @@ cluster_raster_to_polygons <- function(
   clust_multipoly <- terra::as.polygons(clust_raster)
   clust_poly_sf <- sf::st_as_sf(clust_multipoly)
 
-    if(nrow(sites_no_clust) > 0) {
+    if(nrow(sites_no_clust) > 1) {
         no_clust_raster <- terra::rast(
                                       x = as.matrix(sites_no_clust),
                                       type = "xyz",
