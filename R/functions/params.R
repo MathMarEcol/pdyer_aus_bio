@@ -148,7 +148,7 @@ depth_range[[depth_names[2]]] <- c(200, 1000)
 depth_range[[depth_names[3]]] <- c(1000, Inf)
 
 #' Species sampling filter params
-freq_range = c(0.05, 1)
+freq_range = c(0.00, 1)
 min_occurrence = 6
 cov_min = 1.0
 max_taxa = 2000
