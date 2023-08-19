@@ -41,6 +41,7 @@ plot_gfbootstrap <- function(
   if (plot_sim_mat) {
     pl_file <- c(pl_file,
                  sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
+                 sim_mat_ungrouped = paste0(pl_file_base, "_clustering_sim_mat_ungrouped.png"),
                  sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
     )
   }
@@ -53,6 +54,7 @@ plot_gfbootstrap <- function(
     ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
     if (plot_sim_mat) {
         ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
+        ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = no_plot)
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
     }
     return(pl_file)
@@ -240,6 +242,12 @@ plot_gfbootstrap <- function(
             ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
 
         ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
+
+        pl_sim_mat_ungrouped <- castcluster::gg_sim_mat(sim_mat) +
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
+
+        ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = pl_sim_mat_ungrouped)
+
 
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
                                            ggplot2::aes(x = x)) +
