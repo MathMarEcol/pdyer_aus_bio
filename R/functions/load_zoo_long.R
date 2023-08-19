@@ -20,10 +20,11 @@ load_zoo_long <- function(
                           depth_range
                           ) {
     source(zoo_load_script)
-
+    feeding_data <- planktonr::pr_get_PlanktonInfo("Z")
+    data.table::setDT(feeding_data)
     ## CPR
 
-    zoo_planktonr <- planktonr::pr_get_CPRData("Z", "abundance", "raw")
+    zoo_planktonr <- planktonr::pr_get_CPRData("Z", "abundance", "species")
     ## Clean up
     ## Keep Longitute, Latitude, SampleTime_UTC
     sample_data <- zoo_planktonr[,
@@ -42,6 +43,13 @@ load_zoo_long <- function(
     ## species by site data.table, then
     ## filtering and grouping rows
     sp_data_t <- data.table::transpose(species_data,keep.names = "species")
+    sp_data_t[feeding_data, feeding := Diet,  on = c(species = "Taxon Name")]
+    keep_feeding_class <- sp_data_t$feeding %in% c("Herbivore", "Omnivore", "Carnivore")
+    keep_specific <- sp_data_t$species %in% c()
+
+    sp_data_t <- sp_data_t[keep_feeding_class | keep_specific, ]
+
+
 
     sp_name_clip <- function(x) {
         stringr::str_remove(x, " gravid$") |>
@@ -51,31 +59,46 @@ load_zoo_long <- function(
           stringr::str_remove(" j$") |>
           stringr::str_remove(" agg$") |>
           stringr::str_remove(" sol$") |>
-            stringr::str_remove(" larva$") |>
-            stringr::str_remove(" larvae$") |>
-            stringr::str_remove(" protozoea$") |>
             stringr::str_remove(" i$") |>
-                    stringr::str_remove(" cf. ") |>
-            stringr::str_remove(" zoea$")-> y
+            stringr::str_remove(" gp$")   -> y
     }
 
-    sp_names <- sp_name_clip(sp_data_t$species)
+    sp_name_drop_subspecies <- function(x, sep = " ", join = ".") {
+        ret <- stringr::str_c(
+                     stringr::str_split_1(x, sep)[1:2],
+                     collapse = join
+                     )
 
+    }
+
+    sp_names <- sp_data_t$species
+    sp_names_genus_sp <- vapply(sp_names, sp_name_drop_subspecies, character(1))
+    names(sp_names_genus_sp)<-NULL
     sp_names_drop_spp <- !grepl("spp.|spp", sp_names)
-    sp_names_drop_genus <- grepl(" ", sp_names)
-    ## \\b means word boundary, so the following matches
-    ## body or shell or ... but not "somebody"
+    sp_names_drop_genus <- !is.na(sp_names_genus_sp)
+    ## \\b means word boundary, so \\bbody\\b matches
+    ## body but not "somebody"
+
+    drop_regexp <- "\\bbody\\b|\\bshell\\b|\\b[Ee]ggs*\\b|\\bagg\\b|\\bCalanid\\b|\\bdamaged\\b|\\bunidentified\\b|\\b[Ff]ish\\b|\\bnectophore\\b|\\binvert\\b|\\bworm\\b|\\bcrab\\b|\\bdecapod\\b|\\bRadiolarian\\b|\\bForam\\b|\\bamphipod\\b|\\bGrp[1-9]\\b|\\b[Cc]yclopoid\\b|\\bascidian\\b|\\bterrestrial\\b|\\bCalanoid\\b|\\blarvae\\b|\\blarva\\b|\\bBarnacle\\b|\\bmegalopa\\b|\\b[Zz]oea\\b|\\bprotozoea\\b|\\b[Ee]uphausiid\\b|\\b[Nn]auplii\\b|\\bmetanauplii\\b|\\bcyprid\\b|\\b[Gg]astropod\\b|\\b[Mm]ollusc\\b|\\bPterotracheoidea\\b|\\bvicina/macrura\\b|\\bBracht\\b|\\bcf\\b|\\bunid\\b|\\b[Pp]olychaeta\\b"
+
     sp_names_drop_descriptors <- !grepl(
-                                      "\\bbody\\b|\\bshell\\b|\\b[Ee]ggs*\\b|\\bagg\\b|\\bCalanid\\b|\\bdamaged\\b|\\bunidentified\\b|\\b[Ff]ish\\b|\\bnectophore\\b|\\binvert\\b|\\bworm\\b|\\bcrab\\b|\\bdecapod\\b|\\bRadiolarian\\b|\\bForam\\b|\\bamphipod\\b|\\bGrp[1-9]\\b|\\b[Cc]yclopoid\\b|\\badult\\b", sp_names)
+                                      drop_regexp,
+                                      sp_names)
+    ## Merge subspecies back into species
+
+
 
     sp_keep <- sp_names_drop_spp &
         sp_names_drop_genus &
         sp_names_drop_descriptors
 
-    sp_data_t[, sp_names_new := make.names(sp_names)]
+
+    sp_data_t[, sp_names_new := make.names(sp_names_genus_sp)]
+
 
     sp_data_t <- sp_data_t[sp_keep,]
     sp_data_t[, species := NULL]
+    sp_data_t[, feeding := NULL]
 
     sp_data_t <- sp_data_t[,
       by = sp_names_new,
@@ -118,7 +141,7 @@ zoo_cpr_long[,
 
 ## NRS
 
-zoo_planktonr <- planktonr::pr_get_NRSData("Z", "abundance", "raw")
+zoo_planktonr <- planktonr::pr_get_NRSData("Z", "abundance", "species")
 ## Clean up
 ## Keep Longitute, Latitude, SampleTime_UTC
 sample_data <- data.table::setDT(zoo_planktonr[
@@ -147,43 +170,47 @@ species_data <- data.table::setDT(zoo_planktonr[, -(1:18)])
 ## species by site data.table, then
 ## filtering and grouping rows
 sp_data_t <- data.table::transpose(species_data,keep.names = "species")
+    sp_data_t[feeding_data, feeding := Diet,  on = c(species = "Taxon Name")]
+    keep_feeding_class <- sp_data_t$feeding %in% c("Herbivore", "Omnivore", "Carnivore")
+    keep_specific <- sp_data_t$species %in% c()
+
+    sp_data_t <- sp_data_t[keep_feeding_class | keep_specific, ]
 
 sp_name_clip <- function(x) {
     stringr::str_remove(x, " gravid$") |>
+        stringr::str_
       stringr::str_remove(" \\(.*\\)") |>
       stringr::str_remove(" f$") |>
       stringr::str_remove(" m$") |>
       stringr::str_remove(" j$") |>
       stringr::str_remove(" agg$") |>
       stringr::str_remove(" sol$") |>
-      stringr::str_remove(" larva$") |>
-      stringr::str_remove(" larvae$") |>
-      stringr::str_remove(" protozoea$") |>
         stringr::str_remove(" i$") |>
         stringr::str_remove(" complex$") |>
-        stringr::str_remove(" cf. ") |>
-        stringr::str_remove(" gp$") |>
-
-        stringr::str_remove(" [Zz]oea$")-> y
+        stringr::str_remove(" gp$") -> y
 }
 
-sp_names <- sp_name_clip(sp_data_t$species)
+sp_names <- sp_data_t$species
+    sp_names_genus_sp <- vapply(sp_names, sp_name_drop_subspecies, character(1))
+    names(sp_names_genus_sp)<-NULL
 
 sp_names_drop_spp <- !grepl("spp.|spp", sp_names)
-sp_names_drop_genus <- grepl(" ", sp_names)
+    sp_names_drop_genus <- !is.na(sp_names_genus_sp)
 ## \\b means word boundary, so the following matches
 ## body or shell or ... but not "somebody"
-sp_names_drop_descriptors <- !grepl(
-                                  "\\bbody\\b|\\bshell\\b|\\b[Ee]ggs*\\b|\\bagg\\b|\\bCalanid\\b|\\bdamaged\\b|\\bunidentified\\b|\\b[Ff]ish\\b|\\bnectophore\\b|\\binvert\\b|\\bworm\\b|\\bcrab\\b|\\bdecapod\\b|\\bRadiolarian\\b|\\bForam\\b|\\bamphipod\\b|\\bGrp[1-9]\\b|\\b[Cc]yclopoid\\b|\\badult\\b|\\bascidian\\b|\\bterrestrial\\b", sp_names)
+    sp_names_drop_descriptors <- !grepl(drop_regexp, sp_names)
+
+
 
 sp_keep <- sp_names_drop_spp &
     sp_names_drop_genus &
     sp_names_drop_descriptors
 
-sp_data_t[, sp_names_new := make.names(sp_names)]
+sp_data_t[, sp_names_new := make.names(sp_names_genus_sp)]
 
 sp_data_t <- sp_data_t[sp_keep,]
 sp_data_t[, species := NULL]
+    sp_data_t[, feeding := NULL]
 
 sp_data_t <- sp_data_t[,
                        by = sp_names_new,
