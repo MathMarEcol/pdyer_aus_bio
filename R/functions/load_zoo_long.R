@@ -176,20 +176,6 @@ sp_data_t <- data.table::transpose(species_data,keep.names = "species")
 
     sp_data_t <- sp_data_t[keep_feeding_class | keep_specific, ]
 
-sp_name_clip <- function(x) {
-    stringr::str_remove(x, " gravid$") |>
-        stringr::str_
-      stringr::str_remove(" \\(.*\\)") |>
-      stringr::str_remove(" f$") |>
-      stringr::str_remove(" m$") |>
-      stringr::str_remove(" j$") |>
-      stringr::str_remove(" agg$") |>
-      stringr::str_remove(" sol$") |>
-        stringr::str_remove(" i$") |>
-        stringr::str_remove(" complex$") |>
-        stringr::str_remove(" gp$") -> y
-}
-
 sp_names <- sp_data_t$species
     sp_names_genus_sp <- vapply(sp_names, sp_name_drop_subspecies, character(1))
     names(sp_names_genus_sp)<-NULL
