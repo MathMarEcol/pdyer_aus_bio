@@ -150,7 +150,7 @@ depth_range[[depth_names[3]]] <- c(1000, Inf)
 #' Species sampling filter params
 freq_range = c(0.00, 1)
 min_occurrence = 6
-cov_min = 1.0
+cov_min = -Inf
 max_taxa = 2000
 
 #' Site species abundance merge function
