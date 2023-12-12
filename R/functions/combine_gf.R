@@ -130,7 +130,7 @@ combine_gf_p1 <- function(
 }
 
 combine_gf_p2 <- function(gf_combined_tmp,
-                                   gf_bins,
+                                   gf_bins
                                    ) {
 
     if (inherits(future::plan(), "sequential")) {
