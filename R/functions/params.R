@@ -318,9 +318,9 @@ env_log = c(
 )
 
 #' Gradient Forest params
-gf_trees = 600
-gf_bootstrap_iters = 600
-cgf_bootstrap_combinations = 2000
+gf_trees = 200
+gf_bootstrap_iters = 200
+cgf_bootstrap_combinations = 600
 gf_bins = 201
 gf_corr_thres = 0.5
 gf_compact = FALSE
