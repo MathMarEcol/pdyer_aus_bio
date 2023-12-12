@@ -165,7 +165,7 @@ env_offset = 0
 ## in lat lon degrees, use 1/integer fraction
 ## for proper rastering later,
 ## currently 1/12 to allign with BioORACLE
-res_clust = c(1, 1 / 2, 1 / 4)
+res_clust = c(1, 1 / 2, 1 / 4)[1]
 res_env = 1 / 12 # matches BioORACLE
 res_gf = res_env # match res_env for now
 
@@ -318,9 +318,9 @@ env_log = c(
 )
 
 #' Gradient Forest params
-gf_trees = 600
-gf_bootstrap_iters = 600
-cgf_bootstrap_combinations = 2000
+gf_trees = 200
+gf_bootstrap_iters = 200
+cgf_bootstrap_combinations = 600
 gf_bins = 201
 gf_corr_thres = 0.5
 gf_compact = FALSE
