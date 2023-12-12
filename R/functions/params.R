@@ -220,7 +220,7 @@ env_biooracle_names <- c(env_biooracle_names, "MS_bathy_5m")
 ##Not all variables hit the limits, shwon in comment
 ##The limits are generally around 3 standard deviations
 ##from the mean, unless specified in comments
-env_limits_sd = 3
+env_limits_sd = 300
 env_limits = list(
   ##no clipping
   "BO2_tempmin_ss" = c(0, 30),
