@@ -238,6 +238,7 @@ list(
       all_bio_env,
       env_biooracle_names,
       gf_trees,
+      gf_bootstrap_iters,
       gf_compact,
       gf_bins,
       gf_corr_thres
@@ -264,7 +265,7 @@ list(
     combine_gfbootstrap_p2(
       gfbootstrap_combined_tmp,
       gf_bins,
-      gf_bootstrap_combinations
+      cgf_bootstrap_combinations
       ),
     pattern = map(gfbootstrap_combined_tmp)
   ),

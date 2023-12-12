@@ -1,6 +1,7 @@
 fit_gfbootstrap <- function(all_bio_env,
                             env_biooracle_names,
                             gf_trees,
+                            gf_bootstrap_iters,
                             gf_compact,
                             gf_bins,
                             gf_corr_thres) {
@@ -22,13 +23,14 @@ fit_gfbootstrap <- function(all_bio_env,
         x = all_bio_env$wide_taxa_env[[1]],
         predictor.vars = env_biooracle_names,
         response.vars = unique(all_bio_env$obs_env[[1]]$taxon_id_chr),
-        nbootstrap = gf_trees,
+        nbootstrap = gf_bootstrap_iters,
         compact = gf_compact,
         nbin = gf_bins,
         transform = NULL,
         corr.threshold = gf_corr_thres,
         maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$taxon_id_chr)) * 0.368 / 2)),
-        trace = TRUE
+        trace = TRUE,
+        trees_per_iter = gf_trees
     )
 
     ## save the gfbootstrap objects into the targets cache
