@@ -420,7 +420,11 @@ surveys_for_cluster_compare$best_all_depths <- list(
 #' K-medoids params
 min_clust_thres = 0.01
 
-k_range = seq.int(2,20)
+cluster_min_k = 2
+cluster_max_k = 200
+cluster_fixed_k = 41
+
+k_range = seq.int(2,200)
 cluster_reps = seq.int(1,3)
 cluster_reps_test = seq.int(1,10)
 

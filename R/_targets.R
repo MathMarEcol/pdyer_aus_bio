@@ -35,6 +35,8 @@ tar_option_set(
     "gradientForest",
     "castcluster",
     "apcluster",
+    "cluster",
+    "NbClust",
     "planktonr",
     "qs",
     "sf",
@@ -305,6 +307,87 @@ list(
       ),
     pattern = map(all_bio_env)
   ),
+
+  tar_target(
+      gf_combined_tmp,
+      combine_gf_p1(
+          gf_survey,
+          custom_combinations
+      )
+      ## Do NOT map over gfbootstrap_survey
+  ),
+  tar_target(
+      gf_combined,
+      combine_gf_p2(
+          gf_combined_tmp,
+          gf_bins
+      ),
+      pattern = map(gf_combined_tmp)
+  ),
+
+  tar_target(
+      gf_predicted,
+      predict_gf(
+          gf_combined,
+          env_domain_plot, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+          env_biooracle_names,
+          extrap,
+          pred_importance_top,
+          env_id_col,
+          depth_range
+      ),
+      pattern = map(gf_combined)
+  ),
+
+  tar_target(
+    gf_cluster_kmedoids,
+    cluster_gf_kmedoids(
+        gf_predicted,
+        env_domain_plot,
+        cluster_min_k,
+        cluster_max_k,
+        cluster_fixed_k,
+        k_range,
+        clara_samples,
+        clara_sampsize,
+        clara_trace,
+        clara_rngR,
+        clara_pamLike,
+        clara_correct.d
+    ),
+    pattern = map(gf_predicted)
+  ),
+
+
+  tar_target(
+    nbclust_plots,
+    plot_nbclust_rank(),
+    pattern = map(gf_predicted)
+  ),
+
+  ## Adjust gf_kmedoids to be compatible with this function
+  ## tar_target(
+  ##   gf_kmedoid_polygons,
+  ##   cluster_raster_to_polygons(
+  ##     gfbootstrap_cluster,
+  ##     spatial_vars
+  ##   ),
+  ##   pattern = map(gf_cluster_kmedoids)
+  ## ),
+
+
+
+  ## tar_target(
+  ##   kmedoid_plots,
+  ##   plot_kmedoids(gf_kmedoid_polygons,
+  ##                 plot_description),
+  ##   pattern = map(gf_kmedoid_polygons)
+  ## ),
+
+  ## plot rank plot of clusters with hline at 41
+  ## plot maps of 41 clusters
+  ##
+
 
 
   tar_target(
