@@ -359,6 +359,20 @@ custom_combinations$imos <- list(
       )
 )
 
+custom_combinations$all_plankton <- list(
+  descriptions = data.table::data.table(
+    trophic = "plankton",
+    depth_cat = "epi",
+    survey = "all"
+  ),
+  matches = data.table::CJ(
+    trophic = c("zoo", "phy"),
+    depth_cat = c("epi")
+  )
+)
+
+
+
 
 
 ## Survey combinations to compare cluster counts
