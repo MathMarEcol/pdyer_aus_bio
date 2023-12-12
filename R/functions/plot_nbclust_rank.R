@@ -2,7 +2,7 @@ plot_nbclust_rank <- function(
                               gf_predicted,
                               env_domain_plot,
                               env_poly,
-                              spatial_vars
+                              spatial_vars,
                               marine_map,
                               plot_description = "nbclust_rank",
                               output_folder
