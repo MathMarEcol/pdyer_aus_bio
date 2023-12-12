@@ -54,7 +54,7 @@ tar_option_set(
     "jsonlite",
     "glue",
     "ncdf4",
-    "ClimateOperators",
+    # "ClimateOperators",
     "sdmpredictors",
     "data.table",
     "tidyverse",
