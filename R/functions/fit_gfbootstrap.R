@@ -28,7 +28,7 @@ fit_gfbootstrap <- function(all_bio_env,
         nbin = gf_bins,
         transform = NULL,
         corr.threshold = gf_corr_thres,
-        maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$taxon_id_chr)) * 0.368 / 2)),
+        maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$env_id)) )),
         trace = TRUE,
         trees_per_iter = gf_trees
     )
