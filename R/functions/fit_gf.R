@@ -30,7 +30,7 @@ fit_gf <- function(
     nbin = gf_bins,
     transform = NULL,
     corr.threshold = gf_corr_thres,
-    maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$env_id)))),
+    maxLevel = floor(log2(length(unique(all_bio_env$obs_env[[1]]$env_id))/(2*exp(1)))),
     trace = TRUE
   )
 
