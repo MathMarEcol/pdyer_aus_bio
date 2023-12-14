@@ -14,7 +14,10 @@ fit_gf <- function(
     ## Propagating
     ##
     return(data.table(all_bio_env[,.(env_domain, trophic, survey, depth_cat)],
-                      gf = list(NA)
+                      gf = NA,
+                      is_combined = FALSE,
+                      surv_full_name = surv_full_names,
+                      frac_valid = 0
                       ))
   }
   gf_safe <- purrr::possibly(gradientForest::gradientForest, otherwise = NA, quiet = FALSE)
