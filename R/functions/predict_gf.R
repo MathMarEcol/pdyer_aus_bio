@@ -49,9 +49,9 @@ predict_gf <- function(
     n_preds <- length(imp_preds)
 
     comp_turnover <- predict(gf_combined$gf[[1]],
-      newdata = env_dom,
+      newdata = env_dom[, ..imp_preds],
       extrap = extrap
-    )[, imp_preds]
+    )
 
 
   return(data.table::setDT(list(
