@@ -189,7 +189,7 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
   } else {
     return(
       data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
-        gfbootstrap = list(gfbootstrap_combined_tmp$gfbootstrap[[1]])
+        gfbootstrap = gfbootstrap_combined_tmp$gfbootstrap[[1]]
       )
     )
   }
