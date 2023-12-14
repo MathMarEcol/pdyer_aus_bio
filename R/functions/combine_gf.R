@@ -153,7 +153,7 @@ combine_gf_p2 <- function(gf_combined_tmp,
 
   if (all(is.na(gfs))) {
     return(data.table(gf_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
-      gf = list(NA)
+      gf = NA
     ))
   } else if (gf_combined_tmp$is_combined) {
       gfs <- gfs[!is.na(gfs)]
