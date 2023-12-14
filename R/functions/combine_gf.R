@@ -188,7 +188,7 @@ combine_gf_p2 <- function(gf_combined_tmp,
   } else {
     return(
       data.table(gf_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
-        gf = gf_combined_tmp$gf
+        gf = gf_combined_tmp$gf[[1]]
       )
     )
   }
