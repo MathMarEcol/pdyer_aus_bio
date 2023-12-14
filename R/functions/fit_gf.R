@@ -6,6 +6,9 @@ fit_gf <- function(
                    gf_bins,
                    gf_corr_thres
                    ) {
+  surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+  surv_full_names <- apply(all_bio_env[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
+
   if (all(is.na(all_bio_env$wide_taxa_env))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
