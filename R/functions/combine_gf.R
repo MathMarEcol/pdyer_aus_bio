@@ -114,7 +114,7 @@ combine_gf_p1 <- function(
     rbindlist(lapply(
       custom_combinations,
       \(x, gf_survey){
-        custom_combinations_helper(x, gf_survey)
+        gf_custom_combinations_helper(x, gf_survey)
       },
       gf_survey = gf_survey
     )
@@ -214,7 +214,7 @@ combine_gf_p2 <- function(gf_combined_tmp,
 ## Takes a list of character vectors `gf_custom' where
 ## names(gf_custom) -> c("trophic", "depth_cat", "survey")
 ## For each vector, specify the
-custom_combinations_helper <- function(
+gf_custom_combinations_helper <- function(
                                        custom_row,
                                        gf_survey
                                        ) {
