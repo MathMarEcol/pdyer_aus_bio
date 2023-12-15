@@ -381,12 +381,22 @@ list(
 
 
 
-  ## tar_target(
-  ##   kmedoid_plots,
-  ##   plot_kmedoids(gf_kmedoid_polygons,
-  ##                 plot_description),
-  ##   pattern = map(gf_kmedoid_polygons)
-  ## ),
+  tar_target(
+    kmedoid_plots,
+    plot_gf_kmedoids(gf_cluster_kmedoids,
+                     gf_kmedoid_polygons,
+                     gf_predicted,
+                     cluster_fixed_k,
+                     all_bio_env,
+                     all_bio_long,
+                     env_poly,
+                     spatial_vars,
+                     regrid_resolution$grid_res_cluster,
+                     marine_map,
+                     plot_description = "kmedoid_bioregions",
+                     output_folder),
+    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, gf_predicted)
+  ),
 
   ## plot rank plot of clusters with hline at 41
   ## plot maps of 41 clusters
