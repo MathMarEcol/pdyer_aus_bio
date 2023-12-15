@@ -33,7 +33,7 @@ plot_nbclust_rank <- function(
     ranked_scores <- data.frame(
         heuristic = colnames(gf_cluster_kmedoids$gf_nbclust[[1]]$Best.nc),
         nclust = as.vector(
-            gf_cluster_kmedoids$gf_nbclust[[1]]gf_nbclust$Best.nc[1,]
+            gf_cluster_kmedoids$gf_nbclust[[1]]$Best.nc[1,]
         )
     )
     ranked_scores <- ranked_scores[!(ranked_scores$nclust < 1),]
