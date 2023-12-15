@@ -369,15 +369,15 @@ list(
     pattern = map(gf_cluster_kmedoids)
   ),
 
-  ## Adjust gf_kmedoids to be compatible with this function
-  ## tar_target(
-  ##   gf_kmedoid_polygons,
-  ##   cluster_raster_to_polygons(
-  ##     gf_cluster_kmedoids,
-  ##     spatial_vars
-  ##   ),
-  ##   pattern = map(gf_cluster_kmedoids)
-  ## ),
+
+  tar_target(
+    gf_kmedoid_polygons,
+    cluster_raster_to_polygons(
+      gf_cluster_kmedoids$clust_ind_fixed[[1]],
+      spatial_vars
+    ),
+    pattern = map(gf_cluster_kmedoids)
+  ),
 
 
 
