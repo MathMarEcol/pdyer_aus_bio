@@ -9,7 +9,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
                                 clara_pamLike,
                                 clara_correct.d) {
 
-  if (all(is.na(gf_predicted$gf))) {
+  if (all(is.na(gf_predicted$imp_preds))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
