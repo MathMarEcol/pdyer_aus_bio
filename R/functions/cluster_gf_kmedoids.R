@@ -58,11 +58,11 @@ cluster_gf_kmedoids <- function(gf_predicted,
     )
   clust_ind_fixed[, cl_factor := as.factor(cl)]
 
-    data.table::setkey(clust_ind, "x_row")
+    data.table::setkey(clust_ind_fixed, "x_row")
 
   return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
                     clust_method = "kmedoids",
-                    clust_ind_fixed = list(clust_ind= list(clust_ind_fixed),
+                    clust_ind_fixed = list(clust_ind= list(clust_ind_fixed)),
                     gf_fixed_clust = list(gf_fixed_clusts),
                     gf_nbclust = list(gf_nbclust)
                     ))
