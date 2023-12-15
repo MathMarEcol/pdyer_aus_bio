@@ -1,5 +1,6 @@
 cluster_gf_kmedoids <- function(gf_predicted,
                                 env_domain,
+                                env_biooracle_names,
                                 cluster_fixed_k,
                                 k_range,
                                 clara_samples,
@@ -14,6 +15,8 @@ cluster_gf_kmedoids <- function(gf_predicted,
     ## Propagating
     ##
     return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
+                      clust_method = "kmedoids",
+                      clust_ind = list(NA),
                       gf_fixed_clust = list(NA),
                       gf_nbclust = list(NA)
                       ))
@@ -26,7 +29,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
   ## Should have data to cluster in gf_predicted$comp_turnover
 
   gf_fixed_clusts <- cluster::clara(
-    gf_predicted$comp_turnover[[1]],
+    gf_predicted$comp_turnover[[1]][,env_biooracle_names, with = FALSE],
     cluster_fixed_k,
     metric = "manhattan",
     samples = clara_samples,
@@ -37,8 +40,9 @@ cluster_gf_kmedoids <- function(gf_predicted,
     correct.d = clara_correct.d
     )
 
+  ## Slow
   gf_nbclust <- NbClust::NbClust(
-    gf_predicted$comp_turnover[[1]],
+    gf_predicted$comp_turnover[[1]][,env_biooracle_names, with = FALSE],
     distance = "manhattan",
     min.nc = min(k_range),
     max.nc = max(k_range),
@@ -47,9 +51,21 @@ cluster_gf_kmedoids <- function(gf_predicted,
   )
 
 
+  clust_ind_fixed <- data.table(
+    gf_predicted$comp_turnover[[1]][, c(spatial_vars, env_id_col), with = FALSE],
+    cl = gf_fixed_clusts$clustering,
+    x_row = seq.int(1, nrow(gf_predicted$comp_turnover[[1]]))
+    )
+  clust_ind_fixed[, cl_factor := as.factor(cl)]
+
+    data.table::setkey(clust_ind, "x_row")
+
   return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
+                    clust_method = "kmedoids",
+                    clust_ind_fixed = list(clust_ind= list(clust_ind_fixed),
                     gf_fixed_clust = list(gf_fixed_clusts),
                     gf_nbclust = list(gf_nbclust)
                     ))
+
 
 }

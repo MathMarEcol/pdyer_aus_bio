@@ -52,7 +52,9 @@ predict_gf <- function(
     comp_turnover <- predict(gf_combined$gf[[1]],
       newdata = env_dom[, ..imp_preds],
       extrap = extrap
-    )
+      )
+
+    comp_turnover <- data.table::setDT(cbind(comp_turnover, env_dom[,c(spatial_vars, env_id_col), with=FALSE]))
 
 
   return(data.table::setDT(list(

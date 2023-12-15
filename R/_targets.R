@@ -345,6 +345,7 @@ list(
     cluster_gf_kmedoids(
         gf_predicted,
         env_domain_cluster,
+        env_biooracle_names,
         cluster_fixed_k,
         k_range,
         clara_samples,
@@ -360,15 +361,19 @@ list(
 
   tar_target(
     nbclust_plots,
-    plot_nbclust_rank(),
-    pattern = map(gf_predicted)
+    plot_nbclust_rank(
+        gf_cluster_kmedoids,
+        plot_description = "nbclust_rank",
+        output_folder
+    ),
+    pattern = map(gf_cluster_kmedoids)
   ),
 
   ## Adjust gf_kmedoids to be compatible with this function
   ## tar_target(
   ##   gf_kmedoid_polygons,
   ##   cluster_raster_to_polygons(
-  ##     gfbootstrap_cluster,
+  ##     gf_cluster_kmedoids,
   ##     spatial_vars
   ##   ),
   ##   pattern = map(gf_cluster_kmedoids)
