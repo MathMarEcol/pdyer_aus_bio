@@ -12,9 +12,9 @@ predict_gf <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gf_combined[, .(env_domain, trophic, survey, depth_cat)],
+    return(data.table::data.table(gf_combined[, .(env_domain, trophic, survey, depth_cat)],
 			env_id = list(NA),
-      imp_preds = list(NA),
+      imp_preds = list(NA)
     ))
  }
     gf_combined$gf <- list(qs::qread(gf_combined$gf[[1]]))
