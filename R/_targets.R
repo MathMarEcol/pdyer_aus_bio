@@ -345,8 +345,6 @@ list(
     cluster_gf_kmedoids(
         gf_predicted,
         env_domain_plot,
-        cluster_min_k,
-        cluster_max_k,
         cluster_fixed_k,
         k_range,
         clara_samples,
