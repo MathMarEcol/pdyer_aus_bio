@@ -1,5 +1,5 @@
 cluster_gf_kmedoids <- function(gf_predicted,
-                                env_domain_plot,
+                                env_domain,
                                 cluster_fixed_k,
                                 k_range,
                                 clara_samples,

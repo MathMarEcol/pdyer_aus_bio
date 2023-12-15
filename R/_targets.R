@@ -330,7 +330,7 @@ list(
       gf_predicted,
       predict_gf(
           gf_combined,
-          env_domain_plot, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+          env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
           env_biooracle_names,
           extrap,
           pred_importance_top,
@@ -344,7 +344,7 @@ list(
     gf_cluster_kmedoids,
     cluster_gf_kmedoids(
         gf_predicted,
-        env_domain_plot,
+        env_domain_cluster,
         cluster_fixed_k,
         k_range,
         clara_samples,
