@@ -1,7 +1,7 @@
 plot_gf_continuous <- function(
                                gf_predicted,
                                marine_map,
-                               env_poly
+                               env_poly,
                                plot_description,
                                regrid_resolution,
                                output_folder
