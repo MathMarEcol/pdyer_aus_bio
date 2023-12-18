@@ -400,7 +400,7 @@ list(
         plot_description = "nbclust_rank",
         output_folder
     ),
-    pattern = map(gf_cluster_kmedoids)
+    pattern = map(gf_cluster_nbclust)
   ),
 
 
