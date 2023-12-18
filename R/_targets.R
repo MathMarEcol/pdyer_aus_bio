@@ -373,7 +373,7 @@ list(
   tar_target(
     gf_kmedoid_polygons,
     cluster_raster_to_polygons(
-      gf_cluster_kmedoids$clust_ind_fixed[[1]],
+      gf_cluster_kmedoids,
       spatial_vars
     ),
     pattern = map(gf_cluster_kmedoids)
