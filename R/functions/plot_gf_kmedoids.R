@@ -29,7 +29,7 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
     samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png")
   )
 
-  if (is.na(gf_cluster_kmedoids$clust_ind_fixed)) {
+  if (all(is.na(gf_cluster_kmedoids$clust_ind))) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
