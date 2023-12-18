@@ -36,11 +36,6 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
     ggsave_wrapper(filename = pl_file["no_samp"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp_clipped"], plot = no_plot)
     ggsave_wrapper(filename = pl_file["samp"], plot = no_plot)
-    if (plot_sim_mat) {
-        ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
-        ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = no_plot)
-        ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
-    }
     return(pl_file)
   }
 
