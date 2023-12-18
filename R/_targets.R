@@ -339,6 +339,18 @@ list(
       ),
       pattern = map(gf_combined)
   ),
+  tar_target(
+    plot_gf_cont,
+    plot_gf_continuous(
+        gf_predicted,
+        marine_map,
+        env_poly
+        plot_description = "compositional_turnover",
+        regrid_resolution = regrid_resolution$grid_res_cluster,
+        output_folder
+    ),
+    pattern = map(gf_predicted)
+  ),
 
   tar_target(
     gf_cluster_kmedoids,
