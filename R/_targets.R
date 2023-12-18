@@ -372,7 +372,7 @@ list(
 
   tar_target(
     nbclust_index_target,
-    nbclust_index,
+    nbclust_index_vec,
     iteration = "vector"
   ),
 
