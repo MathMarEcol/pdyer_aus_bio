@@ -17,8 +17,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
     return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
                       clust_method = "kmedoids",
                       clust_ind = list(NA),
-                      gf_fixed_clust = list(NA),
-                      gf_nbclust = list(NA)
+                      gf_fixed_clust = list(NA)
                       ))
   }
 
@@ -53,8 +52,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
   return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
                     clust_method = "kmedoids",
                     clust_ind = list(clust_ind),
-                    gf_fixed_clust = list(gf_fixed_clusts),
-                    gf_nbclust = list(gf_nbclust)
+                    gf_fixed_clust = list(gf_fixed_clusts)
                     ))
 
 

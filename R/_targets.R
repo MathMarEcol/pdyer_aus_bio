@@ -358,7 +358,29 @@ list(
     pattern = map(gf_predicted)
   ),
 
+  tar_target(
+    nbclust_index_target,
+    nbclust_index,
+    iteration = "vector"
+  ),
 
+  tar_target(
+    gf_cluster_nbclust_tmp,
+    fit_nbclust(
+      gf_predicted,
+      env_biooracle_names,
+      nbclust_dist,
+      nbclust_method,
+      nbclust_index_target,
+      k_range
+    ),
+    pattern = cross(gf_predicted, nbclust_index_target),
+  ),
+
+  tar_target(
+      gf_cluster_nbclust,
+      merge_nbclust(gf_cluster_nbclust_tmp)
+  ),
   tar_target(
     nbclust_plots,
     plot_nbclust_rank(

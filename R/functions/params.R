@@ -434,6 +434,38 @@ clara_rngR = TRUE
 clara_pamLike = TRUE
 clara_correct.d = TRUE
 
+nbclust_dist = "manhattan"
+nbclust_method = "kmeans"
+nbclust_index_vec = c("kl",
+                      "ch",
+                      "hartigan",
+                      "ccc",
+                      "scott",
+                      "marriot",
+                      "trcovw",
+                      "tracew",
+                      "friedman",
+                      "rubin",
+                      "cindex",
+                      "db",
+                      "silhouette",
+                      "duda",
+                      "pseudot2",
+                      "beale",
+                      "ratkowsky",
+                      "ball",
+                      "ptbiserial",
+                      "gap",
+                      "frey",
+                      "mcclain",
+                      "gamma",
+                      "gplus",
+                      "tau",
+                      "dunn",
+                      "hubert",
+                      "sdindex",
+                      "dindex",
+                      "sdbw")
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
