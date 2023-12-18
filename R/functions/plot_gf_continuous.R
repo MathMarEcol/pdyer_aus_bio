@@ -21,7 +21,7 @@ plot_gf_continuous <- function(
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
-    map = paste0(pl_file_base, "_map.png")
+    map = paste0(pl_file_base, "_map.png"),
     pca = paste0(pl_file_base, "_pca.png")
   )
 
