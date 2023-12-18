@@ -462,9 +462,9 @@ nbclust_index_vec = c("kl",
                       "gplus",
                       "tau",
                       "dunn",
-                      "hubert",
+                      ## "hubert",
                       "sdindex",
-                      "dindex",
+                      ## "dindex",
                       "sdbw")
 
 ##Clustering settings
