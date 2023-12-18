@@ -91,7 +91,10 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
     stop("plot_gfbootstrap.R: Multiple custom groups have matched")
   }
 
+
   if (any(custom_group_matches)) {
+    ## This line is only reached if custom_gorup_matches has exactly one true entry.
+    custom_group_matches <- which(custom_group_matches)
     ## Using a custom combination
     use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
