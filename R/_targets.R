@@ -344,7 +344,7 @@ list(
     plot_gf_continuous(
         gf_predicted,
         marine_map,
-        env_poly
+        env_poly,
         plot_description = "compositional_turnover",
         regrid_resolution = regrid_resolution$grid_res_cluster,
         output_folder
