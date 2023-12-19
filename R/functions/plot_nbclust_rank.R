@@ -36,7 +36,6 @@ plot_nbclust_rank <- function(
             gf_cluster_kmedoids$gf_nbclust[[1]]$Best.nc[1,]
         )
     )
-    ranked_scores <- ranked_scores[!(ranked_scores$nclust < 1),]
     ranked_scores <- ranked_scores[order(ranked_scores$nclust), ]
     ranked_scores <- cbind(ranked_scores, list(x = seq.int(to = nrow(ranked_scores))))
 
