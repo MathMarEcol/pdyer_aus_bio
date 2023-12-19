@@ -44,6 +44,7 @@ plot_nbclust_rank <- function(
                                   name = "Heuristic",
                                   guide = ggplot2::guide_axis(angle = 45)) +
         ggplot2::ggtitle("Recommended number of clusters by hyperparameter tuning heuristics, ranked") +
+          ggplot2::geom_hline(yintercept = 41, colour = "red") +
           ggthemes::theme_tufte()
 
     pl_file <- paste0(pl_file_base, "_", plot_description, ".png")
