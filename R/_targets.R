@@ -395,7 +395,7 @@ list(
   tar_target(
     nbclust_plots,
     plot_nbclust_rank(
-        gf_cluster_kmedoids,
+        gf_cluster_nbclust,
         plot_description = "nbclust_rank",
         output_folder
     ),

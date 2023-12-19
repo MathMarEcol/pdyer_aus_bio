@@ -1,5 +1,5 @@
 plot_nbclust_rank <- function(
-                              gf_cluster_kmedoids,
+                              gf_cluster_nbclust,
                               plot_description,
                               output_folder
                               ) {
