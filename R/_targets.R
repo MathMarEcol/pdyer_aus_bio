@@ -359,7 +359,6 @@ list(
         env_domain_cluster,
         env_biooracle_names,
         cluster_fixed_k,
-        k_range,
         clara_samples,
         clara_sampsize,
         clara_trace,
