@@ -54,9 +54,12 @@ merge_nbclust <- function(
                           gf_cluster_nbclust_tmp
                           ) {
 
-  ## gf_cluster_nbclust <- gf_cluster_nbclust_tmp[
-   ## ,
-     ## ...convert best_nc into a vector. Labels not needed, but could be added as vector names.
-##
-  ## by = c("env_domain", "trophic", "survey", "depth_cat", "clust_method")]
+  gf_cluster_nbclust <- gf_cluster_nbclust_tmp[
+     , list(best_nc=list(setNames(.SD$best_nc, .SD$nbclust_index))),
+       by = c("env_domain", "trophic", "survey", "depth_cat", "clust_method")]
+
+
+  return(gf_cluster_nbclust)
+
+
 }
