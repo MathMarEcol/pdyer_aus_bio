@@ -345,6 +345,8 @@ list(
         gf_predicted,
         marine_map,
         env_poly,
+        pca_n_vars,
+        pca_scale,
         plot_description = "compositional_turnover",
         regrid_resolution = regrid_resolution$grid_res_cluster,
         output_folder

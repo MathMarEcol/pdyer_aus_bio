@@ -2,6 +2,8 @@ plot_gf_continuous <- function(
                                gf_predicted,
                                marine_map,
                                env_poly,
+                               pca_n_vars,
+                               pca_scale,
                                plot_description,
                                regrid_resolution,
                                output_folder
@@ -50,8 +52,9 @@ plot_gf_continuous <- function(
   ## Plot on map
   rast_mat <- terra::rast(as.matrix(
     data.frame(
-      lon = gf_predicted$comp_turnover[[1]][, c(spatial_vars[1]), with=FALSE]-regrid_resolution/2,
-      lat = gf_predicted$comp_turnover[[1]][, c(spatial_vars[2]), with = FALSE]+regrid_resolution/2,
+      lon = gf_predicted$comp_turnover[[1]][, c(spatial_vars[1]), with = FALSE],
+      lat = gf_predicted$comp_turnover[[1]][,
+              c(spatial_vars[2]), with = FALSE] - regrid_resolution / 4,
       r = r,
       g = g,
       b = b)),
@@ -106,8 +109,36 @@ plot_gf_continuous <- function(
     colours = colours
   )
 
+  pca_n_vars <- min(pca_n_vars, length(imp_preds))
+
+  pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
+
+
+
+  # choose a scaling factor to plot the vectors over the grid
+  scal <- 40
+  xrng <- range(PCs$x[,1], PCs$rotation[,1]/scal)*1.1
+  yrng <- range(PCs$x[,2], PCs$rotation[,2]/scal)*1.1
+
+# plot the other predictors with "+"
+  points(PCs$rotation[! vind,1:2]/scal, pch="+")
+# plot the chosen predictors as arrows
+  arrows(rep(0,lv), rep(0,lv), PCs$rotation[vec,1]/scal, PCs$rotation[vec,2]/scal, length = 0.0625)
+  jit <- 0.0015
+  text(PCs$rotation[vec,1]/scal+jit*sign(PCs$rotation[vec,1]), PCs$rotation[vec,2]/scal+jit*sign(PCs$rotation[vec,2]), labels = vec)
+
+
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
     ggplot2::geom_point(show.legend = FALSE) +
+    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]) * pca_scale, mapping = aes(x = PC1, y = PC2), inherit.aes = FALSE) +
+      ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]) * pca_scale,
+                            arrow = arrow(),
+                            inherit.aes = FALSE) +
+      ggplot2::geom_text(
+        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale* 1.1)[seq.int(pca_n_vars),],
+        mapping = aes(x = PC1, y = PC2, label = imp_preds),
+        inherit.aes = FALSE
+      ) +
     ggthemes::theme_tufte()
 
   ggsave_wrapper(filename = pl_file["pca"], plot = pl)

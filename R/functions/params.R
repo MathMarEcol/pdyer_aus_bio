@@ -434,6 +434,9 @@ clara_rngR = TRUE
 clara_pamLike = TRUE
 clara_correct.d = TRUE
 
+pca_n_vars = 10
+pca_scale = 1/20
+
 nbclust_dist = "manhattan"
 nbclust_method = "kmeans"
 nbclust_index_vec = c("kl",
