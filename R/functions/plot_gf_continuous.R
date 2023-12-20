@@ -119,11 +119,11 @@ plot_gf_continuous <- function(
       ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]) * pca_scale,
                             arrow = arrow(),
                             inherit.aes = FALSE) +
-      ggplot2::geom_text(
-        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale* 1.1)[seq.int(pca_n_vars),],
+      ggrepel::geom_text_repel(
+        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale)[pred_ind, ],
         mapping = aes(x = PC1, y = PC2, label = imp_preds),
         inherit.aes = FALSE
-      ) +
+            ) +
     ggthemes::theme_tufte()
 
   ggsave_wrapper(filename = pl_file["pca"], plot = pl)

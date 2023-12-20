@@ -51,6 +51,7 @@ tar_option_set(
     "tmap",
     "ggplot2",
     "ggthemes",
+    "ggrepel",
     "jsonlite",
     "glue",
     "ncdf4",
