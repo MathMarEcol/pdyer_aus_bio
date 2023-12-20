@@ -423,7 +423,7 @@ min_clust_thres = 0.01
 
 cluster_fixed_k = 41
 
-k_range = c(2,200)
+k_range = c(2,300)
 cluster_reps = seq.int(1,3)
 cluster_reps_test = seq.int(1,10)
 
