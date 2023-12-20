@@ -120,7 +120,7 @@ plot_gf_continuous <- function(
                             arrow = arrow(),
                             inherit.aes = FALSE) +
       ggrepel::geom_text_repel(
-        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale)[pred_ind, ],
+        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale),
         mapping = aes(x = PC1, y = PC2, label = imp_preds),
         inherit.aes = FALSE
             ) +
