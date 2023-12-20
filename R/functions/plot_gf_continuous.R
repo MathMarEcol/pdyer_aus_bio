@@ -68,6 +68,17 @@ plot_gf_continuous <- function(
                           crs = "+proj=longlat +datum=WGS84"
                           )
 
+  imp_preds <- gf_predicted$imp_preds[[1]]
+  pred_string <- paste(
+      sapply(
+        split(imp_preds, rep(seq.int(1,length(imp_preds)), each = 5, length.out = length(imp_preds))),
+        function(x){paste(x, collapse = ", ")}
+      ),
+      collapse = "\n"
+  )
+
+
+
   pl_tm <- tmap::tm_shape(rast_mat, bbox = env_bbox) +
     tmap::tm_rgb(r = 1, g = 2, b = 3 , interpolate = FALSE)
   if (gf_predicted$env_domain != "aus_eez"){
