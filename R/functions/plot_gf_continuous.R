@@ -113,21 +113,6 @@ plot_gf_continuous <- function(
 
   pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
 
-
-
-  # choose a scaling factor to plot the vectors over the grid
-  scal <- 40
-  xrng <- range(PCs$x[,1], PCs$rotation[,1]/scal)*1.1
-  yrng <- range(PCs$x[,2], PCs$rotation[,2]/scal)*1.1
-
-# plot the other predictors with "+"
-  points(PCs$rotation[! vind,1:2]/scal, pch="+")
-# plot the chosen predictors as arrows
-  arrows(rep(0,lv), rep(0,lv), PCs$rotation[vec,1]/scal, PCs$rotation[vec,2]/scal, length = 0.0625)
-  jit <- 0.0015
-  text(PCs$rotation[vec,1]/scal+jit*sign(PCs$rotation[vec,1]), PCs$rotation[vec,2]/scal+jit*sign(PCs$rotation[vec,2]), labels = vec)
-
-
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
     ggplot2::geom_point(show.legend = FALSE) +
     ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]) * pca_scale, mapping = aes(x = PC1, y = PC2), inherit.aes = FALSE) +
