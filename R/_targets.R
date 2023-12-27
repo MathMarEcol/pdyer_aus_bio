@@ -386,7 +386,7 @@ list(
         plot_description = "compositional_turnover",
         output_folder
     ),
-    pattern = map(gf_predicted)
+    pattern = slice(gf_predicted, index = c(29))
   ),
 
   tar_target(
@@ -488,7 +488,7 @@ list(
                      marine_map,
                      plot_description = "kmedoid_bioregions",
                      output_folder),
-    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, gf_predicted)
+    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, slice(gf_predicted, index = c(29)))
   ),
 
   ## plot rank plot of clusters with hline at 41
