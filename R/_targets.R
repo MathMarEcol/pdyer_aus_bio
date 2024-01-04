@@ -131,6 +131,18 @@ list(
       env_id_col
   ),
 
+  tar_target(
+    k_target,
+    seq.int(min(k_range), max(k_range)),
+    iteration = "vector"
+  ),
+
+  tar_target(
+    cluster_res_target,
+    cluster_res,
+    iteration = "vector"
+  ),
+
   ## Load in biological data and convert to
   ## long form
   tar_target(
@@ -373,28 +385,39 @@ list(
   ),
 
   tar_target(
-    nbclust_index_target,
-    nbclust_index_vec,
-    iteration = "vector"
-  ),
-
-  tar_target(
-    gf_cluster_nbclust_tmp,
-    fit_nbclust(
+    nbclust_branch_table,
+    nbclust_generate_branches(
       gf_predicted,
-      env_biooracle_names,
+      k_range,
+      nbclust_index_metadata,
       nbclust_dist,
       nbclust_method,
-      nbclust_index_target,
-      k_range
-    ),
-    pattern = cross(gf_predicted, nbclust_index_target),
+      nbclust_max_runtime,
+      nbclust_include_graphical
+    )
+    ## no mapping or crossing
   ),
 
   tar_target(
-      gf_cluster_nbclust,
-      merge_nbclust(gf_cluster_nbclust_tmp)
+    nbclust_branch_fitted,
+    nbclust_fit_branches(
+      gf_predicted,
+      nbclust_index_metadata,
+      nbclust_branch_table
+    ),
+    pattern = map(nbclust_branch_table)
   ),
+
+  tar_target(
+    gf_cluster_nbclust,
+    nbclust_merge_branches(
+      nbclust_branch_fitted,
+      gf_predicted
+    )
+    ## No mapping or crossing
+  ),
+
+
   tar_target(
     nbclust_plots,
     plot_nbclust_rank(

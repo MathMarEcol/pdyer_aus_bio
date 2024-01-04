@@ -439,36 +439,112 @@ pca_scale = 1/20
 
 nbclust_dist = "manhattan"
 nbclust_method = "kmeans"
-nbclust_index_vec = c("kl",
-                      "ch",
-                      "hartigan",
-                      "ccc",
-                      "scott",
-                      "marriot",
-                      "trcovw",
-                      "tracew",
-                      "friedman",
-                      "rubin",
-                      "cindex",
-                      "db",
-                      "silhouette",
-                      "duda",
-                      "pseudot2",
-                      "beale",
-                      "ratkowsky",
-                      "ball",
-                      "ptbiserial",
-                      "gap",
-                      "frey",
-                      "mcclain",
-                      "gamma",
-                      "gplus",
-                      "tau",
-                      "dunn",
-                      ## "hubert",
-                      "sdindex",
-                      ## "dindex",
-                      "sdbw")
+
+
+## NbClust has a GPL-2 licence
+
+## NbClust Beale threshold
+## Package defaults to 0.1
+nbclust_alphabeale = 0.1
+
+## Return the index of the best cluster
+## Assumes scores are sorted from smallest k to largest
+nbclust_custom_bestnc <- list(
+  duda = function(clust_scores, crit_scores) {
+    passes <- clust_scores >= crit_scores
+    ind <- which(passes)
+    if (length(ind) > 0) {
+      return(min(ind))
+    } else {
+      return(NA)
+    }
+  },
+  pseudot2 = function(clust_scores, crit_scores) {
+    passes <- clust_scores <= crit_scores
+    ind <- which(passes)
+    if (length(ind) > 0) {
+      return(min(ind))
+    } else {
+      return(NA)
+    }
+  },
+  beale = function(clust_scores) {
+    passes <- clust_scores >= nbclust_alphabeale ## closure
+    ind <- which(passes)
+    if (length(ind) > 0) {
+      return(min(ind))
+    } else {
+      return(NA)
+    }
+  },
+  frey = function(clust_scores) {
+    passes <- clust_scores < 1
+    ind <- which(passes)
+    if (length(ind) > 0) {
+      return(min(ind) - 1)
+    } else {
+      return(NA)
+    }
+  },
+  gap = function(clust_scores, crit_scores) {
+    passes <- 0 <= crit_scores
+    ind <- which(passes)
+    if (length(ind) > 0) {
+      return(min(ind))
+    } else {
+      return(NA)
+    }
+  }
+)
+## serial indicates the index uses second order information
+## between index scores to calculate the best cluster,
+## and therefore must be run in serial
+## If FALSE, then each k can be calculated in parallel easily using
+## the optima_func and the vector of index scores.
+## runtime is a rank of how quickly results are calculated,
+## from 1 (fast) to 4 (very slow). Use to filter to keep
+## runtime manageable.
+## Fortunately, all serial indicies are also fast.
+## Graphical methods require manual interpretation of a plot
+## so are usually disabled
+## crit methods need the crit scores for each k to find optima
+nbclust_index_metadata = data.table::setDT(tibble::tribble(
+                                     ~index, ~serial, ~runtime,  ~optima_func, ~crit, ~graphical,
+                                     "kl", FALSE, 1, which.max, FALSE, FALSE,
+                                     "ch", FALSE, 1, which.max, FALSE, FALSE,
+                                     "ccc", FALSE, 1, which.max, FALSE, FALSE,
+                                     "db", FALSE, 1, which.min, FALSE, FALSE,
+                                     "silhouette", FALSE, 2, which.max, FALSE, FALSE,
+                                     "duda", FALSE, 1, nbclust_custom_bestnc$duda, TRUE, FALSE,
+                                     "pseudot2", FALSE, 1, nbclust_custom_bestnc$pseudot2, TRUE, FALSE,
+                                     "beale", FALSE, 1, nbclust_custom_bestnc$beale, FALSE, FALSE,
+                                     "ratkowsky", FALSE, 1, which.max, FALSE, FALSE,
+                                     "ptbiserial", FALSE, 2, which.max, FALSE, FALSE,
+                                     "gap", FALSE, 4, nbclust_custom_bestnc$gap, TRUE, FALSE,
+                                     "frey", FALSE, 3, nbclust_custom_bestnc$frey, FALSE, FALSE,
+                                     "mcclain", FALSE, 3, which.min, FALSE, FALSE,
+                                     "gamma", FALSE, 4, which.max, FALSE, FALSE,
+                                     "gplus", FALSE, 4, which.min, FALSE, FALSE,
+                                     "tau", FALSE, 4, which.max, FALSE, FALSE,
+                                     "dunn", FALSE, 1, which.max, FALSE, FALSE,
+                                     "sdindex", TRUE, 1, which.min, FALSE, FALSE, ## uses max k
+                                     "sdbw", FALSE, 2, which.min, FALSE, FALSE,
+                                     "hartigan", TRUE, 1, NA, FALSE, FALSE,
+                                     "scott", TRUE, 1, NA, FALSE, FALSE,
+                                     "marriot", TRUE, 1, NA, FALSE, FALSE,
+                                     "trcovw", TRUE, 1, NA, FALSE, FALSE,
+                                     "tracew", TRUE, 1, NA, FALSE, FALSE,
+                                     "friedman", TRUE, 1, NA, FALSE, FALSE,
+                                     "rubin", TRUE, 1, NA, FALSE, FALSE,
+                                     "cindex", TRUE, 1, NA, FALSE, FALSE,
+                                     "ball", TRUE, 1, NA, FALSE, FALSE,
+                                     "hubert", TRUE, 1, NA, FALSE, TRUE, ## Graphical
+                                     "dindex", TRUE, 1, NA, FALSE, TRUE## Graphical
+                                     ))
+
+nbclust_max_runtime = 3
+nbclust_include_graphical = FALSE
+
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
