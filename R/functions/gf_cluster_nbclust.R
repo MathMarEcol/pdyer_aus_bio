@@ -140,7 +140,7 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
 
   gf_cluster_nbclust_tmp[,
                          list(best_nc = list(setNames(.SD$best_nc, .SD$nbclust_index))),
-                         by = (gf_ind, distance, method)]
+                         by = c(gf_ind, distance, method)]
 
 
   gf_predicted[, gf_ind := seq.int(nrow(gf_predicted))]
