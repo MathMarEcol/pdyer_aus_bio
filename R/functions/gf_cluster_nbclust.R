@@ -132,8 +132,8 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
     }
     best_nc <- ordered$k_min[bestnc]
     return(list(best_nc = best_nc))
-  }
-                                                  by = c(gf_ind, distance, method, nbclust_index)
+  },
+  by = c(gf_ind, distance, method, nbclust_index)
   ]
 
   ## Next, collapse back to gf objects
