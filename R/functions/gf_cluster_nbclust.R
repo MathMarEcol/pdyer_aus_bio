@@ -112,44 +112,54 @@ nbclust_fit_branches <- function(gf_predicted,
 }
 
 nbclust_merge_branches <- function(nbclust_branch_fitted,
-                                   gf_predicted
+                                   gf_predicted,
+                                   nbclust_index_metadata
                                    ) {
-
 
   ## First, collapse parallel indicies
   gf_cluster_nbclust_tmp <- nbclust_branch_fitted[
     ## All rows of parallel indices
-    !serial,
+    serial == FALSE,
     {
       ordered <- .SD[order(k_min)]
-    if (all(is.na(.SD[, "crit"]))) {
-      ## Pass function metric
-      bestnc <- .SD[1, "optima_func"][[1]][[1]](ordered$metric)
-    } else {
-      ## Pass function metric and crit
-      bestnc <- .SD[1, "optima_func"][[1]][[1]](ordered$metric,
-        ordered$crit)
-    }
-    best_nc <- ordered$k_min[bestnc]
-    return(list(best_nc = best_nc))
-  },
-  by = c(gf_ind, distance, method, nbclust_index)
+      if (nbclust_index_metadata[index == .BY[["nbclust_index"]], "crit"][[1]] == FALSE) {
+        ## Pass function metric
+        bestnc <- nbclust_index_metadata[index == .BY[["nbclust_index"]], "optima_func"][[1]][[1]](ordered$metric)
+      } else {
+        ## Pass function metric and crit
+        bestnc <- nbclust_index_metadata[index == .BY[["nbclust_index"]], "optima_func"][[1]][[1]](ordered$metric,
+          ordered$crit)
+      }
+      best_nc <- ordered$k_min[bestnc]
+      if (length(best_nc) != 0) {
+        list(bestnc = best_nc)
+      } else {
+        list(bestnc = NA)
+      }
+    },
+    by = c("gf_ind", "dist", "method", "nbclust_index")
   ]
+
+  ## Add serial metrics back
+  gf_cluster_nbclust_all <- rbind(
+    gf_cluster_nbclust_tmp,
+    nbclust_branch_fitted[serial == TRUE, colnames(gf_cluster_nbclust_tmp), with=FALSE]
+  )
 
   ## Next, collapse back to gf objects
 
-  gf_cluster_nbclust_tmp[,
-                         list(best_nc = list(setNames(.SD$best_nc, .SD$nbclust_index))),
-                         by = c(gf_ind, distance, method)]
+  gf_cluster_nbclust <- gf_cluster_nbclust_all[,
+                         list(best_nc = list(setNames(.SD$bestnc, .SD$nbclust_index))),
+                         by = c("gf_ind", "dist", "method")]
 
 
   gf_predicted[, gf_ind := seq.int(nrow(gf_predicted))]
 
-  gf_cluster_nbclust <- gf_cluster_nbclust_tmp[gf_predicted, on = "gf_ind"]
+  out <- gf_cluster_nbclust[gf_predicted, on = "gf_ind"]
 
-  gf_cluster_nbclust[, c(comp_turnover, imp_preds, env_id) := NULL]
+  out[, c("comp_turnover", "imp_preds", "env_id", "gf_ind") := NULL]
 
-  return(gf_cluster_nbclust)
+  return(out)
 
 }
 

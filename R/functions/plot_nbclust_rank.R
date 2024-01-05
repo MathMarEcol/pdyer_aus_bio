@@ -11,7 +11,8 @@ plot_nbclust_rank <- function(
         "trophic",
         "survey",
         "depth_cat",
-        "clust_method"
+        "method",
+        "dist"
       )
     ]
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
