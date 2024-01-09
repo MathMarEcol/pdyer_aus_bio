@@ -623,10 +623,13 @@ list(
         env_id_col,
         depth_range
       ),
-      pattern = cross(env_biooracle_names,
-                      map(gfbootstrap_predicted,
-                          cross(gfbootstrap_combined, res_clust_target)
-                      )
+      pattern = cross(
+        env_biooracle_names,
+        map(
+          gfbootstrap_predicted,
+          cross(gfbootstrap_combined, res_clust_target)
+        )
+      )
   ),
 
 
