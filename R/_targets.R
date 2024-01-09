@@ -159,7 +159,7 @@ list(
 
   tar_target(
     biooracle_layers,
-    unique(purrr:flatten_chr(env_biooracle_names$env_biooracle_names))
+    unique(purrr::flatten_chr(env_biooracle_names$env_biooracle_names))
   ),
 
   tar_target(
