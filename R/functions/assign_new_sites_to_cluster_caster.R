@@ -3,7 +3,7 @@ assign_new_sites_to_cluster_caster <- function(cluster_env_extrapolate,
                                                env_domain,
                                                env_id_col,
                                                spatial_vars) {
-{
+
 
     ## predict(cast_ob_with_sim_mat, pred_sim_mat)
 
