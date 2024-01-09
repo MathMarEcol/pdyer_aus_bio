@@ -164,7 +164,8 @@ list(
 
   tar_target(
     biooracle_files,
-    fetch_biooracle(biooracle_layers),
+    fetch_biooracle(biooracle_layers,
+                    biooracle_folder),
     pattern = map(biooracle_layers),
     format = "file",
   ),
