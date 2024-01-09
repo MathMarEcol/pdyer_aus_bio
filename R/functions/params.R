@@ -189,10 +189,7 @@ marine_categories <- c("marine")
 #' BioORACLE params
 env_vars = c(
   "temp",
-  "nitrate",
-  "silicate",
   "chlo",
-  "iron",
   "salinity",
   "curvel"
 )
@@ -202,6 +199,8 @@ env_modes = c(
   "mean",
   "range"
 )
+
+env_present_only = c("nitrate", "silicate", "iron")
 
 ## BioORACLE strings to match layer codes
 env_year = c("2050", "2100")

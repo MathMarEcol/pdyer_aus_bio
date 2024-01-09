@@ -152,7 +152,8 @@ list(
       env_modes,
       env_year,
       env_pathway,
-      env_bathy
+      env_bathy,
+      env_present_only
     )
   ),
 

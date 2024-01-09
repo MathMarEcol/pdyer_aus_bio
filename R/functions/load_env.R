@@ -19,7 +19,7 @@ load_env_domain <- function(
   tmp_timeout <- getOption("timeout")
   options(timeout = 60000)
 
-  env_raster <- suppressWarnings(sdmpredictors::load_layers(env_biooracle_names,
+  env_raster <- suppressWarnings(sdmpredictors::load_layers(env_biooracle_names$env_biooracle_names[[1]],
                                                             datadir = biooracle_folder,
                                                             rasterstack = FALSE))
     options(timeout = tmp_timeout)
