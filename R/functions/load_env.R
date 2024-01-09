@@ -8,12 +8,12 @@ load_env_domain <- function(
                             env_biooracle_names,
                             env_poly,
                             max_depth,
-                            regrid_resolution,
-                            env_extrap_year,
+                            res_unique_target,
                             spatial_vars,
                             env_limits_sd,
                             env_offset,
-                            env_id_col
+                            env_id_col,
+                            biooracle_files
                             ) {
 
   tmp_timeout <- getOption("timeout")
@@ -25,7 +25,7 @@ load_env_domain <- function(
     options(timeout = tmp_timeout)
 
     target_grid <- raster::raster(x = env_poly$data[[1]],
-                                     resolution = regrid_resolution,
+                                     resolution = res_unique_target,
                                      crs = "+proj=longlat +datum=WGS84")
 
     raster_crop <- raster::brick(lapply(env_raster,
@@ -52,12 +52,12 @@ load_env_domain <- function(
 
   env_round <- rphildyerphd::align_sp(env_clipped,
                                       spatial_cols = spatial_vars,
-                                      res = regrid_resolution,
+                                      res = res_unique_target,
                                       offset = env_offset,
                                     fun = mean)
   data.table::setDT(env_round)
   env_round[, c(env_id_col) :=  seq_len(nrow(env_round))]
-  env_domain <- data.table::data.table(domain = env_poly$name, res = regrid_resolution, env_year = env_biooracle_names$env_year, env_pathway = env_biooracle_names$env_pathway, data = list(env_round))
+  env_domain <- data.table::data.table(domain = env_poly$name, res = res_unique_target, env_year = env_biooracle_names$env_year, env_pathway = env_biooracle_names$env_pathway, data = list(env_round))
   return(env_domain)
 
 }

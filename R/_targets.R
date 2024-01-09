@@ -157,6 +157,24 @@ list(
     )
   ),
 
+  tar_target(
+    biooracle_layers,
+    unique(purrr:flatten_chr(env_biooracle_names$env_biooracle_names))
+  ),
+
+  tar_target(
+    biooracle_files,
+    {
+      sdmpredictors::load_layers(biooracle_layers,
+        datadir = biooracle_folder,
+        rasterstack = FALSE
+      )
+      out <- file.path(biooracle_folder, paste0(biooracle_layers, "_lonlat.zip"))
+    },
+      pattern = map(biooracle_layers),
+      format = "file",
+  ),
+
   
   tar_target(
     env_domain,
@@ -169,7 +187,8 @@ list(
       spatial_vars,
       env_limits_sd,
       env_offset,
-      env_id_col
+      env_id_col,
+      biooracle_files ## not used, here as a dependency
     ),
     pattern = cross(env_poly, res_unique_target, env_biooracle_names),
     iteration = "vector"
