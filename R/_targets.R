@@ -593,9 +593,9 @@ list(
       ),
       pattern = cross(mpa_polygons,
                       map(extrap_polygons,
-                          cross(env_biooracle_names, gfbootstrap_cluster),
-                          cross(
-                            cross(env_biooracle_names, gfbootstrap_predicted), clust_methods_target))),
+                          cross(env_biooracle_names,
+                                map(gfbootstrap_cluster,
+                                    cross(gfbootstrap_predicted, clust_methods_target))))),
       format = "file"
   ),
 
@@ -673,13 +673,11 @@ list(
           output_folder
       ),
       pattern = map(extrap_polygons,
-                    cross(env_biooracle_names, gfbootstrap_cluster),
-                    cross(
-                      cross(env_biooracle_names, gfbootstrap_predicted),
-                      clust_methods_target))),
+                    cross(env_biooracle_names,
+                          map(gfbootstrap_cluster,
+                      cross(gfbootstrap_predicted, clust_methods_target)))),
       format = "file"
   ),
-
 
   tar_target(
     extrap_confidence_plot,
