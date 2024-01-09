@@ -29,7 +29,7 @@ predict_gfbootstrap <- function(
   env_dom <- env_domain[domain == gfbootstrap_combined$env_domain &
                         res == res_clust_target &
                         env_year == gfbootstrap_combined$env_year &
-                        env_pathway = gfbootstrap_combined$env_pathway, "data"][[1]][[1]]
+                        env_pathway == gfbootstrap_combined$env_pathway, "data"][[1]][[1]]
 
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
 			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
