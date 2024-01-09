@@ -25,17 +25,25 @@ assign_new_sites_to_cluster_apclust <- function(
     clust_ind <- data.table::rbindlist(row_clust_membership$max)
 
 
-    clust_ind[env_domain[domain == gfbootstrap_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
-              c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
+    clust_ind[
+      env_domain[domain == gfbootstrap_cluster$env_domain[[1]] &
+        res == gfbootstrap_cluster$res_gf &
+        env_year == cluster_env_extrapolate$env_year &
+        env_pathway == cluster_env_extrapolate$env_pathway, data][[1]],
+      on = c(env_id_col),
+      c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
+    ]
 
     clust_ind[ , c("env_id"):= NULL]
 
     return(data.table(
         gfbootstrap_cluster[,
-                    .(env_domain, trophic, survey, depth_cat, clust_method)],
+                            .(env_domain, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
+        env_year = cluster_env_extrapolate$env_year,
+        env_pathway = cluster_env_extrapolate$env_pathway,
         clust_ind = list(clust_ind),
         pred_membership = list(row_clust_membership)
-      )
+    )
     )
 
 }

@@ -1,7 +1,7 @@
 find_indicator_species <- function(
                                    #gfbootstrap_cluster,
                                    #gfbootstrap_combined,
-                                   extrap_polygons_present,
+                                   extrap_polygons,
                                    #gfbootstrap_predicted,
                                   # all_bio_env,
                                    all_bio_long,
@@ -9,14 +9,14 @@ find_indicator_species <- function(
                                    ) {
   ## Flag if biology and clustering are matched
   ## Useful for later evaluation of results
-  matched <- all_bio_long$survey == extrap_polygons_present$survey &&
-    all_bio_long$trophic == extrap_polygons_present$trophic &&
-    all_bio_long$depth_cat == extrap_polygons_present$depth_cat
+  matched <- all_bio_long$survey == extrap_polygons$survey &&
+    all_bio_long$trophic == extrap_polygons$trophic &&
+    all_bio_long$depth_cat == extrap_polygons$depth_cat
 
 
-  if(all(is.na(extrap_polygons_present$polygons[[1]])) ||
+  if(all(is.na(extrap_polygons$polygons[[1]])) ||
        all(is.na(all_bio_long$samps))) {
-         return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+         return(data.table::data.table(extrap_polygons[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
                                                                matched = matched,
                                                                spec_ind = list(NA),
                                                                spec_ind_solo = list(NA)))
@@ -42,14 +42,14 @@ find_indicator_species <- function(
   keep_rows <- complete.cases(all_bio_long$samps[[1]])
 
   ## Find clustering of each sample
-  bio_as_sf <- sf::st_as_sf(all_bio_long$samps[[1]][keep_rows], coords = spatial_vars, crs = sf::st_crs(extrap_polygons_present$polygons[[1]]))
+  bio_as_sf <- sf::st_as_sf(all_bio_long$samps[[1]][keep_rows], coords = spatial_vars, crs = sf::st_crs(extrap_polygons$polygons[[1]]))
 
-    bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons_present$polygons[[1]])
+    bio_clustering <- sf::st_intersection(bio_as_sf, extrap_polygons$polygons[[1]])
 
   ## Plot to demonstrate alignment of clusters and samples
-  ## env_bbox <- sf::st_bbox(extrap_polygons_present$polygons[[1]])
+  ## env_bbox <- sf::st_bbox(extrap_polygons$polygons[[1]])
 
-  ## tmap::tm_shape(extrap_polygons_present$polygons[[1]], bbox = env_bbox) +
+  ## tmap::tm_shape(extrap_polygons$polygons[[1]], bbox = env_bbox) +
   ##   tmap::tm_polygons(col = "clustering", style = "cont") +
   ##   tmap::tm_shape(bio_clustering) +
   ##   tmap::tm_symbols(col = "clustering", style = "cont", border.col = "green")
@@ -79,7 +79,7 @@ find_indicator_species <- function(
 
   if (length(unique(clust_to_samp$clustering)) < 2) {
       sf::sf_use_s2(s2_used)
-      return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+      return(data.table::data.table(extrap_polygons[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
                                     matched = matched,
                                     spec_ind = list(NA),
                                     spec_ind_solo = list(NA)
@@ -95,7 +95,7 @@ find_indicator_species <- function(
   spec_ind_solo <- indicspecies::multipatt(site_sp_wide, clust_to_samp$clustering, duleg = TRUE)
   # site_coverage <- indicspecies::coverage(site_sp_wide, spec_ind_solo)
     sf::sf_use_s2(s2_used)
-         return(data.table::data.table(extrap_polygons_present[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+         return(data.table::data.table(extrap_polygons[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
                                                                matched = matched,
                                                                spec_ind = list(spec_ind),
                                                                spec_ind_solo = list(spec_ind_solo)))

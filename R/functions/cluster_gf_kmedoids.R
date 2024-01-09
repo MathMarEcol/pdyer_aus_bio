@@ -1,5 +1,4 @@
 cluster_gf_kmedoids <- function(gf_predicted,
-                                env_domain,
                                 env_biooracle_names,
                                 cluster_fixed_k,
                                 clara_samples,
@@ -13,7 +12,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
+    return(data.table(gf_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                       clust_method = "kmedoids",
                       clust_ind = list(NA),
                       gf_fixed_clust = list(NA)
@@ -27,7 +26,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
   ## Should have data to cluster in gf_predicted$comp_turnover
 
   gf_fixed_clusts <- cluster::clara(
-    gf_predicted$comp_turnover[[1]][,env_biooracle_names, with = FALSE],
+    gf_predicted$comp_turnover[[1]][,env_biooracle_names[env_year == gf_predicted$env_year & env_pathway == gf_predicted$env_pathway, env_biooracle_names][[1]], with = FALSE],
     cluster_fixed_k,
     metric = "manhattan",
     samples = clara_samples,
@@ -48,7 +47,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
 
     data.table::setkey(clust_ind, "x_row")
 
-  return(data.table(gf_predicted[, .(env_domain, trophic, survey, depth_cat)],
+  return(data.table(gf_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                     clust_method = "kmedoids",
                     clust_ind = list(clust_ind),
                     gf_fixed_clust = list(gf_fixed_clusts)

@@ -5,17 +5,19 @@ plot_gf_continuous <- function(
                                pca_n_vars,
                                pca_scale,
                                plot_description,
-                               regrid_resolution,
                                output_folder
                                ) {
 
 
     survey_specs <- gf_predicted[,
-                                      c("env_domain",
-                                        "trophic",
-                                        "survey",
-                                        "depth_cat"
-                                        )]
+                                 c("env_domain",
+                                   "env_year",
+                                   "env_pathway",
+                                   "res_gf",
+                                   "trophic",
+                                   "survey",
+                                   "depth_cat"
+                                   )]
   survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
   survey_specs <- as.character(survey_specs)
 
@@ -53,8 +55,7 @@ plot_gf_continuous <- function(
   rast_mat <- terra::rast(as.matrix(
     data.frame(
       lon = gf_predicted$comp_turnover[[1]][, c(spatial_vars[1]), with = FALSE],
-      lat = gf_predicted$comp_turnover[[1]][,
-              c(spatial_vars[2]), with = FALSE] - regrid_resolution / 4,
+      lat = gf_predicted$comp_turnover[[1]][, c(spatial_vars[2]), with = FALSE],
       r = r,
       g = g,
       b = b)),

@@ -3,81 +3,13 @@
 #'
 #'
 # Generate a list of targets for each regrid_resolution
-env_domain_targets <- function(
-                               biooracle_folder,
-                               env_biooracle_names,
-                               env_poly,
-                               max_depth,
-                               regrid_resolution,
-                               spatial_vars,
-                               env_limits_sd,
-                               env_offset,
-                               env_id_col
-                               ) {
-
-    list(
-
-        tar_target(
-            env_domain_fit,
-            load_env_domain(
-                biooracle_folder,
-                env_biooracle_names,
-                env_poly,
-                max_depth,
-                regrid_resolution$grid_res_gf,
-                spatial_vars,
-                env_limits_sd,
-                env_offset,
-                env_id_col
-            ),
-            pattern = map(env_poly),
-            iteration = "vector"
-        ),
-
-        tar_target(
-            env_domain_cluster,
-            load_env_domain(
-                biooracle_folder,
-                env_biooracle_names,
-                env_poly,
-                max_depth,
-                regrid_resolution$grid_res_cluster,
-                spatial_vars,
-                env_limits_sd,
-                env_offset,
-                env_id_col
-            ),
-            pattern = map(env_poly),
-            iteration = "vector"
-        ),
-
-        tar_target(
-            env_domain_plot,
-            load_env_domain(
-                biooracle_folder,
-                env_biooracle_names,
-                env_poly,
-                max_depth,
-                regrid_resolution$grid_res_plot,
-                spatial_vars,
-                env_limits_sd,
-                env_offset,
-                env_id_col
-            ),
-            pattern = map(env_poly),
-            iteration = "vector"
-        )
-    )
-
-
-}
-
 load_env_domain <- function(
                             biooracle_folder,
                             env_biooracle_names,
                             env_poly,
                             max_depth,
                             regrid_resolution,
+                            env_extrap_year,
                             spatial_vars,
                             env_limits_sd,
                             env_offset,
@@ -85,26 +17,28 @@ load_env_domain <- function(
                             ) {
 
   tmp_timeout <- getOption("timeout")
-  options(timeout = 6000)
+  options(timeout = 60000)
+
   env_raster <- suppressWarnings(sdmpredictors::load_layers(env_biooracle_names,
-                                           datadir = biooracle_folder,
-                                           rasterstack = FALSE))
-  options(timeout = tmp_timeout)
-  target_grid <- raster::raster(x = env_poly$data[[1]],
+                                                            datadir = biooracle_folder,
+                                                            rasterstack = FALSE))
+    options(timeout = tmp_timeout)
+
+    target_grid <- raster::raster(x = env_poly$data[[1]],
                                      resolution = regrid_resolution,
                                      crs = "+proj=longlat +datum=WGS84")
 
-  raster_crop <- raster::brick(lapply(env_raster,
-                                      function(r) {
-                                        raster::crop(r, raster::extent(target_grid))
-                                      }))
-  raster_rescale <- raster::resample(raster_crop,
-                                     target_grid,
-                                     method = "bilinear")
-  ##mask is much quicker than st_intersection
-  raster_masked <- raster::mask(raster_rescale, env_poly$data[[1]])
+    raster_crop <- raster::brick(lapply(env_raster,
+                                        function(r) {
+                                          raster::crop(r, raster::extent(target_grid))
+                                        }))
+    raster_rescale <- raster::resample(raster_crop,
+                                       target_grid,
+                                       method = "bilinear")
+    ##mask is much quicker than st_intersection
+    raster_masked <- raster::mask(raster_rescale, env_poly$data[[1]])
   raster::crs(raster_masked) <-"+proj=longlat +datum=WGS84"
-  env_points <- data.table::data.table(raster::rasterToPoints(raster_masked))
+    env_points <- data.table::data.table(raster::rasterToPoints(raster_masked))
 
 
   env_region <- na.omit(env_points)
@@ -123,7 +57,7 @@ load_env_domain <- function(
                                     fun = mean)
   data.table::setDT(env_round)
   env_round[, c(env_id_col) :=  seq_len(nrow(env_round))]
-  env_domain <- data.table::data.table(domain = env_poly$name, data = list(env_round))
+  env_domain <- data.table::data.table(domain = env_poly$name, res = regrid_resolution, env_year = env_biooracle_names$env_year, env_pathway = env_biooracle_names$env_pathway, data = list(env_round))
   return(env_domain)
 
 }

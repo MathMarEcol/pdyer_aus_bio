@@ -1,10 +1,9 @@
-assign_new_sites_to_cluster_caster <- function(
-                                               cluster_env_extrapolate,
+assign_new_sites_to_cluster_caster <- function(cluster_env_extrapolate,
                                                gfbootstrap_cluster,
                                                env_domain,
                                                env_id_col,
-                                               spatial_vars
-                                               ) {
+                                               spatial_vars) {
+{
 
     ## predict(cast_ob_with_sim_mat, pred_sim_mat)
 
@@ -48,10 +47,22 @@ assign_new_sites_to_cluster_caster <- function(
     }
     pred_clust_prob_full[is.nan(pred_clust_prob_full)] <- 0
 
-    clust_ind[env_domain[domain == gfbootstrap_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
-              c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
+    clust_ind[
+      env_domain[
+        domain == gfbootstrap_cluster$env_domain[[1]] &
+          res == gfbootstrap_cluster$res_gf &
+          env_year == cluster_env_extrapolate$env_year &
+          env_pathway == cluster_env_extrapolate$env_pathway,
+        data
+      ][[1]],
+      on = c(env_id_col),
+      c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
+    ]
 
-    return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+
+    return(data.table(gfbootstrap_cluster[, .(env_domain, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
+                      env_year = cluster_env_extrapolate$env_year,
+                      env_pathway = cluster_env_extrapolate$env_pathway,
                       clust_ind = list(clust_ind),
                       pred_membership = list(row_clust_membership)
                       ))

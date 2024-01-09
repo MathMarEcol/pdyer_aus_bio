@@ -1,16 +1,24 @@
 plot_gfbootstrap_coverage <- function(
-                                        gfbootstrap_polygons,
+                                      gfbootstrap_polygons,
+                                      env_biooracle_names,
                                       mpa_polygons,
                                       plot_description,
                                         output_folder
                                       ) {
 
-    survey_specs <- gfbootstrap_polygons[,
-                                                 c("env_domain",
-                                                   "trophic",
-                                                   "survey",
-                                                   "depth_cat",
-                                                   "clust_method")]
+    survey_specs <- gfbootstrap_polygons[
+      ,
+      c(
+        "env_domain", "env_year", "env_pathway", "res_gf", "res_clust",
+        "trophic",
+        "survey",
+        "depth_cat",
+        "clust_method"
+      )
+    ]
+
+
+
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 

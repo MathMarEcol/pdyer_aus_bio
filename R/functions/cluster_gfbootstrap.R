@@ -14,7 +14,7 @@ cluster_gfbootstrap <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-      return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat)],
+      return(data.table(gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                         clust_method = clust_methods,
       clust = list(NA),
       best_clust =  NA,

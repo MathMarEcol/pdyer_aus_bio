@@ -162,14 +162,13 @@ env_id_col = "env_id"
 map_layer =  "World_EEZ_v8_2014_HR"
 max_depth = 1500
 env_offset = 0
-##in lat lon degrees, use 1/integer fraction
-##for proper rastering later,
-##currently 1/12 to allign with BioORACLE
-regrid_resolution = list(
-    grid_res_gf = 1 / 12, #Fit gf models at max res offered by BioORACLE
-    grid_res_cluster = 1 / 4, # Cluster at low resolution for tractability
-    grid_res_plot = 1 / 12 # plot at higher resolution
-    )
+## in lat lon degrees, use 1/integer fraction
+## for proper rastering later,
+## currently 1/12 to allign with BioORACLE
+res_clust = c(1, 1 / 2, 1 / 4)
+res_env = 1 / 12 # matches BioORACLE
+res_gf = res_env # match res_env for now
+
 ##Extent chosen to match the largest extents of
 ##the Aus EEZ polygon and the FRDC benthic data
 ##FRDC is not being used, but previous effort
@@ -188,9 +187,7 @@ iucn_categories <- data.table::data.table(name = c("no_take", "all"),
 marine_categories <- c("marine")
 
 #' BioORACLE params
-bio_oracle_str_template = "BO22_%s%s_ss"
 env_vars = c(
-  "depth",
   "temp",
   "nitrate",
   "silicate",
@@ -206,15 +203,13 @@ env_modes = c(
   "range"
 )
 
-env_pairs <- data.table::as.data.table(
-                            merge.data.frame(env_vars, env_modes, all = TRUE)
-                          )
-env_biooracle_names <- apply(env_pairs[x != "depth"], 1,
-                              function(x) {
-                                sprintf(bio_oracle_str_template, x[1], x[2])
-                              })
-## Add bathymetry separately
-env_biooracle_names <- c(env_biooracle_names, "MS_bathy_5m")
+## BioORACLE strings to match layer codes
+env_year = c("2050", "2100")
+env_pathway = c("RCP26", "RCP60", "RCP85")
+env_bathy = "MS_bathy_5m"
+## "present" is also always included
+env_fitting <- "present"
+
 #' Environmental clipping params
 ##For each predictor, I have specified limits.
 ##Not all variables hit the limits, shwon in comment

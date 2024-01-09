@@ -4,21 +4,24 @@ plot_gfbootstrap_mpa <- function(
                              gfbootstrap_predicted,
                              env_poly,
                              mpa_polygons,
-                            spatial_vars,
-                            regrid_resolution,
-                            marine_map,
-                            plot_clust_labels,
-                            plot_description,
-                            output_folder
-                            ) {
+                             spatial_vars,
+                             marine_map,
+                             plot_clust_labels,
+                             plot_description,
+                             output_folder
+                             ) {
 
 
-    survey_specs <- gfbootstrap_cluster[,
-                                        c("env_domain",
-                                          "trophic",
-                                          "survey",
-                                          "depth_cat",
-                                          "clust_method")]
+    survey_specs <- gfbootstrap_polygons[
+      ,
+      c(
+        "env_domain", "env_year", "env_pathway", "res_gf", "res_clust",
+        "trophic",
+        "survey",
+        "depth_cat",
+        "clust_method"
+      )
+    ]
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
@@ -53,11 +56,10 @@ plot_gfbootstrap_mpa <- function(
                                   marine_map = env_poly[name == "aus_eez", data][[1]],
                                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
-                                  regrid_res = regrid_resolution,
                                   labels = plot_clust_labels)  +
         tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                      "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                     "studying trophic level [{trophic}], domain is {env_domain}.\n",
+                                                     "studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}.\n",
                                                      "Clustered with {clust_method} which found {k} clusters. Showing [{mpa_polygons$iucn_categories[[1]]$name}] MPAs. Predictors used:\n",
                                                      "{pred_string}"),
                         main.title.size = 0.5) +

@@ -6,24 +6,24 @@ fit_gf <- function(
                    gf_bins,
                    gf_corr_thres
                    ) {
-  surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+  surv_cols <- c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey", "depth_cat")
   surv_full_names <- apply(all_bio_env[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
 
   if (all(is.na(all_bio_env$wide_taxa_env))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(all_bio_env[,.(env_domain, trophic, survey, depth_cat)],
-                      gf = NA,
-                      is_combined = FALSE,
-                      surv_full_name = surv_full_names,
-                      frac_valid = 0
-                      ))
+      return(data.table(all_bio_env[,.(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
+                        gf = NA,
+                        is_combined = FALSE,
+                        surv_full_name = surv_full_names,
+                        frac_valid = 0
+                        ))
   }
   gf_safe <- purrr::possibly(gradientForest::gradientForest, otherwise = NA, quiet = FALSE)
   gf_fit <- gf_safe(
     data = all_bio_env$wide_taxa_env[[1]],
-    predictor.vars = env_biooracle_names,
+    predictor.vars = env_biooracle_names[env_year == all_bio_env$env_year & env_pathway == all_bio_env_env_pathway, env_biooracle_names][[1]],
     response.vars = unique(all_bio_env$obs_env[[1]]$taxon_id_chr),
     ntree = gf_trees,
     compact = gf_compact,
@@ -45,7 +45,7 @@ fit_gf <- function(
 
   qs::qsave(gf_fit, outfile, "high")
 
-  return(data.table::data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
+  return(data.table::data.table(all_bio_env[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
                                 gf = outfile,
                                 is_combined = FALSE,
                                 surv_full_name = surv_full_names,

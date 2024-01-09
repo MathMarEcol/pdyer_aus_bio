@@ -8,8 +8,9 @@ cluster_raster_to_polygons <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, clust_method)],
-      polygons = list(NA)
+    return(data.table::data.table(cluster_row[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
+                                  polygons = list(NA),
+                                  polygons_no_clust = list(NA)
     ))
 
   }
@@ -41,7 +42,7 @@ cluster_raster_to_polygons <- function(
         no_clust_sf <- NA
     }
 
-    return(data.table::data.table(cluster_row[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+    return(data.table::data.table(cluster_row[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
                                   polygons = list(clust_poly_sf),
                                   polygons_no_clust = list(no_clust_sf)
     ))

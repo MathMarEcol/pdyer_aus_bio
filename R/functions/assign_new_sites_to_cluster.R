@@ -1,16 +1,31 @@
 assign_new_sites_to_cluster <- function(
                                         cluster_env_extrapolate,
                                         gfbootstrap_cluster,
+                                        env_biooracle_names,
                                         env_domain,
                                         env_id_col,
                                         spatial_vars
                                         ) {
 
+
+
+    stopifnot(
+      all(
+        cluster_env_extrapolate[, .(env_domain, res_gf, res_clust, trophic, survey, depth_cat)] ==
+          gfbootstrap_cluster[, .(env_domain,  res_gf, res_clust, trophic, survey, depth_cat, clust_method)]
+      ) && all(
+        cluster_env_extrapolate[, .(env_year, env_pathway)] ==
+          env_biooracle_names[, .(env_year, env_pathway)]
+      )
+    )
+
+
+
     if (all(is.na(cluster_env_extrapolate$extrap_sims))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(gfbootstrap_cluster[, .(env_domain, trophic, survey, depth_cat, clust_method)],
+        return(data.table(cluster_env_extrapolate[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
                           clust_ind = list(NA),
                           pred_membership = list(NA),
                           pred_prob = list(NA)

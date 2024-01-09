@@ -5,13 +5,13 @@ fit_gfbootstrap <- function(all_bio_env,
                             gf_compact,
                             gf_bins,
                             gf_corr_thres) {
-    surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+    surv_cols <- c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey", "depth_cat")
     surv_full_names <- apply(all_bio_env[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
     if (all(is.na(all_bio_env$wide_taxa_env))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
+        return(data.table(all_bio_env[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
                           gfbootstrap = NA,
                           is_combined = FALSE,
                           surv_full_name = surv_full_names,
@@ -21,7 +21,7 @@ fit_gfbootstrap <- function(all_bio_env,
     gf_safe <- purrr::possibly(gfbootstrap::bootstrapGradientForest, otherwise = NA, quiet = FALSE)
     gf_fit <- gf_safe(
         x = all_bio_env$wide_taxa_env[[1]],
-        predictor.vars = env_biooracle_names,
+        predictor.vars = env_biooracle_names[env_year == all_bio_env$env_year & env_pathway == all_bio_env$env_pathway, env_biooracle_names][[1]],
         response.vars = unique(all_bio_env$obs_env[[1]]$taxon_id_chr),
         nbootstrap = gf_bootstrap_iters,
         compact = gf_compact,
@@ -44,7 +44,7 @@ fit_gfbootstrap <- function(all_bio_env,
 
     qs::qsave(gf_fit, outfile, "high")
 
-    return(data.table::data.table(all_bio_env[, .(env_domain, trophic, survey, depth_cat)],
+    return(data.table::data.table(all_bio_env[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
                                   gfbootstrap = outfile,
                                   is_combined = FALSE,
                                   surv_full_name = surv_full_names,

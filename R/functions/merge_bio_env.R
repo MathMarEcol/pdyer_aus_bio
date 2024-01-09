@@ -1,17 +1,28 @@
 merge_bio_env <- function(
-                          env_domain,
+                          env_poly,
+                          res_gf_target,
                           all_bio_long,
+                          env_domain,
                           spatial_vars,
-                          regrid_res,
                           env_offset,
                           agg_fun,
                           env_id_col,
                           freq_range,
                           cov_min,
                           min_occurrence,
-                          max_taxa
+                          max_taxa,
+                          env_fitting
 
                           ) {
+
+  env_year <- env_fitting
+  env_pathway <- env_fitting
+
+  env_domain <- env_domain[
+    domain == env_poly$domain &
+      res == res_gf_target &
+      env_year == env_year  &
+      env_pathway == env_pathway, "data"][[1]][[1]]
 
   all_bio_long <- all_bio_long[, {
   ## Aggregate biological samples into grid cells
@@ -23,9 +34,9 @@ merge_bio_env <- function(
                                                      c(spatial_vars),
                                                      with=FALSE]-
                                   env_offset
-                                   ) / regrid_res
+                                   ) / res_gf_target
                                  ) *
-                                 regrid_res +  env_offset)
+                                 res_gf_target +  env_offset)
     samps_round[, `:=`(samp_id = copy_SD$samps[[1]]$samp_id,
                        depth = copy_SD$samps[[1]]$depth)]
     ## Convert all longitudes to range [0, 360]
@@ -50,7 +61,7 @@ merge_bio_env <- function(
   ## sites with no env will be
   ## NA, and can be dropped
 
-  grids <- env_domain$data[[1]][samps,
+  grids <- env_domain[samps,
                       c("samp_id", spatial_vars, env_id_col),
                       on = spatial_vars,
                       with = FALSE]
@@ -66,7 +77,8 @@ merge_bio_env <- function(
 
   if(nrow(grids_env) == 0 | nrow(obs_env) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                      env_domain = env_domain$domain,
+                      env_domain = env_poly$domain,
+                      res_gf = res_gf_target,
                       wide_taxa_env = list(NA),
                       taxa = list(NA),
                       obs_env = list(NA),
@@ -198,17 +210,18 @@ merge_bio_env <- function(
   taxa[, taxon_id_chr := paste0("sp.",taxon_id)]
   grid_env_bio[, taxon_id_chr := paste0("sp.",taxon_id)]
 
-  wide_surv <- env_domain$data[[1]][get(env_id_col) %in% grids_env[[env_id_col]]]
+  wide_surv <- env_domain[get(env_id_col) %in% grids_env[[env_id_col]]]
     ## wide_surv <- rbind(wide_surv, env_domain[1,])
   if (nrow(grid_env_bio) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                                  env_domain = env_domain$domain,
-                      wide_taxa_env = list(NA),
-                      taxa = list(NA),
-                      obs_env = list(NA),
-                      grids_env = list(NA)
-                      ))
-    }
+                                  env_domain = env_poly$domain,
+                                  res_gf = res_gf_target,
+                                  wide_taxa_env = list(NA),
+                                  taxa = list(NA),
+                                  obs_env = list(NA),
+                                  grids_env = list(NA)
+                                  ))
+  }
 
     wide_taxa <- data.table::dcast(grid_env_bio, env_id ~ taxon_id_chr, value.var = "abund", fill = 0)
     wide_taxa_env <- wide_taxa[wide_surv, on = env_id_col, nomatch = NA]
@@ -217,11 +230,14 @@ merge_bio_env <- function(
     ##                   lapply(.SD, function(x){x[is.na(x)] <- 0}),
     ##               .SDcols = unique(obs_env$taxon_id_chr) ]
 
- return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                   env_domain = env_domain$domain,
-                   wide_taxa_env = list(wide_taxa_env),
-                   taxa = list(taxa),
-                   obs_env = list(grid_env_bio),
-                   grids_env = list(grids_env)
-                   ))
+  return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
+                                env_domain = env_poly$domain,
+                                env_year = env_year,
+                                env_pathway = env_pathway,
+                                res_gf = res_gf_target,
+                                wide_taxa_env = list(wide_taxa_env),
+                                taxa = list(taxa),
+                                obs_env = list(grid_env_bio),
+                                grids_env = list(grids_env)
+                                ))
 }

@@ -1,7 +1,7 @@
 extrapolate_to_env <- function(
                                gfbootstrap_combined,
                                gfbootstrap_predicted,
-                               env_domain_plot,
+                               env_domain,
                                env_biooracle_names,
                                extrap,
                                pred_importance_top,
@@ -12,11 +12,15 @@ extrapolate_to_env <- function(
     options(torch.cuda_allocator_reserved_rate = 0.60)
     options(torch.cuda_allocator_allocated_rate = 0.8)
 
+
+
     if (all(is.na(gfbootstrap_predicted$env_id))) {
         ## Upstream target decided survey was not usable.
         ## Propagating
         ##
-        return(data.table(gfbootstrap_predicted[, .(env_domain, trophic, survey, depth_cat)],
+        return(data.table(gfbootstrap_predicted[, .(env_domain, res_gf, res_clust, trophic, survey, depth_cat)],
+                          env_year = env_biooracle_names$env_year,
+                          env_pathway = env_biooracle_names$env_pathway,
 													env_pred_stats = list(NA),
 													env_id = list(NA),
 													imp_preds = list(NA),
@@ -28,7 +32,13 @@ extrapolate_to_env <- function(
     
     ## Make sure env domain is ready
 
-    env_dom <- env_domain_plot[domain ==  gfbootstrap_combined$env_domain, data][[1]]
+    env_names <- env_biooracle_names$env_biooracle_names[[1]]
+
+    env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain &
+                               res == gfbootstrap_combined$res_gf &
+                               env_year == env_biooracle_names$env_year &
+                               env_pathway == env_biooracle_names$env_pathway
+                             , data][[1]]
 
     if (gfbootstrap_combined$depth_cat !=  "all" ) {
         env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
@@ -49,7 +59,7 @@ extrapolate_to_env <- function(
 		size_int <- 4
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-  n_preds_raw <- length(env_biooracle_names)
+  n_preds_raw <- length(env_names)
 
   ## Testing again with row 104
   ## mem_per_site is smaller, 151168
@@ -292,7 +302,7 @@ extrapolate_to_env <- function(
 		similarity_long <- env_dom_batch[ ,
 																		 list(site_pairs = list(new_sites_process(.SD$site,
 																											 env_dom,
-																											 env_biooracle_names,
+																											 env_names,
 																											 gfbootstrap_combined$gfbootstrap[[1]],
 																											 gfbootstrap_predicted,
 																											imp_preds,
@@ -314,14 +324,18 @@ extrapolate_to_env <- function(
     gc()
     torch::cuda_empty_cache()
     return(data.table::setDT(list(
-        env_domain = gfbootstrap_combined$env_domain,
-        trophic = gfbootstrap_combined$trophic,
-        survey = gfbootstrap_combined$survey,
-        depth_cat = gfbootstrap_combined$depth_cat,
-    ## env_pred_stats = list(predicted_stats),
-    env_id = list(env_dom[, ..env_id_col]),
-    imp_preds = list(imp_preds),
-    extrap_sims = list(similarity_long)
+                           env_domain = gfbootstrap_combined$env_domain,
+                           env_year = env_biooracle_names$env_year,
+                           env_pathway = env_biooracle_names$env_pathway,
+                           res_gf = gfbootstrap_combined$res_gf,
+                           res_clust = gfbootstrap_combined$res_clust,
+                           trophic = gfbootstrap_combined$trophic,
+                           survey = gfbootstrap_combined$survey,
+                           depth_cat = gfbootstrap_combined$depth_cat,
+                           ## env_pred_stats = list(predicted_stats),
+                           env_id = list(env_dom[, ..env_id_col]),
+                           imp_preds = list(imp_preds),
+                           extrap_sims = list(similarity_long)
   )))
 }
 

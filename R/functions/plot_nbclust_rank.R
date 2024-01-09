@@ -7,12 +7,14 @@ plot_nbclust_rank <- function(
 
     survey_specs <- gf_cluster_nbclust[,
       c(
-        "env_domain",
-        "trophic",
-        "survey",
-        "depth_cat",
-        "method",
-        "dist"
+          "env_domain",
+          "res_gf",
+          "res_clust",
+          "trophic",
+          "survey",
+          "depth_cat",
+          "method",
+          "dist"
       )
     ]
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)

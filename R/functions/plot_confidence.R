@@ -1,5 +1,5 @@
 plot_confidence <- function(cluster_env_assign_cluster,
-                            env_domain_plot,
+                            env_domain,
                             env_poly,
                             marine_map,
                             max_clust_prob_plot,
@@ -8,12 +8,21 @@ plot_confidence <- function(cluster_env_assign_cluster,
                             plot_description,
                             output_folder) {
 
-       survey_specs <- cluster_env_assign_cluster[,
-                                                 c("env_domain",
-                                                   "trophic",
-                                                   "survey",
-                                                   "depth_cat",
-                                                   "clust_method")]
+       survey_specs <- cluster_env_assign_cluster[
+         ,
+         c(
+             "env_domain",
+             "env_year",
+             "env_pathway",
+             "res_gf",
+             "res_clust",
+             "trophic",
+             "survey",
+             "depth_cat",
+             "clust_method"
+         )
+       ]
+
     survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
     survey_specs <- as.character(survey_specs)
 
@@ -51,8 +60,15 @@ plot_confidence <- function(cluster_env_assign_cluster,
         ## Preserves cluster membership, may lose cluster id
         cluster_prob_long[, clust := NULL]
 
-        cluster_prob_long[env_domain_plot[domain == cluster_env_assign_cluster$env_domain[[1]], data][[1]], on = c(env_id_col),
-                          c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))]
+        cluster_prob_long[
+          env_domain[domain == cluster_env_assign_cluster$env_domain[[1]] &
+            res == cluster_env_assign_cluster$res_gf &
+            env_year == cluster_env_assign_cluster$env_year &
+            env_pathway == cluster_env_assign_cluster$env_pathway, data][[1]],
+          on = c(env_id_col),
+          c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
+        ]
+
 
         clust_raster <- terra::rast(
             x = as.matrix(cluster_prob_long[, ..plot_cols]),

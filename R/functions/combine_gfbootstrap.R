@@ -2,7 +2,7 @@ combine_gfbootstrap_p1 <- function(
                                    gfbootstrap_survey,
                                    custom_combinations) {
 
-    surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+    surv_cols <- c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey", "depth_cat")
 
   gfboot_surv <- data.table::copy(gfbootstrap_survey)
 
@@ -12,27 +12,27 @@ combine_gfbootstrap_p1 <- function(
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
                   survey = "all",
                   is_combined = TRUE),
-                by = c("env_domain", "trophic", "depth_cat")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "depth_cat")],
 
     gfboot_surv[,
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
                 depth_cat = "all",
                 is_combined = TRUE),
-                by = c("env_domain", "trophic", "survey")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey")],
 
     gfboot_surv[,
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
                 survey = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
-                by = c("env_domain", "trophic")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic")],
 
     gfboot_surv[,
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
                 survey = "all",
                 trophic = "all" ,
                 is_combined = TRUE),
-                by = c("env_domain", "depth_cat")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "depth_cat")],
 
     gfboot_surv[,
                 .(frac_valid = sum(!is.na(gfbootstrap))/.N,
@@ -40,7 +40,7 @@ combine_gfbootstrap_p1 <- function(
                 trophic = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
-                by = c("env_domain")]
+                by = c("env_domain", "env_year", "env_pathway", "res_gf")]
     )
 
 
@@ -56,7 +56,7 @@ combine_gfbootstrap_p1 <- function(
                     ),
                   survey = "all",
                   is_combined = TRUE),
-                by = c("env_domain", "trophic", "depth_cat")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "depth_cat")],
 
     gfboot_surv[,
                 .(
@@ -67,7 +67,7 @@ combine_gfbootstrap_p1 <- function(
                     ),
                   depth_cat = "all",
                   is_combined = TRUE),
-                by = c("env_domain", "trophic", "survey")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey")],
 
     gfboot_surv[,
                 .(
@@ -79,7 +79,7 @@ combine_gfbootstrap_p1 <- function(
                 survey = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
-                by = c("env_domain", "trophic")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "trophic")],
 
     gfboot_surv[,
                 .(
@@ -91,7 +91,7 @@ combine_gfbootstrap_p1 <- function(
                 survey = "all",
                 trophic = "all" ,
                 is_combined = TRUE),
-                by = c("env_domain", "depth_cat")],
+                by = c("env_domain", "env_year", "env_pathway", "res_gf", "depth_cat")],
 
     gfboot_surv[,
                 .(
@@ -104,7 +104,7 @@ combine_gfbootstrap_p1 <- function(
                 trophic = "all",
                 depth_cat = "all",
                 is_combined = TRUE),
-                by = c("env_domain")]
+                by = c("env_domain", "env_year", "env_pathway", "res_gf")]
   )
   out <- gfboot_combined[fraction_valid, on = c(surv_cols, "is_combined")]
   out[sapply(out$gfbootstrap, is.null), gfbootstrap := NA]
@@ -152,7 +152,7 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
     )
 
   if (all(is.na(gfb))) {
-    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
+    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, env_year, env_pathway, res_gf, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
       gfbootstrap = NA
     ))
   } else if (gfbootstrap_combined_tmp$is_combined) {
@@ -175,7 +175,7 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
     hashed <- stringr::str_sub(digest::digest(out), 1, 8)
     outdir <- file.path(targets::tar_path_store(), "gfbootstraps")
     dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
-    surv_cols <- c("env_domain", "trophic", "survey", "depth_cat")
+    surv_cols <- c("env_domain", "env_year", "env_pathway", "res_gf", "trophic", "survey", "depth_cat")
     surv_full_names <- apply(gfbootstrap_combined_tmp[, ..surv_cols], 1, function(x){paste0(x, collapse = "__")})
 
     outfile <- file.path(outdir, paste0("combinedgfbootstrap_", hashed, "___", surv_full_names, ".qs"))
@@ -183,12 +183,12 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
     qs::qsave(out, outfile, "high")
 
 
-    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
+    return(data.table(gfbootstrap_combined_tmp[, .(env_domain, env_year, env_pathway, res_gf, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
       gfbootstrap = outfile
     ))
   } else {
     return(
-      data.table(gfbootstrap_combined_tmp[, .(env_domain, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
+      data.table(gfbootstrap_combined_tmp[, .(env_domain, env_year, env_pathway, res_gf, trophic, depth_cat, survey, is_combined, frac_valid, surv_full_name)],
         gfbootstrap = gfbootstrap_combined_tmp$gfbootstrap[[1]]
       )
     )

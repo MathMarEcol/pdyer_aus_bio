@@ -6,7 +6,6 @@ plot_gfbootstrap <- function(
                              all_bio_long,
                              env_poly,
                             spatial_vars,
-                            regrid_resolution,
                             marine_map,
                             plot_clust_labels,
                             plot_description,
@@ -20,17 +19,21 @@ plot_gfbootstrap <- function(
   ## Clusters around Aus
   ## Clusters around Aus with samples
   ## Sim Mat
-    ## Sim Mat histogram
-   survey_specs <- gfbootstrap_cluster[,
-                                                 c("env_domain",
-                                                   "trophic",
-                                                   "survey",
-                                                   "depth_cat",
-                                                   "clust_method")]
-    survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
-    survey_specs <- as.character(survey_specs)
+  ## Sim Mat histogram
+  survey_specs <- gfbootstrap_polygons[
+    ,
+    c(
+      "env_domain", "env_year", "env_pathway", "res_gf", "res_clust",
+      "trophic",
+      "survey",
+      "depth_cat",
+      "clust_method"
+    )
+  ]
+  survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
+  survey_specs <- as.character(survey_specs)
 
-    pl_survey_name <- paste0(c(survey_specs, plot_description),
+  pl_survey_name <- paste0(c(survey_specs, plot_description),
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
@@ -90,11 +93,10 @@ plot_gfbootstrap <- function(
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
                   labels = plot_clust_labels)+
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain}.\n",
+                                                 "studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}.\n",
                                                  "Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
                                                  "{pred_string}"),
                     main.title.size = 0.5)
@@ -104,7 +106,7 @@ plot_gfbootstrap <- function(
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain")
+  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "env_year", "env_pathway", "res_gf", "res_clust")
   custom_grouping_vars <- c("trophic", "survey", "depth_cat")
   ## Check for custom combination
   custom_group_matches <- vapply(custom_combinations, function(x) {
@@ -120,14 +122,17 @@ plot_gfbootstrap <- function(
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- custom_combinations[[custom_group_matches]]$matches
     match_table[["env_domain"]] <- rep(gfbootstrap_cluster$env_domain, nrow(match_table))
+    match_table[["env_year"]] <- rep(gfbootstrap_cluster$res_gf, nrow(match_table))
+    match_table[["env_pathway"]] <- rep(gfbootstrap_cluster$res_clust, nrow(match_table))
+    match_table[["res_gf"]] <- rep(gfbootstrap_cluster$res_gf, nrow(match_table))
+    match_table[["res_clust"]] <- rep(gfbootstrap_cluster$res_clust, nrow(match_table))
+
   } else {
     ## Using a "default" combination
     use_vars <- gfbootstrap_cluster[, ..grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- gfbootstrap_cluster[, ..use_vars]
   }
-
-
 
   bio_env_merge <- all_bio_env[match_table, on = use_vars]
   fit_grids <- unique(data.table::rbindlist(
@@ -151,7 +156,7 @@ plot_gfbootstrap <- function(
   ## fit_grids <- sf::st_as_sf(fit_grids,
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
-  use_vars <- use_vars[use_vars != "env_domain"]
+  use_vars <- use_vars[!(use_vars %in% c("env_domain", "env_year", "env_pathway", "res_gf", "res_clust"))]
   if(length(use_vars) == 0) {
     bio_merge <- all_bio_long
   } else {
@@ -174,9 +179,6 @@ plot_gfbootstrap <- function(
                                     )
                             ))
   fit_samples <- fit_samples[complete.cases(fit_samples)]
-  ## fit_samples <- sf::st_as_sf(fit_samples,
-  ##                        coords = spatial_vars,
-  ##                            crs = "+proj=longlat +datum=WGS84")
 
   pl_samp_clipped <- plot_clust_poly(gfbootstrap_polygons$polygons[[1]],
                                      gfbootstrap_polygons$polygons_no_clust[[1]],
@@ -184,14 +186,13 @@ plot_gfbootstrap <- function(
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
-                                    labels = plot_clust_labels,
+                  labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids)+
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering showing samples in domain for depth [{depth_cat}]\n",
                                                  "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
+                                                 "domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
@@ -206,15 +207,14 @@ plot_gfbootstrap <- function(
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gfbootstrap_cluster$env_domain != "aus_eez",
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
-                                    labels = plot_clust_labels,
+                  labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids,
                   clip_samples = FALSE) +
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
                                                  "Clustering showing all samples, including unused, for depth [{depth_cat}]\n",
                                                  "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
+                                                 "domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
@@ -222,11 +222,7 @@ plot_gfbootstrap <- function(
   tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"], scale = 0.1, dpi = 1200)
 
     if(plot_sim_mat) {
-        sim_mat <- gfbootstrap_predicted[
-            depth_cat == gfbootstrap_cluster$depth_cat &
-            survey == gfbootstrap_cluster$survey &
-            trophic == gfbootstrap_cluster$trophic &
-            env_domain == gfbootstrap_cluster$env_domain]$sim_mat[[1]][[1]]
+        sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
         is_caster <- grepl("^caster", gfbootstrap_cluster$clust_method)
         aff_thres_local <- if(is_caster){
                                gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
@@ -239,12 +235,12 @@ plot_gfbootstrap <- function(
                                               highlight = TRUE,
                                               sort_within_clust = is_caster,
                                               sort_among_clust = is_caster) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters."))
 
         ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
         pl_sim_mat_ungrouped <- castcluster::gg_sim_mat(sim_mat) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters."))
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters."))
 
         ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = pl_sim_mat_ungrouped)
 
@@ -252,7 +248,7 @@ plot_gfbootstrap <- function(
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
                                            ggplot2::aes(x = x)) +
             geom_histogram(na.rm = TRUE) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain}. Clustered with {clust_method} which found {k} clusters"))
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
     }
@@ -272,7 +268,6 @@ plot_clust_poly <- function(cluster_polygons,
                             marine_map,
                             plot_map = FALSE,
                             env_poly,
-                            regrid_res,
                             labels = TRUE,
                             samples = NULL,
                             grids = NULL,
@@ -298,11 +293,6 @@ plot_clust_poly <- function(cluster_polygons,
                             )
   }
 
-
-##   target_grid <- terra::rast(x = env_bbox,
-##                                      resolution = regrid_res,
-## #                             extent =
-##                                      crs = "+proj=longlat +datum=WGS84")
 
   ## tmap does not like large numbers of cluster categories
   ## Since I am manually setting colours, I don't need to

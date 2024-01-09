@@ -31,14 +31,30 @@ plot_polygon_overlay <- function(
     clust_method_levels <- lapply(unique(extrap_polygons$clust), c)
     clust_method_levels$any <- c(unique(extrap_polygons$clust))
     env_domain_levels <- lapply(unique(env_poly$name), c)
+    res_clust_levels <- lapply(unique(extrap_polygons$res_clust), c)
+    res_gf_levels <- lapply(unique(extrap_polygons$res_gf), c)
+    env_year_levels <- lapply(unique(extrap_polygons$env_year), c)
+    env_year_levels$any <- c(unique(extrap_polygons$env_year))
+    env_pathway_levels <- lapply(unique(extrap_polygons$env_pathway), c)
+    env_pathway_levels$any <- c(unique(extrap_polygons$env_pathway))
+
 
     depth_cat_levels <- lapply(depth_cat_levels, as.character)
+
+
+
+    env_year_levels
 
     poly_groups <- data.table::CJ(trophic = trophic_levels,
                                   survey = survey_levels,
                                   depth_cat = depth_cat_levels,
                                   clust = clust_method_levels,
                                   env_domain = env_domain_levels,
+                                  res_clust = res_clust_levels,
+                                  res_gf = res_gf_levels,
+                                  env_year = env_year_levels,
+                                  env_pathway = env_pathway_levels,
+
                                   sorted = FALSE)
 
     s2_used <- sf::sf_use_s2()
@@ -51,10 +67,14 @@ plot_polygon_overlay <- function(
                        function(r, poly_groups, extrap_polygons, env_poly, output_folder, plot_description) {
                            polys <- extrap_polygons[
                                env_domain %in% poly_groups$env_domain[r][[1]] &
-                               trophic %in% poly_groups$trophic[r][[1]] &
-                               survey %in% poly_groups$survey[r][[1]] &
-                               depth_cat %in% poly_groups$depth_cat[r][[1]] &
-                               clust_method %in% poly_groups$clust[r][[1]] &
+                                 trophic %in% poly_groups$trophic[r][[1]] &
+                                 survey %in% poly_groups$survey[r][[1]] &
+                                 depth_cat %in% poly_groups$depth_cat[r][[1]] &
+                                 clust_method %in% poly_groups$clust[r][[1]] &
+                                 res_clust %in% poly_groups$res_clust[r][[1]] &
+                                 res_gf %in% poly_groups$res_gf[r][[1]] &
+                                 env_year %in% poly_groups$env_year[r][[1]] &
+                                 env_pathway %in% poly_groups$env_pathway[r][[1]] &
                                !is.na(polygons),
                                ]
                            if (nrow(polys) > 1) {
@@ -87,13 +107,13 @@ make_poly_name <- function(poly_group, output_folder, plot_description) {
                "for trophic levels [{trophic}], survey [{survey}],\n",
                "depth [{depth_cat}] and clustering technique [{clust}]")
 
-    filename <- glue::glue_data(poly_group, "{env_domain}_{trophic}_{survey}_{depth_cat}_{clust}_{plot_description}.png")
+    filename <- glue::glue_data(poly_group, "{env_domain}_{res_gf}_{res_clust}_{env_year}_{env_pathway}_{trophic}_{survey}_{depth_cat}_{clust}_{plot_description}.png")
     file_out <- file.path(output_folder, filename)
     return(list(title = title, file_out = file_out))
 
 }
 
-save_polys_overlays <- function(polys, env_poly, poly_name ) {
+save_polys_overlays <- function(polys, env_poly, poly_name) {
 
     ## Take all valid polygons
     ## Plot them onto the map with transparency

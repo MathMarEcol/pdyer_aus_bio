@@ -112,34 +112,65 @@ list(
     map_layer,
     env_bounds
   ),
-  
+
+
+
+  tar_target(
+    res_env_target,
+    res_env,
+    iteration = "vector"
+  ),
+
+  tar_target(
+    res_gf_target,
+    res_gf,
+    iteration = "vector"
+  ),
+
+  tar_target(
+    res_clust_target,
+    res_clust,
+    iteration = "vector"
+  ),
+
+  tar_target(
+    res_unique_target,
+    unique(res_env, res_gf, res_clust),
+    iteration = "vector"
+  ),
+
   tar_target(
       clust_methods_target,
       clust_methods,
       iteration = "vector"
   ),
 
-  env_domain_targets(
+  tar_target(
+    env_biooracle_names,
+    make_biooracle_names(
+      env_vars,
+      env_modes,
+      env_year,
+      env_pathway,
+      env_bathy
+    )
+  ),
+
+  
+  tar_target(
+    env_domain,
+    load_env_domain(
       biooracle_folder,
       env_biooracle_names,
       env_poly,
       max_depth,
-      regrid_resolution,
+      res_unique_target,
       spatial_vars,
       env_limits_sd,
       env_offset,
       env_id_col
-  ),
-
-  tar_target(
-    k_target,
-    seq.int(min(k_range), max(k_range)),
-    iteration = "vector"
-  ),
-
-  tar_target(
-    cluster_res_target,
-    cluster_res,
+    ),
+    pattern = cross(env_poly, res_unique_target, env_biooracle_names),
     iteration = "vector"
   ),
 
@@ -191,7 +222,6 @@ list(
       spatial_vars,
       depth_names,
       depth_range,
-      regrid_resolution$grid_res_gf,
       env_offset,
       biooracle_folder
     )
@@ -202,20 +232,17 @@ list(
   ## Downstream targets can iterate over rows
   tar_target(
     all_bio_long,
-    merge_all_bio(
+    data.table::rbindlist(
       list(
         zoo_long,
         phy_long,
         bac_long,
         fish_long
       ),
-      regrid_res = regrid_resolution$grid_res_gf,
-      env_offset = env_offset,
-      agg_fun = mean,
-      spatial_vars = spatial_vars
-    ),
-    iteration = "vector"
+      use.names = TRUE
+    )
   ),
+
   ##
   ## Combine biological and environmental data
   ## At this step we also
@@ -229,21 +256,176 @@ list(
   tar_target(
     all_bio_env,
     merge_bio_env(
-      env_domain_fit,
+      env_poly,
+      res_gf_target,
       all_bio_long,
+      env_domain,
       spatial_vars,
-      regrid_res = regrid_resolution$grid_res_gf,
       env_offset,
       agg_fun,
       env_id_col,
       freq_range,
       cov_min,
       min_occurrence,
-      max_taxa
+      max_taxa,
+      env_fitting
     ),
-    pattern = cross(env_domain_fit, all_bio_long),
+    pattern = cross(env_poly, res_gf_target, all_bio_long),
     iteration = "vector"
   ),
+
+
+  tar_target(
+    gf_survey,
+    fit_gf(
+      all_bio_env,
+      env_biooracle_names,
+      gf_trees,
+      gf_compact,
+      gf_bins,
+      gf_corr_thres
+      ),
+    pattern = map(all_bio_env)
+  ),
+
+  tar_target(
+      gf_combined_tmp,
+      combine_gf_p1(
+          gf_survey,
+          custom_combinations
+      )
+      ## Do NOT map over gfbootstrap_survey
+  ),
+  tar_target(
+      gf_combined,
+      combine_gf_p2(
+          gf_combined_tmp,
+          gf_bins
+      ),
+      pattern = map(gf_combined_tmp)
+  ),
+
+  tar_target(
+      gf_predicted,
+      predict_gf(
+        gf_combined,
+        res_clust_target,
+        env_domain,
+        env_biooracle_names,
+        extrap,
+        pred_importance_top,
+        env_id_col,
+        depth_range
+      ),
+      pattern = cross(gf_combined, res_clust_target)
+  ),
+
+  tar_target(
+    plot_gf_cont,
+    plot_gf_continuous(
+        gf_predicted,
+        marine_map,
+        env_poly,
+        pca_n_vars,
+        pca_scale,
+        plot_description = "compositional_turnover",
+        output_folder
+    ),
+    pattern = map(gf_predicted)
+  ),
+
+  tar_target(
+    nbclust_branch_table,
+    nbclust_generate_branches(
+      gf_predicted,
+      k_range,
+      nbclust_index_metadata,
+      nbclust_dist,
+      nbclust_method,
+      nbclust_max_runtime,
+      nbclust_include_graphical
+    )
+    ## no mapping or crossing
+  ),
+
+  tar_target(
+    nbclust_branch_fitted,
+    nbclust_fit_branches(
+      gf_predicted,
+      nbclust_index_metadata,
+      nbclust_branch_table,
+      env_biooracle_names
+    ),
+    pattern = map(nbclust_branch_table)
+  ),
+
+  tar_target(
+    gf_cluster_nbclust,
+    nbclust_merge_branches(
+      nbclust_branch_fitted,
+      gf_predicted,
+      nbclust_index_metadata
+    )
+    ## No mapping or crossing
+  ),
+
+
+  tar_target(
+    nbclust_plots,
+    plot_nbclust_rank(
+        gf_cluster_nbclust,
+        plot_description = "nbclust_rank",
+        output_folder
+    ),
+    pattern = map(gf_cluster_nbclust)
+  ),
+
+  tar_target(
+    gf_cluster_kmedoids,
+    cluster_gf_kmedoids(
+      gf_predicted,
+      env_biooracle_names,
+      cluster_fixed_k,
+      clara_samples,
+      clara_sampsize,
+      clara_trace,
+      clara_rngR,
+      clara_pamLike,
+      clara_correct.d
+    ),
+    pattern = map(gf_predicted)
+  ),
+
+  tar_target(
+    gf_kmedoid_polygons,
+    cluster_raster_to_polygons(
+      gf_cluster_kmedoids,
+      spatial_vars
+    ),
+    pattern = map(gf_cluster_kmedoids)
+  ),
+
+
+
+  tar_target(
+    kmedoid_plots,
+    plot_gf_kmedoids(gf_cluster_kmedoids,
+                     gf_kmedoid_polygons,
+                     gf_predicted,
+                     cluster_fixed_k,
+                     all_bio_env,
+                     all_bio_long,
+                     env_poly,
+                     spatial_vars,
+                     marine_map,
+                     plot_description = "kmedoid_bioregions",
+                     output_folder),
+    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, gf_predicted)
+  ),
+
+  ## plot rank plot of clusters with hline at 41
+  ## plot maps of 41 clusters
+  ##
 
   tar_target(
     gfbootstrap_survey,
@@ -283,199 +465,51 @@ list(
     pattern = map(gfbootstrap_combined_tmp)
   ),
 
-  tar_target(
-    gfbootstrap_diagnostics,
-    gfbootstrap_diagnostic_stats(gfbootstrap_combined,
-                                 gfbootstrap_predicted,
-                                 env_domain_cluster,
-                                 gfbootstrap_cluster,
-                                 env_biooracle_names,
-                                 pred_importance_top),
-    pattern = map(gfbootstrap_combined, gfbootstrap_predicted)
-  ),
-  tar_target(
-      gfbootstrap_diagnostics_plots,
-      gfbootstrap_diagnostic_plots(gfbootstrap_combined,
-                                   gfbootstrap_diagnostics,
-                                   env_domain_plot,
-                                   env_domain_cluster,
-                                   env_poly,
-                                   marine_map,
-                                   env_id_col,
-                                   env_biooracle_names,
-                                   pred_importance_top,
-                                   plot_description = "gfdiagnostics",
-                                         output_folder),
-      pattern = map(gfbootstrap_combined, gfbootstrap_diagnostics),
-      format = "file"
-  ),
-  tar_target(
-    gf_survey,
-    fit_gf(
-      all_bio_env,
-      env_biooracle_names,
-      gf_trees,
-      gf_compact,
-      gf_bins,
-      gf_corr_thres
-      ),
-    pattern = map(all_bio_env)
-  ),
-
-  tar_target(
-      gf_combined_tmp,
-      combine_gf_p1(
-          gf_survey,
-          custom_combinations
-      )
-      ## Do NOT map over gfbootstrap_survey
-  ),
-  tar_target(
-      gf_combined,
-      combine_gf_p2(
-          gf_combined_tmp,
-          gf_bins
-      ),
-      pattern = map(gf_combined_tmp)
-  ),
-
-  tar_target(
-      gf_predicted,
-      predict_gf(
-          gf_combined,
-          env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
-          env_biooracle_names,
-          extrap,
-          pred_importance_top,
-          env_id_col,
-          depth_range
-      ),
-      pattern = map(gf_combined)
-  ),
-  tar_target(
-    plot_gf_cont,
-    plot_gf_continuous(
-        gf_predicted,
-        marine_map,
-        env_poly,
-        pca_n_vars,
-        pca_scale,
-        plot_description = "compositional_turnover",
-        regrid_resolution = regrid_resolution$grid_res_cluster,
-        output_folder
-    ),
-    pattern = map(gf_predicted)
-  ),
-
-  tar_target(
-    gf_cluster_kmedoids,
-    cluster_gf_kmedoids(
-        gf_predicted,
-        env_domain_cluster,
-        env_biooracle_names,
-        cluster_fixed_k,
-        clara_samples,
-        clara_sampsize,
-        clara_trace,
-        clara_rngR,
-        clara_pamLike,
-        clara_correct.d
-    ),
-    pattern = map(gf_predicted)
-  ),
-
-  tar_target(
-    nbclust_branch_table,
-    nbclust_generate_branches(
-      gf_predicted,
-      k_range,
-      nbclust_index_metadata,
-      nbclust_dist,
-      nbclust_method,
-      nbclust_max_runtime,
-      nbclust_include_graphical
-    )
-    ## no mapping or crossing
-  ),
-
-  tar_target(
-    nbclust_branch_fitted,
-    nbclust_fit_branches(
-      gf_predicted,
-      nbclust_index_metadata,
-      nbclust_branch_table
-    ),
-    pattern = map(nbclust_branch_table)
-  ),
-
-  tar_target(
-    gf_cluster_nbclust,
-    nbclust_merge_branches(
-      nbclust_branch_fitted,
-      gf_predicted
-    )
-    ## No mapping or crossing
-  ),
-
-
-  tar_target(
-    nbclust_plots,
-    plot_nbclust_rank(
-        gf_cluster_nbclust,
-        plot_description = "nbclust_rank",
-        output_folder
-    ),
-    pattern = map(gf_cluster_nbclust)
-  ),
-
-
-  tar_target(
-    gf_kmedoid_polygons,
-    cluster_raster_to_polygons(
-      gf_cluster_kmedoids,
-      spatial_vars
-    ),
-    pattern = map(gf_cluster_kmedoids)
-  ),
-
-
-
-  tar_target(
-    kmedoid_plots,
-    plot_gf_kmedoids(gf_cluster_kmedoids,
-                     gf_kmedoid_polygons,
-                     gf_predicted,
-                     cluster_fixed_k,
-                     all_bio_env,
-                     all_bio_long,
-                     env_poly,
-                     spatial_vars,
-                     regrid_resolution$grid_res_cluster,
-                     marine_map,
-                     plot_description = "kmedoid_bioregions",
-                     output_folder),
-    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, gf_predicted)
-  ),
-
-  ## plot rank plot of clusters with hline at 41
-  ## plot maps of 41 clusters
-  ##
-
-
 
   tar_target(
     gfbootstrap_predicted,
     predict_gfbootstrap(
       gfbootstrap_combined,
-      env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      res_clust_target,
+      env_domain,
       env_biooracle_names,
       extrap,
       pred_importance_top,
       env_id_col,
       depth_range
     ),
-    pattern = map(gfbootstrap_combined)
+    pattern = cross(gfbootstrap_combined, res_clust_target)
   ),
+
+
+  tar_target(
+    gfbootstrap_diagnostics,
+    gfbootstrap_diagnostic_stats(gfbootstrap_cluster,
+                                 gfbootstrap_combined,
+                                 gfbootstrap_predicted,
+                                 env_domain,
+                                 env_biooracle_names,
+                                 pred_importance_top),
+    pattern = map(gfbootstrap_cluster)
+  ),
+
+  tar_target(
+      gfbootstrap_diagnostics_plots,
+      gfbootstrap_diagnostic_plots(gfbootstrap_cluster,
+                                   gfbootstrap_diagnostics,
+                                   gfbootstrap_combined,
+                                   env_domain,
+                                   env_poly,
+                                   marine_map,
+                                   env_id_col,
+                                   env_biooracle_names,
+                                   pred_importance_top,
+                                   plot_description = "gfdiagnostics",
+                                   output_folder),
+      pattern = map(gfbootstrap_cluster, gfbootstrap_diagnostics),
+      format = "file"
+  ),
+
 
   ##Setting up branching over clustering methods
   tar_target(
@@ -483,7 +517,7 @@ list(
     cluster_gfbootstrap(
       clust_methods_target,
       gfbootstrap_predicted,
-      env_domain_cluster, ## this target knows it's own env_domain provenance, and loads in the appropriate env_domain branch.
+      env_domain,
       env_id_col,
       spatial_vars,
       m = clust_m,
@@ -505,7 +539,6 @@ list(
       all_bio_long,
       env_poly,
       spatial_vars,
-      regrid_resolution$grid_res_cluster,
       marine_map,
       plot_clust_labels,
       plot_description = "clustering_resolution",
@@ -548,99 +581,110 @@ list(
       gfbootstrap_mpa_plots,
       plot_gfbootstrap_mpa(
           gfbootstrap_cluster,
-          extrap_polygons_present,
+          extrap_polygons,
           gfbootstrap_predicted,
           env_poly,
           mpa_polygons,
           spatial_vars,
-          regrid_resolution$grid_res_cluster,
           marine_map,
           plot_clust_labels,
           plot_description = "clustering_mpas",
           output_folder
       ),
-      pattern = cross(mpa_polygons, map(gfbootstrap_cluster,
-                    extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target))),
+      pattern = cross(mpa_polygons,
+                      map(extrap_polygons,
+                          cross(env_biooracle_names, gfbootstrap_cluster),
+                          cross(
+                            cross(env_biooracle_names, gfbootstrap_predicted), clust_methods_target))),
       format = "file"
   ),
 
   tar_target(
     gfbootstrap_coverage_plots,
     plot_gfbootstrap_coverage(
-      gfbootstrap_polygons,
+      extrap_polygons,
       mpa_polygons,
       plot_description = "cluster_mpa_coverage",
       output_folder
     ),
-    pattern =  cross(gfbootstrap_polygons, mpa_polygons),
+    pattern =  cross(extrap_polygons, mpa_polygons),
     format = "file"
   ),
 
   tar_target(
-      cluster_env_extrapolate_present,
+      cluster_env_extrapolate,
       extrapolate_to_env(
-          gfbootstrap_combined,
-          gfbootstrap_predicted,
-          env_domain_plot,
-          env_biooracle_names,
-          extrap,
-          pred_importance_top,
-          env_id_col,
-          depth_range
+        gfbootstrap_combined,
+        gfbootstrap_predicted,
+        env_domain,
+        env_biooracle_names,
+        extrap,
+        pred_importance_top,
+        env_id_col,
+        depth_range
       ),
-      pattern = map(gfbootstrap_predicted,
-                             gfbootstrap_combined)
-      ),
+      pattern = cross(env_biooracle_names,
+                      map(gfbootstrap_predicted,
+                          cross(gfbootstrap_combined, res_clust_target)
+                      )
+  ),
+
+
 
   tar_target(
-      cluster_env_assign_cluster_present,
+      cluster_env_assign_cluster,
       assign_new_sites_to_cluster(
-          cluster_env_extrapolate_present,
+          cluster_env_extrapolate,
           gfbootstrap_cluster,
-          env_domain_plot,
+          env_biooracle_names,
+          env_domain,
           env_id_col,
           spatial_vars
       ),
       pattern = map(
-					cross(cluster_env_extrapolate_present, clust_methods_target),
-					gfbootstrap_cluster)
+        cross(env_biooracle_names, gfbootstrap_cluster),
+        cross(cluster_env_extrapolate, clust_methods_target)
+      )
   ),
 
   tar_target(
-      extrap_polygons_present,
+      extrap_polygons,
       cluster_raster_to_polygons(
-          cluster_env_assign_cluster_present,
+          cluster_env_assign_cluster,
           spatial_vars
       ),
-      pattern = map(cluster_env_assign_cluster_present)
+      pattern = map(cluster_env_assign_cluster)
   ),
 
   tar_target(
-      extrap_plotted_present,
+      extrap_plotted,
       plot_gfbootstrap(
           gfbootstrap_cluster,
-          extrap_polygons_present,
+          extrap_polygons,
           gfbootstrap_predicted,
           all_bio_env,
           all_bio_long,
           env_poly,
           spatial_vars,
-          regrid_resolution$grid_res_plot,
           marine_map,
           plot_clust_labels,
-          plot_description = "extrap_present",
+          plot_description = "extrap",
           plot_sim_mat = FALSE,
           output_folder
       ),
-      pattern = map(gfbootstrap_cluster,
-                         extrap_polygons_present, cross(gfbootstrap_predicted, clust_methods_target)),
+      pattern = map(extrap_polygons,
+                    cross(env_biooracle_names, gfbootstrap_cluster),
+                    cross(
+                      cross(env_biooracle_names, gfbootstrap_predicted),
+                      clust_methods_target))),
       format = "file"
   ),
 
+
   tar_target(
-    extrap_confidence_plot_present,
-    plot_confidence(cluster_env_assign_cluster_present,
-                           env_domain_plot,
+    extrap_confidence_plot,
+    plot_confidence(cluster_env_assign_cluster,
+                           env_domain,
                            env_poly,
                            marine_map,
                            max_clust_prob_plot,
@@ -648,14 +692,14 @@ list(
                            spatial_vars,
                            plot_description = "cluster_confidence",
                            output_folder),
-    pattern = map(cluster_env_assign_cluster_present),
+    pattern = map(cluster_env_assign_cluster),
     format = "file"
   ),
 
   tar_target(
-      extrap_overlay_polygons_present,
+      extrap_overlay_polygons,
       plot_polygon_overlay(
-          extrap_polygons_present,
+          extrap_polygons,
           env_poly,
           plot_description = "extrap_polygon_overlay",
           output_folder
@@ -666,12 +710,12 @@ list(
   tar_target(
     indicator_species,
     find_indicator_species(
-        extrap_polygons_present,
+        extrap_polygons,
         all_bio_long,
         spatial_vars
     ),
     pattern =
-        cross(all_bio_long, extrap_polygons_present)
+        cross(all_bio_long, extrap_polygons)
   )
 
   ## tar_target(

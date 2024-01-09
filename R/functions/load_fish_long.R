@@ -18,7 +18,6 @@ load_fish_long <- function(
                           spatial_vars,
                           depth_names,
                           depth_range,
-                          regrid_resolution,
                           env_offset,
                           biooracle_folder
                           ) {
@@ -230,18 +229,6 @@ fish_taxon_depth <-
                                             )
                         },
                       by = c("survey", "trophic",  "depth_cat")]
-## ggplot(fish_rows$obs[[2]][fish_rows$sites[[2]], on = "site_id", nomatch = NULL], aes(x=lon, y= lat, size = abund)) + geom_point()
-
-
-  ## fish_no_taxa <- data.table::CJ(lat = seq(-90, 90, regrid_resolution)+env_offset, lon = seq(0, 360-regrid_resolution, regrid_resolution)+env_offset, depth_cat = depth_names)
-  ## fish_no_taxa[, `:=`(
-  ##   depth = sapply(depth_cat, function(x){depth_range[[x]][1]}),
-  ##   taxon = "No taxa",
-  ##   abund = NA,
-  ##   survey = "watson",
-  ##   trophic = "fish"
-  ## )]
-  ## fish_long <- rbind(fish_long, fish_no_taxa)
 
   return(fish_rows)
 }

@@ -1,5 +1,6 @@
 predict_gfbootstrap <- function(
                                 gfbootstrap_combined,
+                                res_clust_target,
                                 env_domain,
                                 env_biooracle_names,
                                 extrap,
@@ -15,16 +16,20 @@ predict_gfbootstrap <- function(
     ## Upstream target decided survey was not usable.
     ## Propagating
     ##
-    return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
-      env_pred_stats = list(NA),
-			env_id = list(NA),
-      imp_preds = list(NA),
-      sim_mat = list(NA)
+     return(data.table(gfbootstrap_combined[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
+                       res_clust = res_clust_target,
+                       env_pred_stats = list(NA),
+                       env_id = list(NA),
+                       imp_preds = list(NA),
+                       sim_mat = list(NA)
     ))
  }
     gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
 
-  env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain, data][[1]]
+  env_dom <- env_domain[domain == gfbootstrap_combined$env_domain &
+                        res == res_clust_target &
+                        env_year == gfbootstrap_combined$env_year &
+                        env_pathway = gfbootstrap_combined$env_pathway, "data"][[1]][[1]]
 
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
 			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
@@ -34,11 +39,12 @@ predict_gfbootstrap <- function(
 
     if (sum(imp) == 0) {
       ## GF bootstrap object is broken
-      return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
-        env_pred_stats = list(NA),
-        env_id = list(NA),
-        imp_preds = list(NA),
-        sim_mat = list(NA)
+      return(data.table(gfbootstrap_combined[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
+                        res_clust = res_clust_target,
+                        env_pred_stats = list(NA),
+                        env_id = list(NA),
+                        imp_preds = list(NA),
+                        sim_mat = list(NA)
       ))
     }
     if (pred_importance_top >= 1) {
@@ -65,7 +71,7 @@ predict_gfbootstrap <- function(
 		size_int <- 4
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-		n_preds_raw <- length(env_biooracle_names)
+		n_preds_raw <- length(env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]],)
     n_preds <- length(imp_preds)
 
 		mem_per_site <-
@@ -145,15 +151,14 @@ predict_gfbootstrap <- function(
 		nonsingular_det_sites <- as.logical(site_sigma_det$isfinite()$to(device = "cpu"))
 
     ## If all sites have determinant 0, cannot use.
-    ## Not clear why, indicates matrix is not invertible
-    ## Matrices do not have obvious problems like col of 0
-    ## or eigs of 0, but some eigs are complex.
-    ## Problem is likely computational, and I had some
-    ## success inverting sigma with linalg_eigh,
-    ## and calculating det from the eigh eigenvalues,
-    ## but case is rare enough to leave for now.
+    ## indicates matrix is not invertible.
+    ## Cause was probably using fewer bootstrap samples than predictors
+    ## THerefore, tried to fit a covariance matrix with fewer
+    ## samples than dimensions.
+    ## Keep check anyway
     if (all(nonsingular_det_sites == FALSE)) {
-        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+        return(data.table(gfbootstrap_combined[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
+                          res_clust = res_clust_target,
                           env_pred_stats = list(NA),
                           env_id = list(NA),
                           imp_preds = list(NA),
@@ -214,7 +219,8 @@ predict_gfbootstrap <- function(
                  inherits(x, "torch_tensor")
              },
              logical(1)))) {
-        return(data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+        return(data.table(gfbootstrap_combined[, .(env_domain, env_year, env_pathway, res_gf, trophic, survey, depth_cat)],
+                          res_clust = res_clust_target,
                           env_pred_stats = list(NA),
                           env_id = list(NA),
                           imp_preds = list(NA),
@@ -243,7 +249,11 @@ predict_gfbootstrap <- function(
 														site_sigma_det = as.numeric(site_sigma_det$to(device = "cpu")))
 
   return(data.table::setDT(list(
-    env_domain = gfbootstrap_combined$env_domain,
+                         env_domain = gfbootstrap_combined$env_domain,
+                         env_year = gfbootstrap_combined$env_year,
+                         env_pathway = gfbootstrap_combined$env_pathway,
+    res_gf = gfbootstrap_combined$res_gf,
+    res_clust = res_clust_target,
     trophic = gfbootstrap_combined$trophic,
     survey = gfbootstrap_combined$survey,
     depth_cat = gfbootstrap_combined$depth_cat,

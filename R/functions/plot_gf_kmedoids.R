@@ -6,17 +6,22 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                              all_bio_long,
                              env_poly,
                              spatial_vars,
-                             regrid_resolution,
                              marine_map,
                              plot_description,
                              output_folder) {
 
-  survey_specs <- gf_cluster_kmedoids[,
-                                      c("env_domain",
-                                        "trophic",
-                                        "survey",
-                                        "depth_cat",
-                                        "clust_method")]
+  survey_specs <- gf_cluster_kmedoids[
+    ,
+    c(
+        "env_domain", "env_year", "env_pathway",
+        "res_gf",
+        "res_clust",
+        "trophic",
+        "survey",
+        "depth_cat",
+        "clust_method"
+    )
+  ]
   survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
   survey_specs <- as.character(survey_specs)
 
@@ -67,7 +72,6 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gf_cluster_kmedoids$env_domain != "aus_eez",
                   env_poly = env_poly[name == gf_cluster_kmedoids$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
                   labels = plot_clust_labels)+
     tmap::tm_layout(main.title = glue::glue_data(gf_cluster_kmedoids,
                                                  "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
@@ -81,7 +85,7 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain")
+  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "env_year", "env_pathway", "res_gf", "res_clust")
   custom_grouping_vars <- c("trophic", "survey", "depth_cat")
   ## Check for custom combination
   custom_group_matches <- vapply(custom_combinations, function(x) {
@@ -99,15 +103,19 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
     use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- custom_combinations[[custom_group_matches]]$matches
-    match_table[["env_domain"]] <- rep(gf_cluster_kmedoids$env_domain, nrow(match_table))
+      match_table[["env_domain"]] <- rep(gf_cluster_kmedoids$env_domain, nrow(match_table))
+      match_table[["env_year"]] <- rep(gf_cluster_kmedoids$res_gf, nrow(match_table))
+    match_table[["env_pathway"]] <- rep(gf_cluster_kmedoids$res_clust, nrow(match_table))
+
+    match_table[["res_gf"]] <- rep(gf_cluster_kmedoids$res_gf, nrow(match_table))
+    match_table[["res_clust"]] <- rep(gf_cluster_kmedoids$res_clust, nrow(match_table))
+
   } else {
     ## Using a "default" combination
     use_vars <- gf_cluster_kmedoids[, ..grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- gf_cluster_kmedoids[, ..use_vars]
   }
-
-
 
   bio_env_merge <- all_bio_env[match_table, on = use_vars]
   fit_grids <- unique(data.table::rbindlist(
@@ -131,7 +139,7 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
   ## fit_grids <- sf::st_as_sf(fit_grids,
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
-  use_vars <- use_vars[use_vars != "env_domain"]
+  use_vars <- use_vars[!(use_vars %in% c("env_domain", "env_year", "env_pathway", "res_gf", "res_clust"))]
   if(length(use_vars) == 0) {
     bio_merge <- all_bio_long
   } else {
@@ -154,9 +162,6 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                                     )
                             ))
   fit_samples <- fit_samples[complete.cases(fit_samples)]
-  ## fit_samples <- sf::st_as_sf(fit_samples,
-  ##                        coords = spatial_vars,
-  ##                            crs = "+proj=longlat +datum=WGS84")
 
   pl_samp_clipped <- plot_clust_poly(gf_kmedoid_polygons$polygons[[1]],
                                      gf_kmedoid_polygons$polygons_no_clust[[1]],
@@ -164,7 +169,6 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gf_cluster_kmedoids$env_domain != "aus_eez",
                   env_poly = env_poly[name == gf_cluster_kmedoids$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
                                     labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids)+
@@ -186,8 +190,7 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   marine_map = env_poly[name == "aus_eez", data][[1]],
                   plot_map = gf_cluster_kmedoids$env_domain != "aus_eez",
                   env_poly = env_poly[name == gf_cluster_kmedoids$env_domain, data][[1]],
-                  regrid_res = regrid_resolution,
-                                    labels = plot_clust_labels,
+                  labels = plot_clust_labels,
                   samples = fit_samples,
                   grids = fit_grids,
                   clip_samples = FALSE) +

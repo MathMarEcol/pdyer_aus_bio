@@ -1,16 +1,37 @@
-gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
+gfbootstrap_diagnostic_stats <- function(gfbootstrap_cluster,
+                                         gfbootstrap_combined,
                                          gfbootstrap_predicted,
-                                         env_domain_cluster,
-                                         gfbootstrap_cluster,
+                                         env_domain,
                                          env_biooracle_names,
                                          pred_importance_top
 
                                          ) {
+    gfbootstrap_predicted <- gfbootstrap_predicted[
+      env_domain %in% gfbootstrap_cluster$env_domain &
+      env_year %in% gfbootstrap_cluster$env_year &
+      env_pathway %in% gfbootstrap_cluster$env_pathway &
+      res_gf %in% gfbootstrap_cluster$res_gf &
+      res_clust %in% gfbootstrap_cluster$res_clust &
+      trophic %in% gfbootstrap_cluster$trophic &
+      survey %in% gfbootstrap_cluster$survey &
+      depth_cat %in% gfbootstrap_cluster$depth_cat,
+    ]
+
+    gfbootstrap_combined <- gfbootstrap_combined[
+        env_domain %in% gfbootstrap_cluster$env_domain &
+        env_year %in% gfbootstrap_cluster$env_year &
+        env_pathway %in% gfbootstrap_cluster$env_pathway &
+        res_gf %in% gfbootstrap_cluster$res_gf &
+        trophic %in% gfbootstrap_cluster$trophic &
+        survey %in% gfbootstrap_cluster$survey &
+        depth_cat %in% gfbootstrap_cluster$depth_cat,
+        ]
+
   if (all(is.na(gfbootstrap_predicted$imp_preds))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
       ##
-      fail <- data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+      fail <- data.table::data.table(gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
       species_total = NA,
       species_mean = NA,
       species_mean_sd = NA,
@@ -138,7 +159,14 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
   ## A score of 1 indicates that all predictors at a site were extrapolated
   ## A score of 0 indicates no predictors were extrapolated.
   ## Extrapolated means the site is outside the range of samples seen during fitting.
-  env_dom <- env_domain_cluster[domain ==  gfbootstrap_combined$env_domain, data][[1]]
+  env_dom <- env_domain[
+    domain == gfbootstrap_predicted$env_domain &
+    res == gfbootstrap_predicted$res_clust &
+    env_year == gfbootstrap_predicted$env_year &
+   env_pathway == gfbootstrap_predicted$env_pathway,
+    data
+  ][[1]]
+
   if (gfbootstrap_combined$depth_cat !=  "all" ) {
 			env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
   }
@@ -146,7 +174,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
   if (sum(imp) == 0) {
       ## GF bootstrap object is broken
-      return(data.table::data.table(gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)],
+      return(data.table::data.table(gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                         env_pred_stats = list(NA),
                         env_id = list(NA),
                         imp_preds = list(NA),
@@ -412,7 +440,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
   stats_dt <- data.table::setDT(stats)
 
-  ret <- data.table::data.table(stats_dt, gfbootstrap_combined[, .(env_domain, trophic, survey, depth_cat)])
+  ret <- data.table::data.table(stats_dt, gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)])
   data.table::setcolorder(ret, sort(names(ret)))
   return(ret)
 
@@ -423,10 +451,10 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_combined,
 
 
 
-gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
+gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
                                          gfbootstrap_diagnostics,
-                                         env_domain_plot,
-                                         env_domain_cluster,
+                                         gfbootstrap_combined,
+                                         env_domain,
                                          env_poly,
                                          marine_map,
                                          env_id_col,
@@ -434,13 +462,25 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
                                          pred_importance_top,
                                          plot_description,
                                          output_folder) {
-  survey_specs <- gfbootstrap_combined[
+
+
+    gfbootstrap_combined <- gfbootstrap_predicted[
+        env_domain %in% gfbootstrap_cluster$env_domain &
+        res_gf %in% gfbootstrap_cluster$res_gf &
+        trophic %in% gfbootstrap_cluster$trophic &
+        survey %in% gfbootstrap_cluster$survey &
+        depth_cat %in% gfbootstrap_cluster$depth_cat,
+        ]
+
+  survey_specs <- gfbootstrap_cluster[
     ,
     c(
-      "env_domain",
-      "trophic",
-      "survey",
-      "depth_cat"
+        "env_domain",
+        "res_gf",
+        "res_clust",
+        "trophic",
+        "survey",
+        "depth_cat"
     )
   ]
   survey_specs$depth_cat <- as.character(survey_specs$depth_cat)
@@ -485,7 +525,14 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
     file_names,
     gf_diag_plot_helper(gfbootstrap_combined,
                                 gfbootstrap_diagnostics,
-                                env_domain_cluster,
+                        env_domain[
+                            domain == gfbootstrap_combined$env_domain &
+                            res == gfbootstrap_combined$res_clust &
+                            env_year == gfbootstrap_combined$env_year &
+                            env_pathway == gfbootstrap_combined$env_pathway,
+                            data
+                        ][[1]]
+                        ,
                                 env_poly,
                         marine_map,
                         env_id_col,
@@ -501,7 +548,14 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
       file_names,
     gf_diag_plot_helper(gfbootstrap_combined,
                         gfbootstrap_diagnostics,
-                        env_domain_plot,
+                        env_domain[
+                            domain == gfbootstrap_combined$env_domain &
+                            res == gfbootstrap_combined$res_gf &
+                            env_year == gfbootstrap_combined$env_year &
+                            env_pathway == gfbootstrap_combined$env_pathway,
+                            data
+                        ][[1]]
+                        ,
                         env_poly,
                         marine_map,
                         env_id_col,
@@ -520,7 +574,7 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_combined,
 
 gf_diag_plot_helper <- function(gfbootstrap_combined,
                                 gfbootstrap_diagnostics,
-                                env_domain,
+                                env_dom,
                                 env_poly,
                                 marine_map,
                                 env_id_col,
@@ -544,7 +598,6 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
   }
 
 
-  env_dom <- env_domain[domain == gfbootstrap_combined$env_domain, data][[1]]
 
   if (gfbootstrap_combined$depth_cat != "all") {
     env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
@@ -561,7 +614,7 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
     ## Batch to avoid memory explosion
       mem_max <- as.numeric(Sys.getenv("TENSOR_CPU_MEM_MAX", ""))/10
       n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-      n_preds_raw <- length(env_biooracle_names)
+      n_preds_raw <- length(env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]])
       size_doubles <- 8
       size_int <- 4
       pred_obj_size <- n_gf * n_preds_raw * (
@@ -585,7 +638,7 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
                                     {
                                       predicted <- predict(
                                         object = gfbootstrap_combined$gfbootstrap[[1]],
-                                        newdata = env_dom[.SD$site, env_biooracle_names, with = FALSE],
+                                        newdata = env_dom[.SD$site, env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]],, with = FALSE],
                                         ## Just take points, and calculate full coefficient matrix from points
                                         type = c("points"),
                                         extrap = NA,
@@ -612,10 +665,11 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
   }
 
 
-  cluster_res_data[env_domain[domain == gfbootstrap_diagnostics$env_domain[[1]], data][[1]],
-    on = c(env_id_col),
-    c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
-  ]
+    cluster_res_data[env_dom,
+      on = c(env_id_col),
+      c(spatial_vars, env_id_col) := mget(paste0("i.", c(spatial_vars, env_id_col)))
+      ]
+
 
   plot_cols <- c(spatial_vars, "extrap_score")
 
