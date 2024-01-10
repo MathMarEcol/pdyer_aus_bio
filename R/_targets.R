@@ -135,7 +135,7 @@ list(
 
   tar_target(
     res_unique_target,
-    unique(res_env, res_gf, res_clust),
+    unique(c(res_env, res_gf, res_clust)),
     iteration = "vector"
   ),
 
