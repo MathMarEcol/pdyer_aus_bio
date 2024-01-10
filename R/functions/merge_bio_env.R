@@ -19,7 +19,7 @@ merge_bio_env <- function(
   env_pathway <- env_fitting
 
   env_domain <- env_domain[
-    domain == env_poly$domain &
+    domain == env_poly$name &
       res == res_gf_target &
       env_year == env_year  &
       env_pathway == env_pathway, "data"][[1]][[1]]
@@ -77,7 +77,7 @@ merge_bio_env <- function(
 
   if(nrow(grids_env) == 0 | nrow(obs_env) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                      env_domain = env_poly$domain,
+                      env_domain = env_poly$name,
                       res_gf = res_gf_target,
                       wide_taxa_env = list(NA),
                       taxa = list(NA),
@@ -214,7 +214,7 @@ merge_bio_env <- function(
     ## wide_surv <- rbind(wide_surv, env_domain[1,])
   if (nrow(grid_env_bio) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                                  env_domain = env_poly$domain,
+                                  env_domain = env_poly$name,
                                   res_gf = res_gf_target,
                                   wide_taxa_env = list(NA),
                                   taxa = list(NA),
@@ -231,7 +231,7 @@ merge_bio_env <- function(
     ##               .SDcols = unique(obs_env$taxon_id_chr) ]
 
   return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
-                                env_domain = env_poly$domain,
+                                env_domain = env_poly$name,
                                 env_year = env_year,
                                 env_pathway = env_pathway,
                                 res_gf = res_gf_target,
