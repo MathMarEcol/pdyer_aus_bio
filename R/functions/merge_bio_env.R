@@ -78,6 +78,8 @@ merge_bio_env <- function(
   if(nrow(grids_env) == 0 | nrow(obs_env) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
                       env_domain = env_poly$name,
+                      env_year = env_year,
+                      env_pathway = env_pathway,
                       res_gf = res_gf_target,
                       wide_taxa_env = list(NA),
                       taxa = list(NA),
@@ -215,6 +217,8 @@ merge_bio_env <- function(
   if (nrow(grid_env_bio) == 0) {
     return(data.table::data.table(all_bio_long[,.(trophic, survey, depth_cat)],
                                   env_domain = env_poly$name,
+                                  env_year = env_year,
+                                  env_pathway = env_pathway,
                                   res_gf = res_gf_target,
                                   wide_taxa_env = list(NA),
                                   taxa = list(NA),
