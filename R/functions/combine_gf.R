@@ -220,7 +220,7 @@ gf_custom_combinations_helper <- function(
                                        ) {
 
     gf_combined_pre <- gf_survey[,
-                                          by = c("env_domain", "env_year", "env_pathway", "res_gf"), {
+                                 by = c("env_domain", "env_year", "env_pathway", "res_gf"), {
               gf_obs <- .SD[custom_row$matches, on = .NATURAL, nomatch = NULL]
               frac_valid <- sum(!is.na(gf_obs$gf)) / length(gf_obs$gf)
 
