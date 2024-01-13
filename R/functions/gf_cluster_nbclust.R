@@ -32,7 +32,7 @@ nbclust_generate_branches <- function(gf_predicted,
 
 
   ## Parallel branches are row per k per index per gf
-  parallel_rows <- !nbclust_index_metadata$serial &
+  parallel_rows <- !(nbclust_index_metadata$serial | nbclust_index_metadata$runtime == 1) &
     runtime_filter &
     graphical_filter
 
