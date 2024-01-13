@@ -308,7 +308,7 @@ list(
       combine_gf_p1(
           gf_survey,
           custom_combinations
-      )
+      )[trophic == "plankton" & survey == "all" & env_domain == "aus_eez",]
       ## Do NOT map over gfbootstrap_survey
   ),
   tar_target(
@@ -467,7 +467,7 @@ list(
     combine_gfbootstrap_p1(
         gfbootstrap_survey,
         custom_combinations
-    )
+    )[trophic == "plankton" & survey == "all" & env_domain == "aus_eez",]
     ## Do NOT map over gfbootstrap_survey
   ),
   tar_target(
