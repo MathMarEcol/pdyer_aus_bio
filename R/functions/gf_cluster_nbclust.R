@@ -13,7 +13,7 @@ nbclust_generate_branches <- function(gf_predicted,
 
   ## Serial branches are a single row per index per gf x dist x method
   ## min_k and max_k are derived from k_range
-  serial_rows <- nbclust_index_metadata$serial &
+  serial_rows <- (nbclust_index_metadata$serial | nbclust_index_metadata$runtime == 1) &
     runtime_filter &
     graphical_filter
 
