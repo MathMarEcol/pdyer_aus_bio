@@ -23,7 +23,7 @@ fit_gf <- function(
   gf_safe <- purrr::possibly(gradientForest::gradientForest, otherwise = NA, quiet = FALSE)
   gf_fit <- gf_safe(
     data = all_bio_env$wide_taxa_env[[1]],
-    predictor.vars = env_biooracle_names[env_year == all_bio_env$env_year & env_pathway == all_bio_env_env_pathway, env_biooracle_names][[1]],
+    predictor.vars = env_biooracle_names[env_year == all_bio_env$env_year & env_pathway == all_bio_env$env_pathway, env_biooracle_names][[1]],
     response.vars = unique(all_bio_env$obs_env[[1]]$taxon_id_chr),
     ntree = gf_trees,
     compact = gf_compact,
