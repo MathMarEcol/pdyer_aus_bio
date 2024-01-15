@@ -106,7 +106,7 @@ plot_gfbootstrap <- function(
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
-  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "env_year", "env_pathway", "res_gf", "res_clust")
+  grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "env_year", "env_pathway", "res_gf")
   custom_grouping_vars <- c("trophic", "survey", "depth_cat")
   ## Check for custom combination
   custom_group_matches <- vapply(custom_combinations, function(x) {
@@ -120,12 +120,10 @@ plot_gfbootstrap <- function(
     ## Using a custom combination
     use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
-    match_table <- custom_combinations[[custom_group_matches]]$matches
-    match_table[["env_domain"]] <- rep(gfbootstrap_cluster$env_domain, nrow(match_table))
-    match_table[["env_year"]] <- rep(gfbootstrap_cluster$res_gf, nrow(match_table))
-    match_table[["env_pathway"]] <- rep(gfbootstrap_cluster$res_clust, nrow(match_table))
-    match_table[["res_gf"]] <- rep(gfbootstrap_cluster$res_gf, nrow(match_table))
-    match_table[["res_clust"]] <- rep(gfbootstrap_cluster$res_clust, nrow(match_table))
+    match_table <- data.table::data.table(
+      custom_combinations[[custom_group_matches]]$matches,
+      gfbootstrap_cluster[, .(env_domain, env_year, env_pathway, res_gf)]
+    )
 
   } else {
     ## Using a "default" combination
@@ -156,7 +154,7 @@ plot_gfbootstrap <- function(
   ## fit_grids <- sf::st_as_sf(fit_grids,
   ##                        coords = spatial_vars,
   ##                            crs = "+proj=longlat +datum=WGS84")
-  use_vars <- use_vars[!(use_vars %in% c("env_domain", "env_year", "env_pathway", "res_gf", "res_clust"))]
+  use_vars <- use_vars[!(use_vars %in% c("env_domain", "env_year", "env_pathway", "res_gf"))]
   if(length(use_vars) == 0) {
     bio_merge <- all_bio_long
   } else {
