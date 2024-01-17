@@ -37,11 +37,10 @@ fit_gf <- function(
   ## save the gf objects into the targets cache
   ## To make operating over all gf objects more
   ## managable from a memory perspective.
-  hashed <- stringr::str_sub(digest::digest(gf_fit), 1, 8)
   outdir <- file.path(targets::tar_path_store(), "gfs")
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
-  outfile <- file.path(outdir, paste0("gf_", hashed, "___", surv_full_names, ".qs"))
+  outfile <- file.path(outdir, paste0("gf___", surv_full_names, ".qs"))
 
   qs::qsave(gf_fit, outfile, "high")
 

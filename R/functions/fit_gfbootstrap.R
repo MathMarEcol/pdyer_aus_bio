@@ -36,11 +36,10 @@ fit_gfbootstrap <- function(all_bio_env,
     ## save the gfbootstrap objects into the targets cache
     ## To make operating over all gfbootstrap objects more
     ## managable from a memory perspective.
-    hashed <- stringr::str_sub(digest::digest(gf_fit), 1, 8)
     outdir <- file.path(targets::tar_path_store(), "gfbootstraps")
     dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
-    outfile <- file.path(outdir, paste0("gfbootstrap_", hashed, "___", surv_full_names, ".qs"))
+    outfile <- file.path(outdir, paste0("gfbootstrap___", surv_full_names, ".qs"))
 
     qs::qsave(gf_fit, outfile, "high")
 
