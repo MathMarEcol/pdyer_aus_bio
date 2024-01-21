@@ -71,7 +71,7 @@ predict_gfbootstrap <- function(
 		size_int <- 4
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-		n_preds_raw <- length(env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]],)
+    n_preds_raw <- length(env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]])
     n_preds <- length(imp_preds)
 
 		mem_per_site <-
