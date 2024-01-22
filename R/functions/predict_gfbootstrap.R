@@ -12,6 +12,7 @@ predict_gfbootstrap <- function(
     options(torch.cuda_allocator_allocated_rate = 0.8)
 
 
+
  if (all(is.na(gfbootstrap_combined$gfbootstrap))) {
     ## Upstream target decided survey was not usable.
     ## Propagating
@@ -25,7 +26,7 @@ predict_gfbootstrap <- function(
     ))
  }
     gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
-
+    env_biooracle_names <- env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]]
   env_dom <- env_domain[domain == gfbootstrap_combined$env_domain &
                         res == res_clust_target &
                         env_year == gfbootstrap_combined$env_year &
@@ -71,7 +72,8 @@ predict_gfbootstrap <- function(
 		size_int <- 4
 		n_x_row <- nrow(env_dom)
 		n_gf <- length(gfbootstrap_combined$gfbootstrap[[1]]$gf_list)
-    n_preds_raw <- length(env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]])
+
+    n_preds_raw <- length(env_biooracle_names)
     n_preds <- length(imp_preds)
 
 		mem_per_site <-
