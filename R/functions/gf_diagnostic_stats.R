@@ -191,7 +191,7 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_cluster,
   }
   predicted <- predict(
     object = gfbootstrap_combined$gfbootstrap[[1]],
-    newdata = env_dom[, ..env_biooracle_names],
+    newdata = env_dom[, env_biooracle_names[env_year == gfbootstrap_combined$env_year & env_pathway == gfbootstrap_combined$env_pathway, env_biooracle_names][[1]], with=FALSE],
     ## Just take points, and calculate full coefficient matrix from points
     type = c("points"),
     extrap = NA,
