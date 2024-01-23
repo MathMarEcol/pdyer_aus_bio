@@ -464,7 +464,7 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
                                          output_folder) {
 
 
-    gfbootstrap_combined <- gfbootstrap_predicted[
+    gfbootstrap_combined <- gfbootstrap_combined[
         env_domain %in% gfbootstrap_cluster$env_domain &
         res_gf %in% gfbootstrap_cluster$res_gf &
         trophic %in% gfbootstrap_cluster$trophic &
