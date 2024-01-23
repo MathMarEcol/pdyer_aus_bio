@@ -118,10 +118,10 @@ plot_gfbootstrap <- function(
 
   if (any(custom_group_matches)) {
     ## Using a custom combination
-    use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
+    use_vars <- custom_combinations[custom_group_matches][[1]]$descriptions[, ..custom_grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- data.table::data.table(
-      custom_combinations[[custom_group_matches]]$matches,
+      custom_combinations[custom_group_matches][[1]]$matches,
       gfbootstrap_cluster[, .(env_domain, env_year, env_pathway, res_gf)]
     )
 

@@ -100,10 +100,10 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
     ## This line is only reached if custom_gorup_matches has exactly one true entry.
     custom_group_matches <- which(custom_group_matches)
     ## Using a custom combination
-    use_vars <- custom_combinations[[custom_group_matches]]$descriptions[, ..custom_grouping_vars]
+    use_vars <- custom_combinations[custom_group_matches][[1]]$descriptions[, ..custom_grouping_vars]
     use_vars <- grouping_vars[use_vars != "all"]
     match_table <- data.table::data.table(
-      custom_combinations[[custom_group_matches]]$matches,
+      custom_combinations[custom_group_matches][[1]]$matches,
       gf_cluster_kmedoids[, .(env_domain, env_year, env_pathway, res_gf)]
     )
 
