@@ -527,7 +527,7 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
                                 gfbootstrap_diagnostics,
                         env_domain[
                             domain == gfbootstrap_combined$env_domain &
-                            res == gfbootstrap_combined$res_clust &
+                            res == gfbootstrap_combined$res_gf &
                             env_year == gfbootstrap_combined$env_year &
                             env_pathway == gfbootstrap_combined$env_pathway,
                             data
