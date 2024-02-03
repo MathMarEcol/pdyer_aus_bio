@@ -11,17 +11,74 @@ sapply(source_files, source)
 source("./functions/params.R") ##might be redundant, probably sourced above
 
 ## Set global R options, mostly clustermq
-future_plan <- configure_parallel(default_clustermq = TRUE,
-                   future_plan = future.callr::callr)
+## future_plan <- configure_parallel(default_clustermq = TRUE,
+## future_plan = future.callr::callr)
+
+## Stage 1. get targets using crew - DONE
+## Stage2. get crewusing slurm
+## Stage 3. split slurm up according to host
+
+
+## Must contain the following controller names:
+## - "small" - needs 1 core and <4GB RAM
+## - "gpu" - needs a GPU.
+##   -Falls back to BLAS multithreading, if no nvidia gpu, get lots of cores
+## - "multicore" - needs many cores and lots of ram
+## - "ram" - needs 1 core and lots of RAM
+
+## Matches names in aus_bio_submit.sh
+host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bunya)", R.utils::System$getHostname()))
+
+ccg <- switch(host_trunc,
+              prime-ai = {
+                crew::crew_controller_group(
+                  crew::crew_controller_slurm(
+                    name = "small",
+                    workers = 50,
+                    seconds_idle = 600,
+                    seconds_wall = 24 * 60 * 60, # 1 day
+                    reset_globals = FALSE,
+                    garbage_collection = TRUE,
+                    script_lines = "", # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
+                    slurm_log_output = file.path(Sys.getenv("LOGDIR"), "crew_log_%A.txt"),
+                    slurm_log_error = file.path(Sys.getenv("LOGDIR"), "crew_log_error_%A.txt"),
+                    slurm_memory_gigabytes_per_cpu = 4,
+                    slurm_cpus_per_task = 1,
+                    slurm_time_minutes = 24 * 60,
+                    slurm_partition = "cpu"
+                  )
+                )
+})
+
+
+
+##                     ),
+##                   crew.cluster::crew_controller_slurm()
+## )
+
+##               },
+##        bunya = {},
+##        {
+##          stop("Host not recognised")
+##        }
+##        )
+
+
+
+
+
+## Given that crew manages workers, future plan can
+## safely assume it is within a node, so use future.callr and
+## configure future.availableCores.methods
 
 ## Set targets options
 tar_option_set(
   ##qs format is smaller and reads/writes faster than RDS. needs qs package.
   format = "qs",
-  controller = crew::crew_controller_local(
-    name = "local",
-    workers = 4,
-    seconds_idle = 5),
+  controller = ccg,
+  resources = tar_resources(
+    crew = tar_resources_crew(controller = "small")
+  ),
   ## By default, don't load anything into the master
   ## The workers have access to the same FS, and
   ## can read from the cache just as easily as
