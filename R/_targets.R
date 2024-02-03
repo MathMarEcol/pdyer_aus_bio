@@ -32,7 +32,7 @@ host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^pri
 ccg <- switch(host_trunc,
               "prime-ai" = {
                 crew::crew_controller_group(
-                  crew::crew_controller_slurm(
+                  crew.cluster::crew_controller_slurm(
                     name = "small",
                     workers = 50,
                     seconds_idle = 600,
