@@ -181,14 +181,19 @@ Later on I can give the .img file and the source code, and they will get the sam
 :PROPERTIES:
 :ID:       org:08572e87-3196-4198-a161-18df33698dc1
 :END:
+
+The project ~r-dev-shell~ contains the R environment.
+
+https://github.com/PhDyellow/nix_r_dev_shell
+
 All the *.nix files (all_packages.nix, r_packages.nix, singularity_image.nix and r_shell.nix) are files for the Nix package manager, and are the definitive way to reproduce the environment.
 
 Using the package manager Nix, you can rebuild the .sif file with the following code:
       #+begin_src sh
-        nix build -f singularity_image.nix -o ~/r-singularity-aus-bio.img  #runs on "singularity_image.nix" in current folder
+        nix build -f apptainer_image.nix -o /tmp/r-apptainer-aus-bio.sif  #runs on "apptainer_image.nix" in current folder
       #+end_src
 
-The end result is guarenteed to be the exact image I generated with the same commands.
+The end result is guaranteed to be the exact image I generated with the same commands.
 
 ** _targets.R
 :PROPERTIES:
@@ -223,3 +228,58 @@ Given that HPC code should not be run over the network, I copy the relevant part
 :PROPERTIES:
 :ID:       org:bf84771c-bf91-4a29-976f-42d927d98f10
 :END:
+Future layers are handled by BioORACLE v2.2, as well as the ~env_year~ and ~env_pathway~ params.
+* Update for targets and crew
+
+Crew provides a unified frontend for workers.
+
+No longer need to differentiate between local and cluster execution, or call a different top-level function depending on whether future, clustermq or sequential execution are needed.
+Always call ~tar_make()~ and ensure the ~controllers~ tar_option is set appropriately.
+
+** Balancing workloads
+
+Each target has a distinct resource requirement.
+
+Some are small and fast, some require lots of memory, some internally use paralellisation, and benefit from having lots of cores available.
+
+Experience tells me that it is better to compute targets sequentially rather than in parallel if the total runtime is the same.
+Parallel computation should only be used if there are spare resources.
+
+In practice, this means that branches that internally run in parallel should be given the whole node.
+
+- Branch types
+	- single :: single cpu, can run in parallel with other branches
+	- GPU :: needs the GPU, or a whole node for BLAS/LAPACK
+		- BLAS may need the env var ~XXX_NUM_THREADS~ set, according to the number of CPUs
+	- multicore :: the branch internally uses parallel, so can use a whole node
+		- Need to make sure future is configured
+
+RAM requirements are set per job, 4GB is enough for many small jobs.
+Bigger jobs will need tuning according to the dataset, can use 100's of GB.
+
+
+
+** Making sure the right controllers are used
+
+One goal is to make the code run in different environments with minimal changes.
+
+Crew helps, but different controllers are needed for different environments, eg. local vs slurm.
+
+I may end up needing to use the configure_parallel function to just list controllers, and use some flag to choose between them.
+
+
+
+** Future framework
+
+Targets will use crew to assign branches to workers.
+
+Some functions can run in parallel, but all use the future framework to decide if it is possible.
+
+crew might be able to set up future plans for workers that expect multicore operations.
+It doesn't seem to.
+Each target could set the plan just before calling the function.
+Given that the resoureces are specified in the same place, the relevant information would be kept together.
+
+
+future.callr is probably the most flexible and reliable for running within a single node.
+future.mirai is under development, but locally it behaves largely like future.callr.
