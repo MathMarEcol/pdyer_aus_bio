@@ -129,7 +129,21 @@ fi
 ## Run Targets
 
 cd $TMPDIR_SHARE/code/R/
-apptainer exec  $APPTAINER_SIF_RUN  Rscript --vanilla -e "targets::tar_make()"
+
+## Some env vars are leaking into container and breaking
+## downloads.
+## Unset if present
+if [ -v NIX_SSL_CERT_FILE ]; then
+		export TMP_NSCF=$NIX_SSL_CERT_FILE
+		unset -v NIX_SSL_CERT_FILE
+fi
+
+apptainer exec $APPTAINER_SIF_RUN  Rscript --vanilla -e "targets::tar_make()"
+
+if [ -v TMP_NSCF ]; then
+		export NIX_SSL_CERT_FILE=$TMP_NSCF
+fi
+
 
 ## Clean up
 
