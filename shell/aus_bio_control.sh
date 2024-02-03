@@ -130,7 +130,7 @@ fi
 
 cd $TMPDIR_SHARE/code/R/
 
-if [! -v TMPDIR ]; then
+if [ ! -v TMPDIR ]; then
 		mkdir -p $TMPDIR_SHARE/tmp
 		export TMPDIR=$TMPDIR_SHARE/tmp
 fi
