@@ -48,16 +48,16 @@ ccg <- switch(host_trunc,
                                         as.character(Sys.which("sbatch"))
                                     } else {
                                         ## In a slurm job, probably in a container
-                                        "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} sbatch '$@'"
+                                        "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} sbatch"
                                     },
                     command_terminate = if(Sys.getenv("SLURM_SUBMIT_HOST") == "") {
                                          ## No Slurm Host, not in a slurm job
                                          as.character(Sys.which("scancel"))
                                      } else {
                                          ## In a slurm job, probably in a container
-                                         "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} scancel '$@'"
+                                         "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} scancel"
                                      },
-                    script_lines = "alias R apptainer exec ${APPTAINER_SIF_RUN} R"), # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
+                    script_lines = "alias R apptainer exec ${APPTAINER_SIF_RUN} R", # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
                     slurm_log_output = file.path(Sys.getenv("LOGDIR"), "crew_log_%A.txt"),
                     slurm_log_error = file.path(Sys.getenv("LOGDIR"), "crew_log_error_%A.txt"),
                     slurm_memory_gigabytes_per_cpu = 4,
