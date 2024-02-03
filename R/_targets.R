@@ -30,7 +30,7 @@ source("./functions/params.R") ##might be redundant, probably sourced above
 host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bunya)", R.utils::System$getHostname()))
 
 ccg <- switch(host_trunc,
-              prime-ai = {
+              "prime-ai" = {
                 crew::crew_controller_group(
                   crew::crew_controller_slurm(
                     name = "small",
