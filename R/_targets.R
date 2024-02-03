@@ -30,17 +30,34 @@ source("./functions/params.R") ##might be redundant, probably sourced above
 host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
 
 
+## Need a flag for whether we are in container or running on host directly
+## If in a container, makes assumptions about ssh keys
 ccg <- switch(host_trunc,
               "prime-ai" = {
                 crew::crew_controller_group(
                   crew.cluster::crew_controller_slurm(
                     name = "small",
                     workers = 50,
+                    seconds_timeout = 10,
                     seconds_idle = 600,
                     seconds_wall = 24 * 60 * 60, # 1 day
                     reset_globals = FALSE,
                     garbage_collection = TRUE,
-                    script_lines = "", # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
+                    command_submit = if(Sys.getenv("SLURM_SUBMIT_HOST") == "") {
+                                        ## No Slurm Host, not in a slurm job
+                                        as.character(Sys.which("sbatch"))
+                                    } else {
+                                        ## In a slurm job, probably in a container
+                                        "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} sbatch '$@'"
+                                    },
+                    command_terminate = if(Sys.getenv("SLURM_SUBMIT_HOST") == "") {
+                                         ## No Slurm Host, not in a slurm job
+                                         as.character(Sys.which("scancel"))
+                                     } else {
+                                         ## In a slurm job, probably in a container
+                                         "ssh -i ~/.ssh/selfkey ${SLURM_SUBMIT_HOST:-'no_host_not_in_a_slurm_job'} scancel '$@'"
+                                     },
+                    script_lines = "alias R apptainer exec ${APPTAINER_SIF_RUN} R"), # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
                     slurm_log_output = file.path(Sys.getenv("LOGDIR"), "crew_log_%A.txt"),
                     slurm_log_error = file.path(Sys.getenv("LOGDIR"), "crew_log_error_%A.txt"),
                     slurm_memory_gigabytes_per_cpu = 4,
@@ -58,7 +75,7 @@ ccg <- switch(host_trunc,
 ## )
 
 ##               },
-##        bunya = {},
+##        "bun" = {},
 ##        {
 ##          stop("Host not recognised")
 ##        }
