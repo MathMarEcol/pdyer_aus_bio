@@ -135,6 +135,8 @@ if [! -v TMPDIR ]; then
 		export TMPDIR=$TMPDIR_SHARE/tmp
 fi
 
+mkdir -p $TMPDIR_SHARE/logs
+export LOGDIR=$TMPDIR_SHARE/logs
 
 ## Some env vars are leaking into container and breaking
 ## downloads.
