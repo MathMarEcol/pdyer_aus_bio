@@ -33,7 +33,7 @@ echo "Building on ${HName}"
 
 
 case $HName in
-		bunya*)
+		bun*)
 				export ROOT_STORE_DIR="/QRISdata/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 				export APPTAINER_SIF_DIR=$ROOT_STORE_DIR/sif_images
