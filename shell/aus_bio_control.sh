@@ -49,7 +49,7 @@ rsync -irc $ROOT_STORE_DIR/data/mpa_poly_june_2023/ $TMP_DATA_DIR/mpa_poly_june_
 
 #Set up the output directory
 if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.7z" ]]; then
-		7z_cmd x $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z -o$TMPDIR_SHARE/outputs/
+		7z_cmd x $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z -o$TMPDIR_SHARE/outputs
 fi
 
 #Load in the cache if it exists
@@ -160,7 +160,7 @@ fi
 rsync -irc $TMPDIR_SHARE/code/R/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
 
 #Store the outputs
-7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  $TMPDIR_SHARE/outputs
+7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  $TMPDIR_SHARE/outputs/*
 rsync -irc $TMPDIR_SHARE/*_outputs.* $ROOT_STORE_DIR/aus_bio_outputs
 if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.7z" ]]; then
 		unlink $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z
