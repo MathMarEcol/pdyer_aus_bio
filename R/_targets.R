@@ -18,6 +18,10 @@ future_plan <- configure_parallel(default_clustermq = TRUE,
 tar_option_set(
   ##qs format is smaller and reads/writes faster than RDS. needs qs package.
   format = "qs",
+  controller = crew_controller_local(
+    name = "local",
+    workers = 4,
+    seconds_idle = 5),
   ## By default, don't load anything into the master
   ## The workers have access to the same FS, and
   ## can read from the cache just as easily as
