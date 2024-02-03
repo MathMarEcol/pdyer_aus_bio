@@ -27,7 +27,8 @@ source("./functions/params.R") ##might be redundant, probably sourced above
 ## - "ram" - needs 1 core and lots of RAM
 
 ## Matches names in aus_bio_submit.sh
-host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bunya)", R.utils::System$getHostname()))
+host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
+
 
 ccg <- switch(host_trunc,
               "prime-ai" = {
