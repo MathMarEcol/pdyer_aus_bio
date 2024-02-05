@@ -37,7 +37,7 @@ ccg <- switch(host_trunc,
                 crew::crew_controller_group(
                   crew.cluster::crew_controller_slurm(
                     name = "small",
-                    workers = 50,
+                    workers = 20,
                     seconds_timeout = 10,
                     seconds_idle = 600,
                     seconds_wall = 24 * 60 * 60, # 1 day
@@ -47,16 +47,73 @@ ccg <- switch(host_trunc,
                     ## This is sufficient to make runnable slurm workers
                     script_lines = paste(sep = "\n",
                                          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"),
-                    ## script_lines = paste0("alias R='apptainer exec ", Sys.getenv("APPTAINER_SIF_RUN"), " R'"), # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
                     slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
                     slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
                     slurm_memory_gigabytes_per_cpu = 4,
                     slurm_cpus_per_task = 1,
                     slurm_time_minutes = 24 * 60,
                     slurm_partition = "cpu"
-                  )
+                  ),
+                  crew.cluster::crew_controller_slurm(
+                    name = "gpu",
+                    workers = 1,
+                    seconds_timeout = 10,
+                    seconds_idle = 600,
+                    seconds_wall = 24 * 60 * 60, # 1 day
+                    reset_globals = FALSE,
+                    garbage_collection = TRUE,
+
+                    ## This is sufficient to make runnable slurm workers
+                    script_lines = paste(sep = "\n",
+                                         "#SBATCH --gpus=nvidia:1",
+                                         "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"),
+                    slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+                    slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+                    slurm_memory_gigabytes_per_cpu = 45,
+                    slurm_cpus_per_task = 1,
+                    slurm_time_minutes = 24 * 60,
+                    slurm_partition = "gpu"
+                  ),
+                  crew.cluster::crew_controller_slurm(
+                    name = "multicore",
+                    workers = 1,
+                    seconds_timeout = 10,
+                    seconds_idle = 600,
+                    seconds_wall = 24 * 60 * 60, # 1 day
+                    reset_globals = FALSE,
+                    garbage_collection = TRUE,
+
+                    ## This is sufficient to make runnable slurm workers
+                    script_lines = paste(sep = "\n",
+                                         "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"),
+                    slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+                    slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+                    slurm_memory_gigabytes_per_cpu = 5.5,
+                    slurm_cpus_per_task = 10,
+                    slurm_time_minutes = 24 * 60,
+                    slurm_partition = "cpu"
+                  ),
+                  crew.cluster::crew_controller_slurm(
+                    name = "ram",
+                    workers = 1,
+                    seconds_timeout = 10,
+                    seconds_idle = 600,
+                    seconds_wall = 24 * 60 * 60, # 1 day
+                    reset_globals = FALSE,
+                    garbage_collection = TRUE,
+
+                    ## This is sufficient to make runnable slurm workers
+                    script_lines = paste(sep = "\n",
+                                         "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"),
+                    slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+                    slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+                    slurm_memory_gigabytes_per_cpu = 60,
+                    slurm_cpus_per_task = 10,
+                    slurm_time_minutes = 24 * 60,
+                    slurm_partition = "cpu"
+                    )
                 )
-})
+              })
 
 
 
@@ -369,7 +426,10 @@ list(
       gf_compact,
       gf_bins,
       gf_corr_thres
-      ),
+    ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "small")
+    ),
     pattern = map(all_bio_env)
   ),
 
@@ -386,6 +446,9 @@ list(
       combine_gf_p2(
           gf_combined_tmp,
           gf_bins
+      ),
+      resources = tar_resources(
+        crew = tar_resources_crew(controller = "ram")
       ),
       pattern = map(gf_combined_tmp)
   ),
@@ -523,6 +586,9 @@ list(
       gf_bins,
       gf_corr_thres
     ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "multicore")
+    ),
     pattern = map(all_bio_env)
   ),
 
@@ -537,6 +603,9 @@ list(
     combine_gfbootstrap_p1(
         gfbootstrap_survey,
         custom_combinations
+    ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "ram")
     )
     ## Do NOT map over gfbootstrap_survey
   ),
@@ -546,7 +615,10 @@ list(
       gfbootstrap_combined_tmp,
       gf_bins,
       cgf_bootstrap_combinations
-      ),
+    ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "multicore")
+    ),
     pattern = map(gfbootstrap_combined_tmp)
   ),
 
@@ -563,6 +635,9 @@ list(
       env_id_col,
       depth_range
     ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "gpu")
+    ),
     pattern = cross(gfbootstrap_combined, res_clust_target)
   ),
 
@@ -575,6 +650,9 @@ list(
                                  env_domain,
                                  env_biooracle_names,
                                  pred_importance_top),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "ram")
+    ),
     pattern = map(gfbootstrap_cluster)
   ),
 
@@ -609,7 +687,7 @@ list(
       min_range = min_range_tol,
       min_tol = min_gamma_tol,
       keep_all_clusts
-          ),
+    ),
     pattern = cross(gfbootstrap_predicted, clust_methods_target)
   ),
   
@@ -708,13 +786,16 @@ list(
         env_id_col,
         depth_range
       ),
+      resources = tar_resources(
+        crew = tar_resources_crew(controller = "multicore")
+      ),
       pattern = cross(
         env_biooracle_names,
         map(
           gfbootstrap_predicted,
           cross(gfbootstrap_combined, res_clust_target)
         )
-      )
+      ),
   ),
 
 
@@ -728,6 +809,9 @@ list(
           env_domain,
           env_id_col,
           spatial_vars
+      ),
+      resources = tar_resources(
+        crew = tar_resources_crew(controller = "ram")
       ),
       pattern = map(
         cross(env_biooracle_names, gfbootstrap_cluster),
@@ -759,6 +843,9 @@ list(
           plot_description = "extrap",
           plot_sim_mat = FALSE,
           output_folder
+      ),
+      resources = tar_resources(
+        crew = tar_resources_crew(controller = "ram")
       ),
       pattern = map(extrap_polygons,
                     cross(env_biooracle_names,
@@ -799,6 +886,9 @@ list(
         extrap_polygons,
         all_bio_long,
         spatial_vars
+    ),
+    resources = tar_resources(
+      crew = tar_resources_crew(controller = "ram")
     ),
     pattern =
         cross(all_bio_long, extrap_polygons)
