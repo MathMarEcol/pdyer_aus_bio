@@ -46,7 +46,7 @@ ccg <- switch(host_trunc,
 
                     ## This is sufficient to make runnable slurm workers
                     script_lines = paste(sep = "\n",
-                                         "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'")
+                                         "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"),
                     ## script_lines = paste0("alias R='apptainer exec ", Sys.getenv("APPTAINER_SIF_RUN"), " R'"), # May need to tune for apptainer, perhaps by creating a bash alias to Rscript
                     slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
                     slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
