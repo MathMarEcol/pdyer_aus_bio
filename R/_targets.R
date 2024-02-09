@@ -665,7 +665,7 @@ list(
         depth_range
       ),
       resources = tar_resources(
-        crew = tar_resources_crew(controller = "multicore")
+        crew = tar_resources_crew(controller = "gpu")
       ),
       pattern = cross(
         env_biooracle_names,
