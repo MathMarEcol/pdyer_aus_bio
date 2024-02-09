@@ -44,20 +44,24 @@ case $HName in
 				# curl -L https://hydra.nixos.org/job/nix/maintenance-2.20/buildStatic.x86_64-linux/latest/download-by-type/file/binary-dist > ~/bin/nix
 
 
-				cat 'export NIX_CONFIG="use-xdg-base-directories = true
+				# cat 'export NIX_CONFIG="use-xdg-base-directories = true
+# ssl-cert-file = /etc/ssl/certs/ca-bundle.crt
+# store = ~/nix_store
+# extra-experimental-features = flakes nix-command recursive-nix
+# max-jobs = 1
+# cores = 1
+# "' > ~/nix_env_aus_bio.sh
+				# source ~/nix_env_aus_bio.sh
+				export NIX_CONFIG="use-xdg-base-directories = true
 ssl-cert-file = /etc/ssl/certs/ca-bundle.crt
 store = ~/nix_store
 extra-experimental-features = flakes nix-command recursive-nix
 max-jobs = 1
-"' > ~/nix_env.sh
-				source ~/nix_env.sh
-       export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+cores = 1"
+				export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
 
-				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE
+				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE
 
-				## tell BLAS that we are using gnu openmp
-				export MKL_THREADING_LAYER="GNU"
-				export MKL_INTERFACE_LAYER="GNU,LP64"
 				## Control job goes to "general" partition
 				cd $TMPDIR_SHARE
 				sbatch aus_bio_bunya_batch.sh -A $2
@@ -68,11 +72,8 @@ max-jobs = 1
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 
-				export MKL_THREADING_LAYER="GNU"
-				export MKL_INTERFACE_LAYER="GNU,LP64"
-
 				## Control job goes to "cpu" partition
-				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES
+				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES
 				sbatch aus_bio_prime_ai_batch.sh -A $2
 		;;
 
