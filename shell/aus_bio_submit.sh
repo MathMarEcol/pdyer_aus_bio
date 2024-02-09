@@ -39,6 +39,8 @@ case $HName in
 				export ROOT_STORE_DIR="/QRISdata/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 				mkdir -p $TMPDIR_SHARE
+				cp ./aus_bio_bunya_batch.sh $TMPDIR_SHARE
+				cp ./aus_bio_control.sh $TMPDIR_SHARE
 				## Set up the nix dir.
 				## put nix into ~/bin
 				# curl -L https://hydra.nixos.org/job/nix/maintenance-2.20/buildStatic.x86_64-linux/latest/download-by-type/file/binary-dist > ~/bin/nix
