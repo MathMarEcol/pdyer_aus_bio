@@ -1,8 +1,3 @@
-## Stage 1. get targets using crew - DONE
-## Stage2. get crewusing slurm
-## Stage 3. split slurm up according to host
-
-
 ## Must contain the following controller names:
 ## - "small" - needs 1 core and <4GB RAM
 ## - "gpu" - needs a GPU.
@@ -21,7 +16,7 @@ ccg <- switch(host_trunc,
         workers = 20,
         seconds_timeout = 10,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -42,7 +37,7 @@ ccg <- switch(host_trunc,
         workers = 1,
         seconds_timeout = 10,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -55,7 +50,7 @@ ccg <- switch(host_trunc,
           "export TENSOR_CPU_MEM_MAX=50000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
           "export TENSOR_GPU_MEM_MAX=4500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
           "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -69,14 +64,14 @@ ccg <- switch(host_trunc,
         workers = 1,
         seconds_timeout = 10,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
         ## This is sufficient to make runnable slurm workers
         script_lines = paste(
           sep = "\n",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -90,14 +85,14 @@ ccg <- switch(host_trunc,
         workers = 1,
         seconds_timeout = 10,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
         ## This is sufficient to make runnable slurm workers
         script_lines = paste(
           sep = "\n",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -115,7 +110,7 @@ ccg <- switch(host_trunc,
         workers = 100,
         seconds_timeout = 100,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -137,7 +132,7 @@ ccg <- switch(host_trunc,
         workers = 10,
         seconds_timeout = 100,
         seconds_idle = 60,
-        seconds_wall = 24 * 60 * 60, # 24 hours
+        seconds_wall = 22 * 60 * 60, # 24 hours
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -147,19 +142,19 @@ ccg <- switch(host_trunc,
           paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
           "#SBATCH --gpus=nvidia_a100_80gb_pcie_1g.10gb:1",
           "#SBATCH --nodes=1",
-          "#SBATCH --ntasks-per-node=24",
+          "#SBATCH --ntasks-per-node=1",
           "#SBATCH --mem=100G",
           "export TF_FORCE_GPU_ALLOW_GROWTH='true'",
           "export CUDA_MODULE_LOADING=LAZY",
           "export TENSOR_CPU_MEM_MAX=90000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
           "export TENSOR_GPU_MEM_MAX=8500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
           "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=24'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
-        slurm_cpus_per_task = 1,
+        slurm_cpus_per_task = 24,
         slurm_time_minutes = 24 * 60 + 10,
         slurm_partition = "gpu_cuda"
       ),
@@ -168,7 +163,7 @@ ccg <- switch(host_trunc,
         workers = 10,
         seconds_timeout = 100,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -177,15 +172,15 @@ ccg <- switch(host_trunc,
           sep = "\n",
           paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
           "#SBATCH --nodes=1",
-          "#SBATCH --ntasks-per-node=48",
+          "#SBATCH --ntasks-per-node=1",
           "#SBATCH --mem=600G",
           "export TENSOR_CPU_MEM_MAX=599000000000",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=48'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
-        slurm_cpus_per_task = 1,
+        slurm_cpus_per_task = 96,
         slurm_time_minutes = 24 * 60 + 10,
         slurm_partition = "general"
       ),
@@ -194,7 +189,7 @@ ccg <- switch(host_trunc,
         workers = 10,
         seconds_timeout = 100,
         seconds_idle = 600,
-        seconds_wall = 24 * 60 * 60, # 1 day
+        seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -203,15 +198,15 @@ ccg <- switch(host_trunc,
           sep = "\n",
           paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
           "#SBATCH --nodes=1",
-          "#SBATCH --ntasks-per-node=10",
+          "#SBATCH --ntasks-per-node=1",
           "#SBATCH --mem=300G",
           "export TENSOR_CPU_MEM_MAX=299000000000",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
-        slurm_cpus_per_task = 1,
+        slurm_cpus_per_task = 10,
         slurm_time_minutes = 24 * 60 + 10,
         slurm_partition = "general"
       )
