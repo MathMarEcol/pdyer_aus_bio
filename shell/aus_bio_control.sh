@@ -59,74 +59,6 @@ fi
 
 ## Files are ready, set up env
 
-## Prepare Apptainer
-mkdir -p $TMPDIR_SHARE/sif_images
-rsync -irc $APPTAINER_SIF_DIR/$APPTAINER_SIF_FILE $TMPDIR_SHARE/sif_images
-export APPTAINER_SIF_RUN=$TMPDIR_SHARE/sif_images/$APPTAINER_SIF_FILE
-
-
-#Bash builtin that allows module aliases to work in non-interactive jobs (shopt: SHell OPTions)
-#-s means set, expand_aliases is only default for interactive shells, not non-interactive
-shopt -s expand_aliases
-
-
-#Because this is a apptainer, it can only see directories specified in "APPTAINER_BIND" env var.
-export TMPDIR_REAL=$(realpath $TMPDIR_SHARE)
-export APPTAINER_BIND=${TMPDIR_REAL:-""}
-## Needed for cases when sbatch needs to be wrapped when the control process cannot launch jobs from a compute node.
-## Use with caution, allows any executable to be overriden by files in home dir
-export APPTAINERENV_APPEND_PATH="/home/${USER}/bin"
-## Add env vars into container needed by code
-export APPTAINERENV_TMPDIR_SHARE=$TMPDIR_SHARE
-mkdir -p $TMPDIR_SHARE/apptainer_cache
-mkdir -p $TMPDIR_SHARE/apptainer_tmp
-export APPTAINER_CACHEDIR=$TMPDIR_SHARE/apptainer_cache
-export APPTAINER_TMPDIR=$TMPDIR_SHARE/apptainer_tmp
-
-## Debugging, assume I don't need modules for now
-if [ $COPY_WRAPPERS -gt 0 ]
-then
-#Always use the latest module, so I don't need to remember to copy it manually
-#but only if I really am on the HPC
-mkdir -p ~/privatemodules
-#Also make sure I have a wrapped version of qsub and qstat for the containers
-mkdir -p ~/bin
-   if [ $SCHEDULER == "pbs" ]
-   then
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_pbs.lua \
-         ~/privatemodules/aus_bio_module.lua
-   module load use.own
-   module load aus_bio_module.lua
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qsub_wrap.sh \
-      ~/bin/qsub
-   chmod u+x ~/bin/qsub
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qdel_wrap.sh \
-   ~/bin/qdel
-   chmod u+x ~/bin/qdel
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/qstat_wrap.sh \
-      ~/bin/qstat
-   chmod u+x ~/bin/qstat
-   fi
-   if [ $SCHEDULER == "slurm" ]
-   then
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/aus_bio_module_slurm.tcl \
-         ~/privatemodules/aus_bio_module.tcl
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/sbatch_wrap.sh \
-      ~/bin/sbatch
-   chmod u+x ~/bin/sbatch
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/scancel_wrap.sh \
-   ~/bin/scancel
-   chmod u+x ~/bin/scancel
-   cp $TMPDIR_SHARE/Q1216/pdyer/pdyer_aus_bio/code/shell/squeue_wrap.sh \
-      ~/bin/squeue
-   chmod u+x ~/bin/squeue
-   fi
-fi
-
-
-
-
-## Run Targets
 
 cd $TMPDIR_SHARE/code/R/
 
@@ -138,20 +70,17 @@ fi
 mkdir -p $TMPDIR_SHARE/logs
 export LOGDIR=$TMPDIR_SHARE/logs
 
-## Some env vars are leaking into container and breaking
-## downloads.
-## Unset if present
-if [ -v NIX_SSL_CERT_FILE ]; then
-		export TMP_NSCF=$NIX_SSL_CERT_FILE
-		unset -v NIX_SSL_CERT_FILE
-fi
+## Set up an R shell
+#Bash builtin that allows module aliases to work in non-interactive jobs (shopt: SHell OPTions)
+#-s means set, expand_aliases is only default for interactive shells, not non-interactive
+shopt -s expand_aliases
 
-apptainer exec $APPTAINER_SIF_RUN  Rscript --vanilla -e "targets::tar_make()"
+alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c R'
+alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c Rscript'
 
-if [ -v TMP_NSCF ]; then
-		export NIX_SSL_CERT_FILE=$TMP_NSCF
-fi
+## Run Targets
 
+Rscript --vanilla -e "targets::tar_make()"
 
 ## Clean up
 

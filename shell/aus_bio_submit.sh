@@ -34,54 +34,46 @@ echo "Building on ${HName}"
 
 case $HName in
 		bun*)
+				## Moving into aus_bio_bunya_batch
+				## Root directories
 				export ROOT_STORE_DIR="/QRISdata/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
-				export APPTAINER_SIF_DIR=$ROOT_STORE_DIR/sif_images
-				export APPTAINER_SIF_FILE=aus_bio_apptainer_r.sif
-				export COPY_WRAPPERS=0 #don't copy HPC module files locally
+				mkdir -p $TMPDIR_SHARE
+				## Set up the nix dir.
+				## put nix into ~/bin
+				# curl -L https://hydra.nixos.org/job/nix/maintenance-2.20/buildStatic.x86_64-linux/latest/download-by-type/file/binary-dist > ~/bin/nix
+
+
+				cat 'export NIX_CONFIG="use-xdg-base-directories = true
+ssl-cert-file = /etc/ssl/certs/ca-bundle.crt
+store = ~/nix_store
+extra-experimental-features = flakes nix-command recursive-nix
+max-jobs = 1
+"' > ~/nix_env.sh
+				source ~/nix_env.sh
+       export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+
+				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE
+
 				## tell BLAS that we are using gnu openmp
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
 				## Control job goes to "general" partition
-				sbatch aus_bio_bunya_batch.sh $2 general
+				cd $TMPDIR_SHARE
+				sbatch aus_bio_bunya_batch.sh -A $2
 				;;
 
 		prime-ai*)
 				## Root directories
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
-				## Container location. Will be moved to scratch before execution
-				export APPTAINER_SIF_DIR=$ROOT_STORE_DIR/sif_images
-				export APPTAINER_SIF_FILE=aus_bio_apptainer_r.sif
-				## Mount slurm into container
-				## Nix is horrible for this
-				export APPTAINERENV_SLURM_CONF=/nix/store/cjmalw9cc69vh0b3sl8v2af6pj1iahym-etc-slurm/slurm.conf
-				export APPTAINERENV_APPEND_PATH=/nix/store/lp79sxc2j3r69finmb9c0wr6f04h4m3m-slurm-23.02.7.1/bin
-				export APPTAINERENV_APPEND_PATH=${APPTAINERENV_APPEND_PATH}:/nix/store/9zw2qhrnsfrj5n1682f0qbqdv7kdwl4q-munge-0.5.15/bin
 
-				# export APPTAINER_BIND=/nix/store/fqpibzgmziwzs6ypfxwz67528b5h4qby-wrappedSlurm/bin
-				export APPTAINER_BIND=/nix/store/cjmalw9cc69vh0b3sl8v2af6pj1iahym-etc-slurm
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/lp79sxc2j3r69finmb9c0wr6f04h4m3m-slurm-23.02.7.1
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/9zw2qhrnsfrj5n1682f0qbqdv7kdwl4q-munge-0.5.15
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/9y8pmvk8gdwwznmkzxa6pwyah52xy3nk-glibc-2.38-27
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/bi51rzf2g7jlfqccqv4c3yswzy4ah80f-slurm.conf
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/9558j3vg39rznx9n318cqyg4bvyvhvnf-plugstack.conf
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/6d38l2007fk6x5mzns0ccw0ackg5d79l-cgroup.conf
-				export APPTAINER_BIND=${APPTAINER_BIND},/nix/store/vwpki5nihab5yssssd54kd8f5c32sg7f-lz4-1.9.4
-
-				export APPTAINER_BIND=${APPTAINER_BIND},/var/run/munge
-				export APPTAINER_BIND=${APPTAINER_BIND},/run/munge
-				export APPTAINER_BIND=${APPTAINER_BIND},/etc/passwd,/etc/group
-
-
-
-				export COPY_WRAPPERS=0 #don't copy HPC module files locally
-				## tell BLAS that we are using gnu openmp
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
 
 				## Control job goes to "cpu" partition
-        sbatch aus_bio_prime_ai_batch.sh -A $2
+				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES
+				sbatch aus_bio_prime_ai_batch.sh -A $2
 		;;
 
 		*)
