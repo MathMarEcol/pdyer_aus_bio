@@ -80,7 +80,7 @@ cores = 1"
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 				mkdir -p $TMPDIR_SHARE
-				cp ./aus_bio_bunya_batch.sh $TMPDIR_SHARE
+				cp ./aus_bio_prime_ai_batch.sh $TMPDIR_SHARE
 				cp ./aus_bio_control.sh $TMPDIR_SHARE
 
 				## tell BLAS that we are using gnu openmp
