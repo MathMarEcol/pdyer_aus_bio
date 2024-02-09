@@ -64,11 +64,13 @@ cores = 1"
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
 
-				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER
+				export SBATCH_ACCOUNT=$2
+
+				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,SBATCH_ACCOUNT
 
 				## Control job goes to "general" partition
 				cd $TMPDIR_SHARE
-				sbatch aus_bio_bunya_batch.sh -A $2
+				sbatch aus_bio_bunya_batch.sh
 				;;
 
 		prime-ai*)
@@ -80,9 +82,10 @@ cores = 1"
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
 
+
 				## Control job goes to "cpu" partition
 				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER
-				sbatch aus_bio_prime_ai_batch.sh -A $2
+				sbatch aus_bio_prime_ai_batch.sh
 		;;
 
 		*)

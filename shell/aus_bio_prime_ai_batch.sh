@@ -6,7 +6,6 @@
 #SBATCH --job-name=aus_bio
 #SBATCH --time=168:00:00
 #SBATCH --partition=cpu
-#SBATCH --account=$1
 #SBATCH -o aus_bio_output_%j
 #SBATCH -e aus_bio_error_%j
 
