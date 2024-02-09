@@ -13,4 +13,5 @@
 
 ## Contains job submission parameters for control job
 echo "Running"
+export SLURM_EXPORT_ENV=ALL
 srun aus_bio_control.sh
