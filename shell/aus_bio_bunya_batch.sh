@@ -13,4 +13,5 @@
 ## Contains job submission parameters for control job
 
 export SLURM_EXPORT_ENV=ALL
+cd $TPMDIR_SHARE
 srun aus_bio_control.sh

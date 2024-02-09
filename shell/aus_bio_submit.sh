@@ -79,6 +79,9 @@ cores = 1"
 				## Root directories
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
+				mkdir -p $TMPDIR_SHARE
+				cp ./aus_bio_bunya_batch.sh $TMPDIR_SHARE
+				cp ./aus_bio_control.sh $TMPDIR_SHARE
 
 				## tell BLAS that we are using gnu openmp
 				export MKL_THREADING_LAYER="GNU"
@@ -87,6 +90,7 @@ cores = 1"
 
 				## Control job goes to "cpu" partition
 				export SLURM_EXPORT_ENV=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER
+				cd $TMPDIR_SHARE
 				sbatch aus_bio_prime_ai_batch.sh
 		;;
 
