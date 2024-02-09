@@ -9,10 +9,6 @@ cluster_gfbootstrap_casteroptimal <- function(
                                        min_tol,
                                        keep_all_clusts
                                        ) {
-    oplan <- plan()
-    if ({nworkers <- as.numeric(Sys.getenv("FUTURE_WORKERS", 1))} > 1 && inherits(plan(), "sequential")) {
-        plan(future.callr::callr, workers = min(nworkers, m))
-    }
 
     aff_range = range(gfbootstrap_predicted$sim_mat[[1]][[1]][
                                                 upper.tri(gfbootstrap_predicted$sim_mat[[1]][[1]])])
@@ -36,7 +32,6 @@ cluster_gfbootstrap_casteroptimal <- function(
 
 
 
-    plan(oplan)
     return(data.table(gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                       clust_method = clust_methods,
                       clust = list(caster_clust),

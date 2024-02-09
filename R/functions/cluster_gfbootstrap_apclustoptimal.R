@@ -9,10 +9,6 @@ cluster_gfbootstrap_apclustoptimal <- function(
                                 min_tol,
                                 keep_all_clusts
                                 ) {
-    oplan <- plan()
-    if ({nworkers <- as.numeric(Sys.getenv("FUTURE_WORKERS", 1))} > 1 && inherits(plan(), "sequential")) {
-        plan(future.callr::callr, workers = min(nworkers, m))
-    }
 
      ap_clust <- data.table::setDT(apclust_optimise(log(gfbootstrap_predicted$sim_mat[[1]][[1]]), m = m, min_range = min_range, min_tol = min_tol, return_full = keep_all_clusts))
 
@@ -34,7 +30,6 @@ cluster_gfbootstrap_apclustoptimal <- function(
 
     clust_ind[, cl_factor := as.factor(cl)]
 
-    plan(oplan)
   return(data.table(gfbootstrap_predicted[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat)],
                     clust_method = clust_methods,
                     clust = list(ap_clust),

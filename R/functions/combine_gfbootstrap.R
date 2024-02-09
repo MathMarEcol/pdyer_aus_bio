@@ -133,13 +133,6 @@ combine_gfbootstrap_p2 <- function(gfbootstrap_combined_tmp,
                                    gf_bins,
                                    gf_bootstrap_combinations) {
 
-    if (inherits(future::plan(), "sequential")) {
-      ## We are in a tar_make_clustermq worker
-      ## which has not propagated the future plan
-      oplan <- future::plan(future.callr::callr, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))
-      on.exit(future::plan(oplan))
-    }
-
     gfb <- lapply(
       gfbootstrap_combined_tmp$gfbootstrap[[1]],
       \(gf_file) {

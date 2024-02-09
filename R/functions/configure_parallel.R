@@ -1,54 +1,220 @@
-configure_parallel <- function(default_clustermq = TRUE, future_plan = future.callr::callr){
-  ## Needed by targets::tar_make_future()
-  ## Update, must ONLY be used by tar_make_future()
-  ## Need to know if there is a flag or check,
-  ## will add if there is.
-  ## future::plan(future_plan)
-
-  scheduler <- Sys.getenv("SCHEDULER")
+## Stage 1. get targets using crew - DONE
+## Stage2. get crewusing slurm
+## Stage 3. split slurm up according to host
 
 
-  switch(scheduler,
-         "multiprocess" = {
-             ## Either local clustermq or local R futures
-      options(
-        clustermq.defaults = list(log_file = "cmq_worker_%i.log"),
-        clustermq.scheduler = scheduler
+## Must contain the following controller names:
+## - "small" - needs 1 core and <4GB RAM
+## - "gpu" - needs a GPU.
+##   -Falls back to BLAS multithreading, if no nvidia gpu, get lots of cores
+## - "multicore" - needs many cores and lots of ram
+## - "ram" - needs 1 core and lots of RAM
+
+## Matches names in aus_bio_submit.sh
+host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
+
+ccg <- switch(host_trunc,
+  "prime-ai" = {
+    crew::crew_controller_group(
+      crew.cluster::crew_controller_slurm(
+        name = "small",
+        workers = 20,
+        seconds_timeout = 10,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 4,
+        slurm_cpus_per_task = 1,
+        slurm_time_minutes = 24 * 60,
+        slurm_partition = "cpu"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "gpu",
+        workers = 1,
+        seconds_timeout = 10,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          "#SBATCH --gpus=nvidia:1",
+          "export TF_FORCE_GPU_ALLOW_GROWTH='true'",
+          "export CUDA_MODULE_LOADING=LAZY",
+          "export TENSOR_CPU_MEM_MAX=50000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
+          "export TENSOR_GPU_MEM_MAX=4500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
+          "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 4.5,
+        slurm_cpus_per_task = 10,
+        slurm_time_minutes = 24 * 60,
+        slurm_partition = "gpu"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "multicore",
+        workers = 1,
+        seconds_timeout = 10,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 5.5,
+        slurm_cpus_per_task = 10,
+        slurm_time_minutes = 24 * 60,
+        slurm_partition = "cpu"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "ram",
+        workers = 1,
+        seconds_timeout = 10,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 60,
+        slurm_cpus_per_task = 10,
+        slurm_time_minutes = 24 * 60,
+        slurm_partition = "cpu"
       )
-      future::plan(list(future::tweak(future_plan, workers = as.numeric(Sys.getenv("WORKERS", "1"))), future::tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
-   },
-  "pbs" = {
-      options(
-          clustermq.scheduler = scheduler,
-        ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "pbs_clustermq.tmpl"),
-        clustermq.defaults = list(work_dir =  getwd(),
-                                  memory =  Sys.getenv("WORKER_MEM", "20GB"),
-                                  cores = Sys.getenv("WORKER_CORES", "1"),
-                                  log_file = "cmq_worker_${PBS_JOBID}_${PBS_ARRAY_INDEX}.log",
-                                  runtime =  Sys.getenv("WORKER_RUNTIME", "7-00:00:00"))
-      )
-  },
-
-  "slurm" = {
-      options(
-          clustermq.scheduler = scheduler,
-        ## Created by drake_hpc_template_file("pbs_clustermq.tmpl") and modified:
-        clustermq.template = file.path(rprojroot::find_root(is_targets_project), "..", "shell", "slurm_clustermq.tmpl"),
-        clustermq.defaults = list(work_dir =  getwd(),
-                                  memory =  Sys.getenv("WORKER_MEM", "20GB"),
-                                  cores = Sys.getenv("WORKER_CORES", "1"),
-                                  log_file = "cmq_worker_%j_%a.log",
-                                  runtime =  Sys.getenv("WORKER_RUNTIME", "7-00:00:00"))
-      )
-  },
-  {
-      ## sequential processing. Allow branches to use future workers though.
-    options(
-      clustermq.scheduler = "LOCAL"
     )
-    future::plan(list(future::tweak(future_plan, workers = as.numeric(Sys.getenv("FUTURE_WORKERS", "1")))))
-  }
- )
+  },
+  "bun" = {
+    crew::crew_controller_group(
+      crew.cluster::crew_controller_slurm(
+        name = "small",
+        workers = 100,
+        seconds_timeout = 100,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
 
-}
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 4,
+        slurm_cpus_per_task = 1,
+        slurm_time_minutes = 24 * 60 + 10,
+        slurm_partition = "general"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "gpu",
+        workers = 10,
+        seconds_timeout = 100,
+        seconds_idle = 60,
+        seconds_wall = 24 * 60 * 60, # 24 hours
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
+          "#SBATCH --gpus=nvidia_a100_80gb_pcie_1g.10gb:1",
+          "#SBATCH --nodes=1",
+          "#SBATCH --ntasks-per-node=24",
+          "#SBATCH --mem=100G",
+          "export TF_FORCE_GPU_ALLOW_GROWTH='true'",
+          "export CUDA_MODULE_LOADING=LAZY",
+          "export TENSOR_CPU_MEM_MAX=90000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
+          "export TENSOR_GPU_MEM_MAX=8500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
+          "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=24'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = NULL,
+        slurm_cpus_per_task = 1,
+        slurm_time_minutes = 24 * 60 + 10,
+        slurm_partition = "gpu_cuda"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "multicore",
+        workers = 10,
+        seconds_timeout = 100,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
+          "#SBATCH --nodes=1",
+          "#SBATCH --ntasks-per-node=48",
+          "#SBATCH --mem=600G",
+          "export TENSOR_CPU_MEM_MAX=599000000000",
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=48'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = NULL,
+        slurm_cpus_per_task = 1,
+        slurm_time_minutes = 24 * 60 + 10,
+        slurm_partition = "general"
+      ),
+      crew.cluster::crew_controller_slurm(
+        name = "ram",
+        workers = 10,
+        seconds_timeout = 100,
+        seconds_idle = 600,
+        seconds_wall = 24 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
+          "#SBATCH --nodes=1",
+          "#SBATCH --ntasks-per-node=10",
+          "#SBATCH --mem=300G",
+          "export TENSOR_CPU_MEM_MAX=299000000000",
+          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=10'"
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = NULL,
+        slurm_cpus_per_task = 1,
+        slurm_time_minutes = 24 * 60 + 10,
+        slurm_partition = "general"
+      )
+    )
+  }
+)
