@@ -38,14 +38,49 @@ cluster_gfbootstrap <- function(
                )
            },
            "casterdefault" = {
-               cluster_gfbootstrap_casterdefault(
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               cluster_gfbootstrap_casterfixed(
                    clust_methods,
                    gfbootstrap_predicted,
                    env_domain,
                    env_id_col,
                    spatial_vars
+                   aff_thres = mean(sim_mat[upper.tri(sim_mat)])
                )
            },
+           "casterohfive" = {
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = 0.05
+               )
+           },
+           "casterohfivebonferroni" = {
+               sim_mat_nrow <- nrow(gfbootstrap_predicted$sim_mat[[1]][[1]])
+               cluster_gfbootstrap_casterfixed(
+                 clust_methods,
+                 gfbootstrap_predicted,
+                 env_domain,
+                 env_id_col,
+                 spatial_vars,
+                 aff_thres = 0.05 / ((sim_mat_nrow * (sim_mat_nrow - 1)) / 2)
+               )
+           },
+           "casternonzero" = {
+               sim_mat_nz <- gfbootstrap_predicted$sim_mat[[1]][[1]] > 0
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = min(sim_mat[sim_mat_nz])
+               )
+           },
+
            "apclustdefaultmedian" = {
                cluster_gfbootstrap_apclustdefault(
                    clust_methods,

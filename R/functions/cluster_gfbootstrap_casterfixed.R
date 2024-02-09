@@ -1,16 +1,16 @@
-cluster_gfbootstrap_casterdefault <- function(
+cluster_gfbootstrap_casterfixed <- function(
                                        clust_methods,
                                        gfbootstrap_predicted,
                                        env_domain,
                                        env_id_col,
-                                       spatial_vars                                       ) {
+                                       spatial_vars,
+                                       aff_thres) {
 
     ## Select mean similarity as aff_thres.
     ## Will not give peak Hubert Gamma, but should be near max,
     ## given that Hubert Gamma is increased for similarities
     ## within a cluster that are above the mean similarity.
     sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
-    aff_thres = mean(sim_mat[upper.tri(sim_mat)])
 
 
     clust_first_pass <- castcluster::cast_alg(sim_mat, aff_thres)

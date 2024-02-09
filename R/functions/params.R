@@ -542,7 +542,7 @@ nbclust_include_graphical = FALSE
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
-clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefaultmedian", "apclustdefaultmin")
+clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefaultmedian", "apclustdefaultmin", "casternonzero", "casterohfive", "casterohfiveboferroni")
 clust_m = 4
 min_gamma_tol = 0.005
 min_range_tol = 0.001
