@@ -75,8 +75,8 @@ export LOGDIR=$TMPDIR_SHARE/logs
 #-s means set, expand_aliases is only default for interactive shells, not non-interactive
 shopt -s expand_aliases
 
-alias R='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c R'
-alias Rscript='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c Rscript'
+alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c R'
+alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-linux".r-shell -c Rscript'
 
 ## Run Targets
 
