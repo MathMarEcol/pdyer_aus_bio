@@ -377,7 +377,7 @@ custom_combinations$all_plankton <- list(
 ## are allowed for match.
 ## Also needs `descriptions`, but only set `compare_group`
 ## Env domains will always be mapped over
-cluster_compare_methods = c("apclustdefault", "casterdefault")
+cluster_compare_methods = c("casterdefault","casternonzero", "casterohfiveboferroni")
 
 surveys_for_cluster_compare <- list()
 
@@ -542,7 +542,7 @@ nbclust_include_graphical = FALSE
 
 ##Clustering settings
 ##Currently implemented clustering methods are "caster" and "apclust"
-clust_methods = c("casteroptimal", "apclustoptimal", "casterdefault", "apclustdefaultmedian", "apclustdefaultmin", "casternonzero", "casterohfive", "casterohfivebonferroni", "casterquantile25", "casterquantile50", "casterquantile75", "casterquantile90", "casterquantile95")
+clust_methods = c("casterdefault","casterohfive", "casterquantile95")
 clust_m = 4
 min_gamma_tol = 0.005
 min_range_tol = 0.001
