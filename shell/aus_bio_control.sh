@@ -80,6 +80,27 @@ alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell#devShells."x86_64-li
 
 ## Run Targets
 
+
+## Some Slurm variables need to be unset so workers do not get conflicting env
+## Only env vars interpreted as resource requests need to be cleared
+## Keep SLURM_JOB_ACCOUNT
+
+unset SLURM_CPUS_ON_NODE
+unset SLURM_CPUS_PER_TASK
+unset SLURM_CPUS_PER_GPU
+unset SLURM_MEM_PER_CPU
+unset SLURM_MEM_PER_GPU
+unset SLURM_MEM_PER_NODE
+unset SLURM_NPROCS
+unset SLURM_NTASKS
+unset SLURM_NTASKS_PER_CORE
+unset SLURM_NTASKS_PER_GPU
+unset SLURM_NTASKS_PER_NODE
+unset SLURM_NTASKS_PER_SOCKET
+unset SLURM_PROFILE
+unset SLURM_TASKS_PER_NODE
+unset SLURM_THREADS_PER_CORE
+
 Rscript --vanilla -e "targets::tar_make()"
 
 ## Clean up
