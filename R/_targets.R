@@ -333,7 +333,7 @@ list(
       resources = tar_resources(
         crew = tar_resources_crew(controller = "ram")
       ),
-      pattern = map(gf_combined_tmp)
+      pattern = slice(gf_combined_tmp, index = c(29))
   ),
 
   tar_target(
@@ -386,7 +386,7 @@ list(
         plot_description = "compositional_turnover",
         output_folder
     ),
-    pattern = slice(gf_predicted, index = c(29))
+    pattern =  map(gf_predicted)
   ),
 
   tar_target(
@@ -488,7 +488,7 @@ list(
                      marine_map,
                      plot_description = "kmedoid_bioregions",
                      output_folder),
-    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, slice(gf_predicted, index = c(29)))
+    pattern = map(gf_kmedoid_polygons, gf_cluster_kmedoids, gf_predicted)
   ),
 
   ## plot rank plot of clusters with hline at 41
@@ -554,7 +554,7 @@ list(
     resources = tar_resources(
       crew = tar_resources_crew(controller = "multicore")
     ),
-    pattern = map(gfbootstrap_combined_tmp)
+    pattern = slice(gfbootstrap_combined_tmp, index = c(29))
   ),
 
 
