@@ -43,7 +43,7 @@ rsync -irc $TMPDIR_SHARE/*_outputs.* $ROOT_STORE_DIR/aus_bio_outputs
 #cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z
 
 #The downloaded variables from bioORACLE are also worth saving
-export TMP_DATA_DIR=$TMPDIR_SHARE/R/data
+export TMP_DATA_DIR=$TMPDIR_SHARE/code/R/data
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/data/
 
 #clean up TMPDIR_SHARE
