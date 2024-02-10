@@ -165,7 +165,7 @@ env_offset = 0
 ## in lat lon degrees, use 1/integer fraction
 ## for proper rastering later,
 ## currently 1/12 to allign with BioORACLE
-res_clust = c(1, 1 / 2, 1 / 4)
+res_clust = c(1)
 res_env = 1 / 12 # matches BioORACLE
 res_gf = res_env # match res_env for now
 
