@@ -44,7 +44,7 @@ cluster_gfbootstrap <- function(
                    gfbootstrap_predicted,
                    env_domain,
                    env_id_col,
-                   spatial_vars
+                   spatial_vars,
                    aff_thres = mean(sim_mat[upper.tri(sim_mat)])
                )
            },
