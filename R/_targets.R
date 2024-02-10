@@ -321,10 +321,15 @@ list(
   ),
   tar_target(
       gf_combined,
-      combine_gf_p2(
+      {
+        future::plan(future.callr::callr,
+                     workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                     "1")))
+        combine_gf_p2(
           gf_combined_tmp,
           gf_bins
-      ),
+        )
+      },
       resources = tar_resources(
         crew = tar_resources_crew(controller = "ram")
       ),
@@ -455,7 +460,11 @@ list(
 
   tar_target(
     gfbootstrap_survey,
-    fit_gfbootstrap(
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      fit_gfbootstrap(
       all_bio_env,
       env_biooracle_names,
       gf_trees,
@@ -463,7 +472,8 @@ list(
       gf_compact,
       gf_bins,
       gf_corr_thres
-    ),
+      )
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "multicore")
     ),
@@ -478,10 +488,15 @@ list(
   ## eg. all depths at trophic X, all trophic at depth X
   tar_target(
     gfbootstrap_combined_tmp,
-    combine_gfbootstrap_p1(
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      combine_gfbootstrap_p1(
         gfbootstrap_survey,
         custom_combinations
-    ),
+      )
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "ram")
     )
@@ -489,11 +504,16 @@ list(
   ),
   tar_target(
     gfbootstrap_combined,
-    combine_gfbootstrap_p2(
-      gfbootstrap_combined_tmp,
-      gf_bins,
-      cgf_bootstrap_combinations
-    ),
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      combine_gfbootstrap_p2(
+        gfbootstrap_combined_tmp,
+        gf_bins,
+        cgf_bootstrap_combinations
+      )
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "multicore")
     ),
@@ -503,16 +523,21 @@ list(
 
   tar_target(
     gfbootstrap_predicted,
-    predict_gfbootstrap(
-      gfbootstrap_combined,
-      res_clust_target,
-      env_domain,
-      env_biooracle_names,
-      extrap,
-      pred_importance_top,
-      env_id_col,
-      depth_range
-    ),
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      predict_gfbootstrap(
+        gfbootstrap_combined,
+        res_clust_target,
+        env_domain,
+        env_biooracle_names,
+        extrap,
+        pred_importance_top,
+        env_id_col,
+        depth_range
+      )
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "gpu")
     ),
@@ -522,12 +547,17 @@ list(
 
   tar_target(
     gfbootstrap_diagnostics,
-    gfbootstrap_diagnostic_stats(gfbootstrap_cluster,
-                                 gfbootstrap_combined,
-                                 gfbootstrap_predicted,
-                                 env_domain,
-                                 env_biooracle_names,
-                                 pred_importance_top),
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      gfbootstrap_diagnostic_stats(gfbootstrap_cluster,
+                                   gfbootstrap_combined,
+                                   gfbootstrap_predicted,
+                                   env_domain,
+                                   env_biooracle_names,
+                                   pred_importance_top)
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "ram")
     ),
@@ -654,16 +684,21 @@ list(
 
   tar_target(
       cluster_env_extrapolate,
-      extrapolate_to_env(
-        gfbootstrap_combined,
-        gfbootstrap_predicted,
-        env_domain,
-        env_biooracle_names,
-        extrap,
-        pred_importance_top,
-        env_id_col,
-        depth_range
-      ),
+      {
+        future::plan(future.callr::callr,
+                     workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                     "1")))
+        extrapolate_to_env(
+          gfbootstrap_combined,
+          gfbootstrap_predicted,
+          env_domain,
+          env_biooracle_names,
+          extrap,
+          pred_importance_top,
+          env_id_col,
+          depth_range
+        )
+      },
       resources = tar_resources(
         crew = tar_resources_crew(controller = "gpu")
       ),
@@ -680,14 +715,19 @@ list(
 
   tar_target(
       cluster_env_assign_cluster,
-      assign_new_sites_to_cluster(
+      {
+        future::plan(future.callr::callr,
+                     workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                     "1")))
+        assign_new_sites_to_cluster(
           cluster_env_extrapolate,
           gfbootstrap_cluster,
           env_biooracle_names,
           env_domain,
           env_id_col,
           spatial_vars
-      ),
+        )
+      },
       resources = tar_resources(
         crew = tar_resources_crew(controller = "ram")
       ),
@@ -708,7 +748,11 @@ list(
 
   tar_target(
       extrap_plotted,
-      plot_gfbootstrap(
+      {
+        future::plan(future.callr::callr,
+                     workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                     "1")))
+        plot_gfbootstrap(
           gfbootstrap_cluster,
           extrap_polygons,
           gfbootstrap_predicted,
@@ -721,7 +765,8 @@ list(
           plot_description = "extrap",
           plot_sim_mat = FALSE,
           output_folder
-      ),
+        )
+      },
       resources = tar_resources(
         crew = tar_resources_crew(controller = "ram")
       ),
@@ -760,11 +805,16 @@ list(
   ),
   tar_target(
     indicator_species,
-    find_indicator_species(
+    {
+      future::plan(future.callr::callr,
+                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+                                                   "1")))
+      find_indicator_species(
         extrap_polygons,
         all_bio_long,
         spatial_vars
-    ),
+      )
+    },
     resources = tar_resources(
       crew = tar_resources_crew(controller = "ram")
     ),
