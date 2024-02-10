@@ -11,7 +11,7 @@ host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^pri
 r_alias <- paste(
   sep = "\n",
   "shopt -s expand_aliases",
-  "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+  "alias R='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
 )
 
 ccg <- switch(host_trunc,
