@@ -8,8 +8,11 @@
 ## Matches names in aus_bio_submit.sh
 host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
 
-r_alias <- "alias R='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
-
+r_alias <- paste(
+  sep = "\n",
+  "shopt -s expand_aliases",
+  "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+)
 
 ccg <- switch(host_trunc,
   "prime-ai" = {
