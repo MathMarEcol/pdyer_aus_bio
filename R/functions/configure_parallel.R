@@ -8,6 +8,9 @@
 ## Matches names in aus_bio_submit.sh
 host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
 
+r_alias <- "alias R='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+
+
 ccg <- switch(host_trunc,
   "prime-ai" = {
     crew::crew_controller_group(
@@ -23,7 +26,7 @@ ccg <- switch(host_trunc,
         ## This is sufficient to make runnable slurm workers
         script_lines = paste(
           sep = "\n",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -53,7 +56,7 @@ ccg <- switch(host_trunc,
           "export TENSOR_CPU_MEM_MAX=50000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
           "export TENSOR_GPU_MEM_MAX=4500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
           "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -77,7 +80,7 @@ ccg <- switch(host_trunc,
           "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -102,7 +105,7 @@ ccg <- switch(host_trunc,
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export TENSOR_CPU_MEM_MAX=55000000000",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -131,7 +134,7 @@ ccg <- switch(host_trunc,
           "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -165,7 +168,7 @@ ccg <- switch(host_trunc,
           "export TENSOR_CPU_MEM_MAX=90000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
           "export TENSOR_GPU_MEM_MAX=8500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
           "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -194,7 +197,7 @@ ccg <- switch(host_trunc,
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export TENSOR_CPU_MEM_MAX=599000000000",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
@@ -223,7 +226,7 @@ ccg <- switch(host_trunc,
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export TENSOR_CPU_MEM_MAX=299000000000",
-          "alias R='nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R --parallel=$SLURM_CPUS_PER_TASK'"
+          r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
