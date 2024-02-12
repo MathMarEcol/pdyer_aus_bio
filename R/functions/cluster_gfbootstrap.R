@@ -70,7 +70,8 @@ cluster_gfbootstrap <- function(
                )
            },
            "casternonzero" = {
-               sim_mat_nz <- gfbootstrap_predicted$sim_mat[[1]][[1]] > 0
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               sim_mat_nz <- sim_mat > 0
                cluster_gfbootstrap_casterfixed(
                    clust_methods,
                    gfbootstrap_predicted,
