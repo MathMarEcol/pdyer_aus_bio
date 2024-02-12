@@ -381,12 +381,23 @@ list(
 
   tar_target(
     nbclust_branch_fitted,
-    nbclust_fit_branches(
-      gf_predicted,
-      nbclust_index_metadata,
-      nbclust_branch_table,
-      env_biooracle_names
-    ),
+    {
+      if (Sys.getenv("OMP_NUM_THREADS") == "" && Sys.getenv("SLURM_CPUS_PER_TASK") != "") {
+        Sys.setenv(OMP_NUM_THREADS = Sys.getenv("SLURM_CPUS_PER_TASK"))
+      }
+      if (Sys.getenv("MKL_NUM_THREADS") == "" && Sys.getenv("SLURM_CPUS_PER_TASK") != "") {
+        Sys.setenv(MKL_NUM_THREADS = Sys.getenv("SLURM_CPUS_PER_TASK"))
+      }
+      if (Sys.getenv("BLIS_NUM_THREADS") == "" && Sys.getenv("SLURM_CPUS_PER_TASK") != "") {
+        Sys.setenv(BLIS_NUM_THREADS = Sys.getenv("SLURM_CPUS_PER_TASK"))
+      }
+      nbclust_fit_branches(
+        gf_predicted,
+        nbclust_index_metadata,
+        nbclust_branch_table,
+        env_biooracle_names
+      )
+    },
     pattern = map(nbclust_branch_table)
   ),
 
