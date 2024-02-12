@@ -29,7 +29,6 @@ ccg <- switch(host_trunc,
         ## This is sufficient to make runnable slurm workers
         script_lines = paste(
           sep = "\n",
-          "env | sort",
           r_alias
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
