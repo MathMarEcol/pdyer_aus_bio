@@ -298,9 +298,13 @@ plot_clust_poly <- function(cluster_polygons,
   ## cluster_polygons$clustering <- as.factor(  cluster_polygons$clustering)
   nclust <- max(cluster_polygons$clustering)
   ## remove any values between 35% and 60% of the rainbow spectrum
-  green_cut <- seq(0,  1,  1/(nclust-1))
-  green_cut <- green_cut < 0.3 | green_cut > 0.45
-  rainbow_cut <- rainbow(nclust)[green_cut]
+  rainbow_cut <- if (nclust > 1) {
+    green_cut <- seq(0, 1, 1 / (nclust - 1))
+    green_cut <- green_cut < 0.3 | green_cut > 0.45
+    rainbow(nclust)[green_cut]
+  } else {
+    rainbow(1)
+  }
 
 pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
     tm_polygons(col = "clustering",
