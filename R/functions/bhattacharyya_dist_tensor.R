@@ -152,12 +152,14 @@ def test (joint_det,
 
     ## Compiled torchscript is offset indexed (0-indexed)
     ## R code is count indexed (1-indexed)
-		rows_x <- torch::torch_tensor(row_pairs[[1]]-1,
-                                  device = local_device,
-                                  dtype = torch::torch_int())
-		rows_y <- torch::torch_tensor(row_pairs[[2]]-1,
-                                  device = local_device,
-                                  dtype = torch::torch_int())
+    rows_x <- torch::torch_tensor(row_pairs[[1]] - 1,
+      device = local_device,
+      dtype = torch::torch_int(),
+      pin_memory=TRUE)
+  rows_y <- torch::torch_tensor(row_pairs[[2]] - 1,
+    device = local_device,
+    dtype = torch::torch_int(),
+    pin_memory=TRUE)
     bhatt_coeff <- compiled$bhatt_coeff_full(
       site_mean_x,
       site_sigma_x,
