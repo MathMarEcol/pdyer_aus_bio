@@ -48,5 +48,5 @@ rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/data/
 
 #clean up TMPDIR_SHARE
 chmod 770 -R $TMPDIR_SHARE/*
-rm -r $TMPDIR_SHARE/*
+rm -r $TMPDIR_SHARE
 #done
