@@ -339,7 +339,7 @@ extrapolate_to_env <- function(
                            env_year = env_biooracle_names$env_year,
                            env_pathway = env_biooracle_names$env_pathway,
                            res_gf = gfbootstrap_combined$res_gf,
-                           res_clust = gfbootstrap_combined$res_clust,
+                           res_clust = gfbootstrap_predicted$res_clust,
                            trophic = gfbootstrap_combined$trophic,
                            survey = gfbootstrap_combined$survey,
                            depth_cat = gfbootstrap_combined$depth_cat,
