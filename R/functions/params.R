@@ -377,7 +377,7 @@ custom_combinations$all_plankton <- list(
 ## are allowed for match.
 ## Also needs `descriptions`, but only set `compare_group`
 ## Env domains will always be mapped over
-cluster_compare_methods = c("casterdefault","casternonzero", "casterohfiveboferroni")
+cluster_compare_methods = c("casterdefault","casternonzero", "casterohfivebonferroni")
 
 surveys_for_cluster_compare <- list()
 
