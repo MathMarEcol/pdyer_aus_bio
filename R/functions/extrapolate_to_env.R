@@ -32,13 +32,24 @@ extrapolate_to_env <- function(
     
     ## Make sure env domain is ready
 
-    env_names <- env_biooracle_names$env_biooracle_names[[1]]
+  names_to_present <- function(n) {
+    str_remove(n, "RCP[0-9]{2}_[0-9]{4}_")
+  }
 
+    
+    env_names <- env_biooracle_names$env_biooracle_names[[1]]
+    env_names <- names_to_present(env_names)
     env_dom <- env_domain[domain ==  gfbootstrap_combined$env_domain &
                                res == gfbootstrap_combined$res_gf &
                                env_year == env_biooracle_names$env_year &
                                env_pathway == env_biooracle_names$env_pathway
                              , data][[1]]
+
+    ## GF was fitted with present day env layers
+    ## and attempts to match predictor names.
+    ## Need to rename future layers for GF.
+    names(env_dom) <- names_to_present(names(env_dom))
+
 
     if (gfbootstrap_combined$depth_cat !=  "all" ) {
         env_dom <- env_dom[-MS_bathy_5m >= min(depth_range[[gfbootstrap_combined$depth_cat]]), ]
