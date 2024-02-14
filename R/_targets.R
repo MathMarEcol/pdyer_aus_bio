@@ -685,6 +685,7 @@ list(
     gfbootstrap_coverage_plots,
     plot_gfbootstrap_coverage(
       extrap_polygons,
+      env_biooracle_names,
       mpa_polygons,
       plot_description = "cluster_mpa_coverage",
       output_folder
