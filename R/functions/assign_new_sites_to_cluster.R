@@ -38,7 +38,10 @@ assign_new_sites_to_cluster <- function(
 		clust_methods <- gfbootstrap_cluster$clust_method
     out <- switch(clust_methods,
                   "casterdefault" =,
-                  "casteroptimal" = {
+                  "casteroptimal" =,
+                  "casternonzero" = ,
+                  "casterohfive" = ,
+                  "casterohfivebonferroni" = {
                       assign_new_sites_to_cluster_caster(
                           cluster_env_extrapolate,
                           gfbootstrap_cluster,
