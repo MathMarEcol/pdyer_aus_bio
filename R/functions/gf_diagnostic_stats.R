@@ -117,7 +117,11 @@ gfbootstrap_diagnostic_stats <- function(gfbootstrap_cluster,
 
   stats$clust_score_best <- max(stats$clust_score[[1]])
 
-  stats$clust_count_best <- stats$clust_count[[1]][which.max(stats$clust_score[[1]])]
+  stats$clust_count_best <- if (length(which.max(stats$clust_score[[1]])) < 1) {
+    NA
+  } else {
+    stats$clust_count[[1]][which.max(stats$clust_score[[1]])]
+  }
 
   ## Variance at each env site in "sph"erical "eq"uivalent
   ## Essentially a comparable measure that represents volume of the
