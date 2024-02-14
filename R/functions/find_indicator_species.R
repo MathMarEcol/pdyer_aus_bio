@@ -64,11 +64,10 @@ find_indicator_species <- function(
   taxa_col_names[,taxon_col_name := make.names(taxon)]
   obs_col_names <- all_bio_long$obs[[1]][taxa_col_names, on = "taxon_id"]
 
-  site_sp_wide <- data.table::dcast(obs_col_names, samp_id ~ taxon_col_name, value.var = "abund", fill = 0)
+  site_sp_wide <- data.table::dcast(obs_col_names, samp_id ~ taxon_col_name, value.var = "abund", fill = 0, fun.aggregate = mean)
   ## TODO, drop NA rows or set to 0?
   site_sp_wide[site_sp_wide < 0] <- 0
 
-  site_sp_wide <- site_sp_wide[keep_rows, ]
   site_sp_wide <- site_sp_wide[samp_id %in% bio_clustering$samp_id]
   clust_to_samp <- data.table::as.data.table(bio_clustering[, c("samp_id", "clustering")])
   clust_to_samp[, geometry := NULL]
