@@ -221,7 +221,7 @@ plot_gfbootstrap <- function(
 
     if(plot_sim_mat) {
         sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
-        is_caster <- grepl("^caster", gfbootstrap_cluster$clust_method)
+        is_caster <- grepl("^caster", gfbootstrap_cluster$clust_method) &&  (gfbootstrap_cluster$best_clust > 1)
         aff_thres_local <- if(is_caster){
                                gfbootstrap_cluster$clust[[1]]$aff_thres[gfbootstrap_cluster$best_clust]
                            } else {
