@@ -40,6 +40,11 @@ assign_new_sites_to_cluster <- function(
                   "casterdefault" =,
                   "casteroptimal" =,
                   "casternonzero" = ,
+                  "casterquantile25" = ,
+                  "casterquantile50" = ,
+                  "casterquantile75" = ,
+                  "casterquantile90" = ,
+                  "casterquantile95" = ,
                   "casterohfive" = ,
                   "casterohfivebonferroni" = {
                       assign_new_sites_to_cluster_caster(
