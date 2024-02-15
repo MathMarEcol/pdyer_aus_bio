@@ -81,7 +81,64 @@ cluster_gfbootstrap <- function(
                    aff_thres = min(sim_mat[sim_mat_nz])
                )
            },
-
+           "casterquantile25" = {
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               sim_mat_nz <- sim_mat > 0
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = quantile(sim_mat[upper.tri(sim_mat)], 0.25)
+               )
+           },
+           "casterquantile50" = {
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = quantile(sim_mat[upper.tri(sim_mat)], 0.5)
+               )
+           },
+           "casterquantile75" = {
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = quantile(sim_mat[upper.tri(sim_mat)], 0.75)
+               )
+           },
+           "casterquantile90" = {
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               sim_mat_nz <- sim_mat > 0
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = quantile(sim_mat[upper.tri(sim_mat)], 0.9)
+               )
+           },
+           "casterquantile95" = {
+               sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
+               sim_mat_nz <- sim_mat > 0
+               cluster_gfbootstrap_casterfixed(
+                   clust_methods,
+                   gfbootstrap_predicted,
+                   env_domain,
+                   env_id_col,
+                   spatial_vars,
+                   aff_thres = quantile(sim_mat[upper.tri(sim_mat)], 0.95)
+               )
+           },
            "apclustdefaultmedian" = {
                cluster_gfbootstrap_apclustdefault(
                    clust_methods,
