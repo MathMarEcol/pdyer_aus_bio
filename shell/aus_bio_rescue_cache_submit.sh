@@ -66,4 +66,4 @@ esac
 
 cp aus_bio_rescue_job.sh $TMPDIR_SHARE
 cd $TMPDIR_SHARE
-sbatch aus_bio_rescue_job.sh
+sbatch aus_bio_rescue_cache_batch.sh

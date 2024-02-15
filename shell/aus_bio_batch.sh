@@ -4,8 +4,6 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --job-name=aus_bio
-#SBATCH --time=320:00:00
-#SBATCH --partition=general
 #SBATCH -o aus_bio_output_%j
 #SBATCH -e aus_bio_error_%j
 
