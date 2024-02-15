@@ -814,7 +814,7 @@ list(
       ),
       pattern = map(env_poly),
       format = "file"
-  ),
+  )
 
   ## tar_target(
   ##   indicator_species,
