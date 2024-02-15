@@ -815,24 +815,25 @@ list(
       pattern = map(env_poly),
       format = "file"
   ),
-  tar_target(
-    indicator_species,
-    {
-      future::plan(future.callr::callr,
-                   workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
-                                                   "1")))
-      find_indicator_species(
-        extrap_polygons,
-        all_bio_long,
-        spatial_vars
-      )
-    },
-    resources = tar_resources(
-      crew = tar_resources_crew(controller = "ram")
-    ),
-    pattern =
-        cross(all_bio_long, extrap_polygons)
-  )
+
+  ## tar_target(
+  ##   indicator_species,
+  ##   {
+  ##     future::plan(future.callr::callr,
+  ##                  workers = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK",
+  ##                                                  "1")))
+  ##     find_indicator_species(
+  ##       extrap_polygons,
+  ##       all_bio_long,
+  ##       spatial_vars
+  ##     )
+  ##   },
+  ##   resources = tar_resources(
+  ##     crew = tar_resources_crew(controller = "ram")
+  ##   ),
+  ##   pattern =
+  ##       cross(all_bio_long, extrap_polygons)
+  ## )
 
   ## tar_target(
   ##   comparable_clusters,
