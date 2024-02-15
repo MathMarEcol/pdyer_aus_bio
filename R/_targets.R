@@ -588,6 +588,9 @@ list(
                                    pred_importance_top,
                                    plot_description = "gfdiagnostics",
                                    output_folder),
+      resources = tar_resources(
+          crew = tar_resources_crew(controller = "ram")
+      ),
       pattern = map(gfbootstrap_cluster, gfbootstrap_diagnostics),
       format = "file"
   ),
