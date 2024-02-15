@@ -125,7 +125,7 @@ ccg <- switch(host_trunc,
         name = "small",
         workers = 100,
         seconds_timeout = 100,
-        seconds_idle = 600,
+        seconds_idle = 60,
         seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
@@ -184,7 +184,7 @@ ccg <- switch(host_trunc,
         name = "multicore",
         workers = 10,
         seconds_timeout = 100,
-        seconds_idle = 600,
+        seconds_idle = 60,
         seconds_wall = 22 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
@@ -213,8 +213,8 @@ ccg <- switch(host_trunc,
         name = "ram",
         workers = 10,
         seconds_timeout = 100,
-        seconds_idle = 600,
-        seconds_wall = 22 * 60 * 60, # 1 day
+        seconds_idle = 60,
+        seconds_wall = 122 * 60 * 60, # 1 day
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -235,7 +235,7 @@ ccg <- switch(host_trunc,
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
         slurm_cpus_per_task = 10,
-        slurm_time_minutes = 24 * 60 + 10,
+        slurm_time_minutes = 124 * 60 + 10,
         slurm_partition = "general"
       )
     )
