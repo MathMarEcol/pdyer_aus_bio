@@ -30,6 +30,18 @@ export GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 export git_hash=$(git rev-parse --short HEAD)
 export date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
+
+## Store the logs
+mkdir -p $ROOT_STORE_DIR/aus_bio_logs
+
+cp $TMPDIR_SHARE/code/R/crew_log* $LOGDIR
+cp $TMPDIR_SHARE/aus_bio_output* $LOGDIR
+cp $TMPDIR_SHARE/aus_bio_error* $LOGDIR
+
+7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $TMPDIR_SHARE/logs/*
+cp "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
+
+
 #Store the targets cache
 cd $TMPDIR_SHARE/code/R
 7z_cmd u -mx=0 $TMPDIR_SHARE/code/R/targets_cache.7z  $TMPDIR_SHARE/code/R/_targets
