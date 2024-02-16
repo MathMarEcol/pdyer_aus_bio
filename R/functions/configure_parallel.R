@@ -11,7 +11,7 @@ host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^pri
 r_alias <- paste(
   sep = "\n",
   "shopt -s expand_aliases",
-  "alias R='srun nix develop github:PhDyellow/nix_r_dev_shell#devShells.x86_64-linux.r-shell -c R'"
+  "alias R='srun nix develop github:PhDyellow/nix_r_dev_shell/6bc2bb1f068e9fe6289be59671d3e7183bf4a142#devShells.x86_64-linux.r-shell -c R'"
 )
 
 ccg <- switch(host_trunc,
