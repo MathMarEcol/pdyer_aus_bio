@@ -108,10 +108,6 @@ Rscript --vanilla -e "targets::tar_make()"
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
 
-cp $TMPDIR_SHARE/code/R/crew_log* $LOGDIR
-cp $TMPDIR_SHARE/aus_bio_output* $LOGDIR
-cp $TMPDIR_SHARE/aus_bio_error* $LOGDIR
-
 7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $TMPDIR_SHARE/logs/*
 cp "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
 

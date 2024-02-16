@@ -5,8 +5,8 @@
 #SBATCH --mem=16G
 #SBATCH --job-name=aus_bio_cache_recover
 #SBATCH --time=4:00:00
-#SBATCH -o aus_bio_output_%j
-#SBATCH -e aus_bio_error_%j
+#SBATCH -o logs/aus_bio_output_%j
+#SBATCH -e logs/aus_bio_error_%j
 
 
 set -euo pipefail
@@ -33,10 +33,6 @@ export date_run=$(date +%Y-%m-%d_%H-%M-%S)
 
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
-
-cp $TMPDIR_SHARE/code/R/crew_log* $LOGDIR
-cp $TMPDIR_SHARE/aus_bio_output* $LOGDIR
-cp $TMPDIR_SHARE/aus_bio_error* $LOGDIR
 
 7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $TMPDIR_SHARE/logs/*
 cp "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
