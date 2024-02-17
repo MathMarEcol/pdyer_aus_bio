@@ -85,10 +85,13 @@ alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/6bc2bb1f068e9fe6289b
 ## Only env vars interpreted as resource requests need to be cleared
 ## Keep SLURM_JOB_ACCOUNT
 
+unset ${!SBATCH*}
 export TMP_EXPORT_ENV=$SLURM_EXPORT_ENV
+export SBATCH_ACCOUNT=$SLURM_JOB_ACCOUNT
 unset ${!SLURM*}
 export SLURM_EXPORT_ENV=$TMP_EXPORT_ENV
-
+export LC_ALL=C
+export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_SSL_CERT_FILE
 Rscript --vanilla -e "targets::tar_make()"
 
 ## Clean up
