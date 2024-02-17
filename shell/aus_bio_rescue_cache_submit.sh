@@ -30,6 +30,7 @@ case $HName in
 				## Root directories
 				export ROOT_STORE_DIR="/QRISdata/$2" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE=$1
+				mkdir -p $TMPDIR_SHARE/logs
 				# cat 'export NIX_CONFIG="use-xdg-base-directories = true
 # ssl-cert-file = /etc/ssl/certs/ca-bundle.crt
 # store = ~/nix_store
@@ -51,6 +52,7 @@ case $HName in
 				## Root directories
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$2" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE=$1
+				mkdir -p $TMPDIR_SHARE/logs
 
 				export SBATCH_PARTITION=cpu
 
