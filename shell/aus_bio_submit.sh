@@ -39,6 +39,7 @@ case $HName in
 				export ROOT_STORE_DIR="/QRISdata/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 				mkdir -p $TMPDIR_SHARE
+				mkdir -p $TMPDIR_SHARE/logs
 				cp ./aus_bio_batch.sh $TMPDIR_SHARE
 				cp ./aus_bio_control.sh $TMPDIR_SHARE
 
@@ -76,6 +77,7 @@ then create and edit ~/.config/nix/nix.conf"
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/${3}" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
 				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
 				mkdir -p $TMPDIR_SHARE
+				mkdir -p $TMPDIR_SHARE/logs
 				cp ./aus_bio_batch.sh $TMPDIR_SHARE
 				cp ./aus_bio_control.sh $TMPDIR_SHARE
 
