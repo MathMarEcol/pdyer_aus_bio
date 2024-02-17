@@ -12,8 +12,9 @@ if [ ! -v SBATCH_ACCOUNT ]; then
 	 exit 1
 fi
 
-if [ ! -v SBATCH_TRES_PER_TASK ]; then
-		echo "SBATCH_TRES_PER_TASK not defined, please set it to 'SBATCH_TRES_PER_TASK=cpu:24' or similar and rerun script"
+
+if [ -z "$1"  ]; then
+		echo "Please specify the number of cores to request"
 		exit 1
 fi
 
@@ -25,4 +26,4 @@ then create and edit ~/.config/nix/nix.conf"
 		exit 1
 fi
 
-sbatch setup_nix_shell_batch.sh
+sbatch --cpus-per-task $1 setup_nix_shell_batch.sh
