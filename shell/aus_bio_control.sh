@@ -14,7 +14,7 @@ set -euo pipefail
 				exit 127
 		fi
 }
-echo "Running2"
+
 
 
 mkdir -p $ROOT_STORE_DIR/aus_bio_outputs
