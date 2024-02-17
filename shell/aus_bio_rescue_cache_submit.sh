@@ -64,6 +64,6 @@ case $HName in
 		;;
 esac
 
-cp aus_bio_rescue_job.sh $TMPDIR_SHARE
+cp aus_bio_rescue_cache_batch.sh $TMPDIR_SHARE
 cd $TMPDIR_SHARE
 sbatch aus_bio_rescue_cache_batch.sh
