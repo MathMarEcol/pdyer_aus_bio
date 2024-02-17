@@ -85,21 +85,9 @@ alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/6bc2bb1f068e9fe6289b
 ## Only env vars interpreted as resource requests need to be cleared
 ## Keep SLURM_JOB_ACCOUNT
 
-unset SLURM_CPUS_ON_NODE
-unset SLURM_CPUS_PER_TASK
-unset SLURM_CPUS_PER_GPU
-unset SLURM_MEM_PER_CPU
-unset SLURM_MEM_PER_GPU
-unset SLURM_MEM_PER_NODE
-unset SLURM_NPROCS
-unset SLURM_NTASKS
-unset SLURM_NTASKS_PER_CORE
-unset SLURM_NTASKS_PER_GPU
-unset SLURM_NTASKS_PER_NODE
-unset SLURM_NTASKS_PER_SOCKET
-unset SLURM_PROFILE
-unset SLURM_TASKS_PER_NODE
-unset SLURM_THREADS_PER_CORE
+export TMP_EXPORT_ENV=$SLURM_EXPORT_ENV
+unset ${!SLURM*}
+export SLURM_EXPORT_ENV=$TMP_EXPORT_ENV
 
 Rscript --vanilla -e "targets::tar_make()"
 
