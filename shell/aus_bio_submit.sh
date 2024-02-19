@@ -61,13 +61,16 @@ then create and edit ~/.config/nix/nix.conf"
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
 
+				## Connect nix binaries to Nvidia GPUs
+				export NIX_GL_PREFIX="nixglhost -- "
+
 				export SBATCH_ACCOUNT=$2
 				## Control job goes to "general" partition
 				export SBATCH_PARTITION=general
 				export SBATCH_TIMELIMIT=320:00:00
 				export SBATCH_MEM_PER_NODE=16G
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,SBATCH_ACCOUNT,SBATCH_EXPORT
+				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,SBATCH_ACCOUNT,SBATCH_EXPORT
 
 				cd $TMPDIR_SHARE
 				sbatch aus_bio_batch.sh
@@ -82,6 +85,10 @@ then create and edit ~/.config/nix/nix.conf"
 				cp ./aus_bio_batch.sh $TMPDIR_SHARE
 				cp ./aus_bio_control.sh $TMPDIR_SHARE
 
+				## Connect nix binaries to Nvidia GPUs
+				## NixOS does not need modifications
+				export NIX_GL_PREFIX=""
+
 				## tell BLAS that we are using gnu openmp
 				export MKL_THREADING_LAYER="GNU"
 				export MKL_INTERFACE_LAYER="GNU,LP64"
@@ -90,7 +97,7 @@ then create and edit ~/.config/nix/nix.conf"
 				export SBATCH_PARTITION=cpu
 				export SBATCH_TIMELIMIT=168:00:00
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER
+				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX
 				cd $TMPDIR_SHARE
 				sbatch aus_bio_batch.sh
 		;;

@@ -75,8 +75,8 @@ export LOGDIR=$TMPDIR_SHARE/logs
 #-s means set, expand_aliases is only default for interactive shells, not non-interactive
 shopt -s expand_aliases
 
-alias R='nix develop github:PhDyellow/nix_r_dev_shell/6bc2bb1f068e9fe6289be59671d3e7183bf4a142#devShells."x86_64-linux".r-shell -c R'
-alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/6bc2bb1f068e9fe6289be59671d3e7183bf4a142#devShells."x86_64-linux".r-shell -c Rscript'
+alias R='nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R'
+alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX Rscript'
 
 ## Run Targets
 
@@ -91,8 +91,8 @@ export SBATCH_ACCOUNT=$SLURM_JOB_ACCOUNT
 unset ${!SLURM*}
 export SLURM_EXPORT_ENV=$TMP_EXPORT_ENV
 export LC_ALL=C
-export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_SSL_CERT_FILE
-Rscript --vanilla -e "targets::tar_make()"
+export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_SSL_CERT_FILE,NIX_GL_PREFIX
+R --vanilla -e "targets::tar_make()"
 
 ## Clean up
 
