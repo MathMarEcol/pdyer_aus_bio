@@ -64,13 +64,17 @@ then create and edit ~/.config/nix/nix.conf"
 				## Connect nix binaries to Nvidia GPUs
 				export NIX_GL_PREFIX="nixglhost -- "
 
+				## Prevent warnings
+				export LC_ALL=C
+				export TZ="Australia/Brisbane"
+
 				export SBATCH_ACCOUNT=$2
 				## Control job goes to "general" partition
 				export SBATCH_PARTITION=general
 				export SBATCH_TIMELIMIT=320:00:00
 				export SBATCH_MEM_PER_NODE=16G
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,SBATCH_ACCOUNT,SBATCH_EXPORT
+				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,SBATCH_ACCOUNT,SBATCH_EXPORT,LC_ALL,TZ
 
 				cd $TMPDIR_SHARE
 				sbatch aus_bio_batch.sh
