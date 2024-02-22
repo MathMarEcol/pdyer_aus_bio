@@ -96,7 +96,7 @@ export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADIN
 ## On success or failure, clean up rather than killing the pipeline
 set +euo pipefail
 ## timeout: If pipeline takes too long, stop and clean up
-timeout 315h  R --vanilla -e "targets::tar_make()"
+timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make()"
 
 set -euo pipefail
 
