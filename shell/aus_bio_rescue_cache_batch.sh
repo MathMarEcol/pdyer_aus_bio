@@ -34,20 +34,21 @@ export date_run=$(date +%Y-%m-%d_%H-%M-%S)
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
 
-7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $TMPDIR_SHARE/logs/*
-cp "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
+7z_cmd a "$TMPDIR/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $TMPDIR_SHARE/logs/*
+cp "$TMPDIR/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
 
 
 #Store the targets cache
 cd $TMPDIR_SHARE/code/R
-7z_cmd u -mx=0 $TMPDIR_SHARE/code/R/targets_cache.7z  $TMPDIR_SHARE/code/R/_targets
+cp $TMPDIR_SHARE/code/R/targets_cache.7z $TMPDIR/
+7z_cmd u -mx=0 $TMPDIR/targets_cache.7z  $TMPDIR_SHARE/code/R/_targets
 mkdir -p $ROOT_STORE_DIR/aus_bio_outputs
-rsync -irc $TMPDIR_SHARE/code/R/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
+rsync -irc $TMPDIR/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
 
 #Store the outputs
 cd $TMPDIR_SHARE
-7z_cmd a "$TMPDIR_SHARE/${date_run}_${GIT_BRANCH}_${git_hash}_failed_outputs.7z"  $TMPDIR_SHARE/outputs/*
-rsync -irc $TMPDIR_SHARE/*_outputs.* $ROOT_STORE_DIR/aus_bio_outputs
+7z_cmd a "$TMPDIR/${date_run}_${GIT_BRANCH}_${git_hash}_failed_outputs.7z"  $TMPDIR_SHARE/outputs/*
+rsync -irc $TMPDIR/*_outputs.* $ROOT_STORE_DIR/aus_bio_outputs
 #cp "$ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/Q1216/pdyer/pdyer_aus_bio/outputs/current_output.7z
 
 #The downloaded variables from bioORACLE are also worth saving
