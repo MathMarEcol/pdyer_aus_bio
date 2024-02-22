@@ -398,6 +398,9 @@ list(
         env_biooracle_names
       )
     },
+    resources = tar_resources(
+        crew = tar_resources_crew(controller = "ram")
+    ),
     pattern = map(nbclust_branch_table)
   ),
 
