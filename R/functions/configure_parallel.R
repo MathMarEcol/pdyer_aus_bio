@@ -142,7 +142,7 @@ ccg <- switch(host_trunc,
         ),
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
-        slurm_memory_gigabytes_per_cpu = 12,
+        slurm_memory_gigabytes_per_cpu = 4,
         slurm_cpus_per_task = 1,
         slurm_time_minutes = 24 * 60 + 10,
         slurm_partition = "general"
