@@ -29,8 +29,8 @@ case $HName in
 				## Moving into aus_bio_bunya_batch
 				## Root directories
 				export ROOT_STORE_DIR="/QRISdata/$2" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
-				export TMPDIR_SHARE=$1
-				mkdir -p $TMPDIR_SHARE/logs
+				export SCRATCH_PIPELINE_DIR=$1
+				mkdir -p $SCRATCH_PIPELINE_DIR/logs
 				# cat 'export NIX_CONFIG="use-xdg-base-directories = true
 # ssl-cert-file = /etc/ssl/certs/ca-bundle.crt
 # store = ~/nix_store
@@ -43,7 +43,7 @@ case $HName in
 				export SBATCH_ACCOUNT=$3
 				export SBATCH_PARTITION=general
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,HOME,LANG,SBATCH_ACCOUNT,SBATCH_PARTITION
+				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,HOME,LANG,SBATCH_ACCOUNT,SBATCH_PARTITION
 
 				## Control job goes to "general" partition
 				;;
@@ -51,13 +51,13 @@ case $HName in
 		prime-ai*)
 				## Root directories
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/$2" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
-				export TMPDIR_SHARE=$1
-				mkdir -p $TMPDIR_SHARE/logs
+				export SCRATCH_PIPELINE_DIR=$1
+				mkdir -p $SCRATCH_PIPELINE_DIR/logs
 
 				export SBATCH_PARTITION=cpu
 
 				## Control job goes to "cpu" partition
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,date,HOME,LANG,NIX_BUILD_CORES,SBATCH_PARTITION
+				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,date,HOME,LANG,NIX_BUILD_CORES,SBATCH_PARTITION
 		;;
 
 		*)
@@ -66,6 +66,6 @@ case $HName in
 		;;
 esac
 
-cp aus_bio_rescue_cache_batch.sh $TMPDIR_SHARE
-cd $TMPDIR_SHARE
+cp aus_bio_rescue_cache_batch.sh $SCRATCH_PIPELINE_DIR
+cd $SCRATCH_PIPELINE_DIR
 sbatch aus_bio_rescue_cache_batch.sh

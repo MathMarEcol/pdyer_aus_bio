@@ -37,11 +37,12 @@ case $HName in
 				## Moving into aus_bio_bunya_batch
 				## Root directories
 				export ROOT_STORE_DIR="/QRISdata/$3" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
-				export TMPDIR_SHARE="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
-				mkdir -p $TMPDIR_SHARE
-				mkdir -p $TMPDIR_SHARE/logs
-				cp ./aus_bio_batch.sh $TMPDIR_SHARE
-				cp ./aus_bio_control.sh $TMPDIR_SHARE
+				## Mostly not used on bunya
+				export SCRATCH_PIPELINE_DIR="/scratch/user/$(whoami)/aus_bio_scratch_${date}"
+				mkdir -p $SCRATCH_PIPELINE_DIR
+				mkdir -p $SCRATCH_PIPELINE_DIR/logs
+				cp ./aus_bio_batch.sh $SCRATCH_PIPELINE_DIR
+				cp ./aus_bio_control.sh $SCRATCH_PIPELINE_DIR
 
 				## Requires Nix
 				## put nix into ~/bin
@@ -73,21 +74,24 @@ then create and edit ~/.config/nix/nix.conf"
 				export SBATCH_PARTITION=general
 				export SBATCH_TIMELIMIT=320:00:00
 				export SBATCH_MEM_PER_NODE=32G
+				export SBATCH_OUTPUT=$SCRATCH_PIPELINE_DIR/logs/aus_bio_output_%j
+				export SBATCH_ERROR=$SCRATCH_PIPELINE_DIR/logs/aus_bio_error_%j
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,SBATCH_ACCOUNT,SBATCH_EXPORT,LC_ALL,TZ
 
-				cd $TMPDIR_SHARE
+				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_CONFIG,NIX_SSL_CERT_FILE,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,SBATCH_ACCOUNT,SBATCH_EXPORT,LC_ALL,TZ
+
+				cd $SCRATCH_PIPELINE_DIR
 				sbatch aus_bio_batch.sh
 				;;
 
 		prime-ai*)
 				## Root directories
 				export ROOT_STORE_DIR="/para/resources/qris_sandbox/${3}" #directory with same structure as /QRISdata/. May even be /QRISdata, but probably shouldn't be
-				export TMPDIR_SHARE="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
-				mkdir -p $TMPDIR_SHARE
-				mkdir -p $TMPDIR_SHARE/logs
-				cp ./aus_bio_batch.sh $TMPDIR_SHARE
-				cp ./aus_bio_control.sh $TMPDIR_SHARE
+				export SCRATCH_PIPELINE_DIR="/para/resources/hpc_sandbox/scratch/user/$(whoami)/aus_bio_scratch_${date}"
+				mkdir -p $SCRATCH_PIPELINE_DIR
+				mkdir -p $SCRATCH_PIPELINE_DIR/logs
+				cp ./aus_bio_batch.sh $SCRATCH_PIPELINE_DIR
+				cp ./aus_bio_control.sh $SCRATCH_PIPELINE_DIR
 
 				## Connect nix binaries to Nvidia GPUs
 				## NixOS does not need modifications
@@ -100,9 +104,11 @@ then create and edit ~/.config/nix/nix.conf"
 				## Control job goes to "cpu" partition
 				export SBATCH_PARTITION=cpu
 				export SBATCH_TIMELIMIT=168:00:00
+				export SBATCH_OUTPUT=$SCRATCH_PIPELINE_DIR/logs/aus_bio_output_%j
+				export SBATCH_ERROR=$SCRATCH_PIPELINE_DIR/logs/aus_bio_error_%j
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,TMPDIR_SHARE,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX
-				cd $TMPDIR_SHARE
+				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX
+				cd $SCRATCH_PIPELINE_DIR
 				sbatch aus_bio_batch.sh
 		;;
 
