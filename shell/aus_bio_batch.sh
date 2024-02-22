@@ -7,4 +7,4 @@
 
 ## Contains job submission parameters for control job
 cd $TMPDIR
-srun aus_bio_control.sh
+srun $SCRATCH_PIPELINE_DIR/aus_bio_control.sh
