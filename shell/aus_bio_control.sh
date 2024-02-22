@@ -56,7 +56,7 @@ fi
 
 #Load in the cache if it exists
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.7z" ]]; then
-		rsync -irc $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.7z $TMPDIR_CONTROL/code/R
+		cp $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.7z $TMPDIR_CONTROL/code/R
 		7z_cmd x $TMPDIR_CONTROL/code/R/targets_cache.7z -o$TMPDIR_CONTROL/code/R
 fi
 
