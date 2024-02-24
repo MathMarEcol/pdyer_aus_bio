@@ -110,7 +110,7 @@ cp "$SCRATCH_PIPELINE_DIR/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_S
 
 #Store the cache
 7z_cmd u -mx=0 $TMPDIR_CONTROL/code/R/targets_cache.7z  $TMPDIR_CONTROL/code/R/_targets
-rsync -iI --inplace $TMPDIR_CONTROL/code/R/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
+rsync -iI $TMPDIR_CONTROL/code/R/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
 
 #Store the outputs
 7z_cmd a "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  $TMPDIR_CONTROL/outputs/*
