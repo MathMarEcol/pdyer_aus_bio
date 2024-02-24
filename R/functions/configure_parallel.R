@@ -185,10 +185,10 @@ ccg <- switch(host_trunc,
       crew.cluster::crew_controller_slurm(
         name = "multicore",
         host = R.utils::System$getHostname(),
-        workers = 10,
+        workers = 20,
         seconds_timeout = 100,
         seconds_idle = 60,
-        seconds_wall = 22 * 60 * 60, # 1 day
+        seconds_wall = 164 * 60 * 60, # 1 week
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -209,16 +209,16 @@ ccg <- switch(host_trunc,
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
         slurm_cpus_per_task = 96,
-        slurm_time_minutes = 24 * 60 + 10,
+        slurm_time_minutes = 164 * 60 + 10,
         slurm_partition = "general"
       ),
       crew.cluster::crew_controller_slurm(
         name = "ram",
         host = R.utils::System$getHostname(),
-        workers = 10,
+        workers = 50,
         seconds_timeout = 100,
         seconds_idle = 60,
-        seconds_wall = 122 * 60 * 60, # 1 day
+        seconds_wall = 164 * 60 * 60, # 1 week
         reset_globals = FALSE,
         garbage_collection = TRUE,
 
@@ -239,7 +239,7 @@ ccg <- switch(host_trunc,
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
         slurm_cpus_per_task = 10,
-        slurm_time_minutes = 124 * 60 + 10,
+        slurm_time_minutes = 164 * 60 + 10, # 1 week
         slurm_partition = "general"
       )
     )
