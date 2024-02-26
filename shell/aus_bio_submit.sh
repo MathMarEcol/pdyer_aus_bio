@@ -93,6 +93,8 @@ then create and edit ~/.config/nix/nix.conf"
 				cp ./aus_bio_batch.sh $SCRATCH_PIPELINE_DIR
 				cp ./aus_bio_control.sh $SCRATCH_PIPELINE_DIR
 
+				export TMPDIR=/para/tmp/aus_bio_tmp_${date}
+
 				## Connect nix binaries to Nvidia GPUs
 				## NixOS does not need modifications
 				export NIX_GL_PREFIX=""
@@ -107,7 +109,7 @@ then create and edit ~/.config/nix/nix.conf"
 				export SBATCH_OUTPUT=$SCRATCH_PIPELINE_DIR/logs/aus_bio_output_%j
 				export SBATCH_ERROR=$SCRATCH_PIPELINE_DIR/logs/aus_bio_error_%j
 
-				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX
+				export SBATCH_EXPORT=ROOT_STORE_DIR,SCRATCH_PIPELINE_DIR,GIT_BRANCH,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,NIX_BUILD_CORES,MKL_THREADING_LAYER,MKL_INTERFACE_LAYER,NIX_GL_PREFIX,TMPDIR
 				cd $SCRATCH_PIPELINE_DIR
 				sbatch aus_bio_batch.sh
 		;;
