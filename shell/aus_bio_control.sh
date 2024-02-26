@@ -69,7 +69,7 @@ fi
 
 #Load in the cache if it exists
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
-		unsquashfs -q -dest $TMPDIR_CONTROL/code/R/_targets $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs
+		unsquashfs -q -dest $TMPDIR_CONTROL/code/R $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs
 fi
 
 ## Files are ready, set up env
@@ -110,7 +110,7 @@ set -euo pipefail
 
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
-mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend -no-strip -mem 25G
+mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend  -mem 25G
 
 #Store the cache
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
@@ -123,8 +123,7 @@ if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs" ]]; then
 fi
 
 #Store the outputs
-mksquashfs $TMPDIR_CONTROL/outputs "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" -comp zstd -Xcompression-level 12 -b 512k -quiet -no-duplicates -noappend -no-strip -mem 25G
-cp "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs"
+mksquashfs $TMPDIR_CONTROL/outputs "${ROOT_STORE_DIR}/aus_bio_outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" -comp zstd -Xcompression-level 12 -b 512k -quiet -no-duplicates -noappend  -mem 25G
 if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs" ]]; then
 		unlink $ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs
 fi
