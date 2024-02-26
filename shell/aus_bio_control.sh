@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+## Set up an R shell
+#Bash builtin that allows module aliases to work in non-interactive jobs (shopt: SHell OPTions)
+#-s means set, expand_aliases is only default for interactive shells, not non-interactive
+shopt -s expand_aliases
+
+export R_SHELL_REV=e14ac6840c7cb813b3c086e7526435aef613f050
+
+alias R='nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R'
+alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX Rscript'
+alias mksquashfs='nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c mksquashfs'
+alias unsquashfs='nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c unsquashfs'
+
+
 #This script uses 7zip to pack up results.
 #7zip recently released a native version, but many distros will still be using the unofficial p7zip
 #This is only a problem here because p7zip uses "7za" as the running command, but official 7zip for linux uses "7zz"
@@ -50,14 +63,13 @@ mkdir -p $TMP_DATA_DIR/mpa_poly_june_2023
 rsync -irc $ROOT_STORE_DIR/data/mpa_poly_june_2023/ $TMP_DATA_DIR/mpa_poly_june_2023
 
 #Set up the output directory
-if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.7z" ]]; then
-		7z_cmd x $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z -o$TMPDIR_CONTROL/outputs
+if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs" ]]; then
+		unsquashfs -q -dest $TMPDIR_CONTROL/outputs $ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs
 fi
 
 #Load in the cache if it exists
-if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.7z" ]]; then
-		cp $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.7z $TMPDIR_CONTROL/code/R
-		7z_cmd x $TMPDIR_CONTROL/code/R/targets_cache.7z -o$TMPDIR_CONTROL/code/R
+if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
+		unsquashfs -q -dest $TMPDIR_CONTROL/code/R/_targets $ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs
 fi
 
 ## Files are ready, set up env
@@ -69,13 +81,7 @@ cd $TMPDIR_CONTROL/code/R/
 mkdir -p $SCRATCH_PIPELINE_DIR/logs
 export LOGDIR=$SCRATCH_PIPELINE_DIR/logs
 
-## Set up an R shell
-#Bash builtin that allows module aliases to work in non-interactive jobs (shopt: SHell OPTions)
-#-s means set, expand_aliases is only default for interactive shells, not non-interactive
-shopt -s expand_aliases
 
-alias R='nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R'
-alias Rscript='nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX Rscript'
 
 ## Run Targets
 
@@ -96,7 +102,7 @@ export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADIN
 ## On success or failure, clean up rather than killing the pipeline
 set +euo pipefail
 ## timeout: If pipeline takes too long, stop and clean up
-timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/dc0d948b1fd6c49bd4ba4c61e86ce90b19b37e30#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make()"
+timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make()"
 
 set -euo pipefail
 
@@ -104,21 +110,23 @@ set -euo pipefail
 
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
-
-7z_cmd a "$SCRATCH_PIPELINE_DIR/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z"  $SCRATCH_PIPELINE_DIR/logs/*
-cp "$SCRATCH_PIPELINE_DIR/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" $ROOT_STORE_DIR/aus_bio_logs
+mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend
 
 #Store the cache
-7z_cmd u -mx=0 $TMPDIR_CONTROL/code/R/targets_cache.7z  $TMPDIR_CONTROL/code/R/_targets
-rsync -iI $TMPDIR_CONTROL/code/R/targets_cache.* $ROOT_STORE_DIR/aus_bio_outputs
+if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
+		mv "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
+fi
+mksquashfs $TMPDIR_CONTROL/code/R/_targets "${ROOT_STORE_DIR}/aus_bio_outputs/targets_cache.squashfs" -comp zstd -Xcompression-level 12 -b 1M -quiet -no-duplicates -noappend
+if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs" ]]; then
+		rm "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
+fi
 
 #Store the outputs
-7z_cmd a "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z"  $TMPDIR_CONTROL/outputs/*
-rsync -iI $TMPDIR_CONTROL/*_outputs.* $ROOT_STORE_DIR/aus_bio_outputs
-if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.7z" ]]; then
-		unlink $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z
+mksquashfs $TMPDIR_CONTROL/outputs "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" -comp zstd -Xcompression-level 12 -b 512k -quiet -no-duplicates -noappend
+if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs" ]]; then
+		unlink $ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs
 fi
-ln -s "$ROOT_STORE_DIR/aus_bio_outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.7z" $ROOT_STORE_DIR/aus_bio_outputs/current_output.7z
+ln -s "$ROOT_STORE_DIR/aus_bio_outputs/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" $ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs
 
 #The downloaded variables from bioORACLE are also worth saving
 rsync -irc $TMP_DATA_DIR/bioORACLE $ROOT_STORE_DIR/data/
