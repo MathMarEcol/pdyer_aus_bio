@@ -102,7 +102,7 @@ export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADIN
 ## On success or failure, clean up rather than killing the pipeline
 set +euo pipefail
 ## timeout: If pipeline takes too long, stop and clean up
-timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make()"
+timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make(reporter = 'verbose_positives')"
 
 set -euo pipefail
 
@@ -110,19 +110,21 @@ set -euo pipefail
 
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
-mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend
+mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend -no-strip -mem 25G
 
 #Store the cache
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
 		mv "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
 fi
-mksquashfs $TMPDIR_CONTROL/code/R/_targets "${ROOT_STORE_DIR}/aus_bio_outputs/targets_cache.squashfs" -comp zstd -Xcompression-level 12 -b 1M -quiet -no-duplicates -noappend
+mksquashfs $TMPDIR_CONTROL/code/R/_targets $TMPDIR/targets_cache.squashfs -comp zstd -Xcompression-level 1 -b 1M -quiet -no-duplicates -noappend -no-strip -mem 25G
+cp $TMPDIR/targets_cache.squashfs "${ROOT_STORE_DIR}/aus_bio_outputs"
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs" ]]; then
 		rm "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
 fi
 
 #Store the outputs
-mksquashfs $TMPDIR_CONTROL/outputs "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" -comp zstd -Xcompression-level 12 -b 512k -quiet -no-duplicates -noappend
+mksquashfs $TMPDIR_CONTROL/outputs "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs" -comp zstd -Xcompression-level 12 -b 512k -quiet -no-duplicates -noappend -no-strip -mem 25G
+cp "$TMPDIR_CONTROL/${date_run}_${GIT_BRANCH}_${git_hash}_outputs.squashfs"
 if [[ -f "$ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs" ]]; then
 		unlink $ROOT_STORE_DIR/aus_bio_outputs/current_output.squashfs
 fi
