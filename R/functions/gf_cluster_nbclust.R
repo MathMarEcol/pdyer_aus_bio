@@ -30,9 +30,10 @@ nbclust_generate_branches <- function(gf_predicted,
       rep(max(k_range), nrow(nbclust_serial))
     )]
 
+  nbclust_serial[, parallel = FALSE]
 
   ## Parallel branches are row per k per index per gf
-  parallel_rows <- !(nbclust_index_metadata$serial | nbclust_index_metadata$runtime == 1) &
+  parallel_rows <- !(nbclust_index_metadata$serial | nbclust_index_metadata$runtime <= 2) &
     runtime_filter &
     graphical_filter
 
@@ -45,7 +46,7 @@ nbclust_generate_branches <- function(gf_predicted,
   )
 
   nbclust_parallel[, k_max := .(k_min)]
-
+  nbclust_parallel[, parallel = TRUE]
   return(rbind(nbclust_serial, nbclust_parallel))
 }
 
@@ -65,8 +66,7 @@ nbclust_fit_branches <- function(gf_predicted,
     return(data.table(nbclust_branch_table,
       bestnc = NA,
       metric = NA,
-      crit = NA,
-      serial = nbclust_index_metadata$serial
+      crit = NA
     ))
   }
 
@@ -91,13 +91,13 @@ nbclust_fit_branches <- function(gf_predicted,
   crit <- NA
 
   if (!inherits(gf_nbclust, "error")) {
-    if (nbclust_index_metadata$serial) {
-      best_nc <- gf_nbclust$Best.nc["Number_clusters"]
-    } else {
+    if (nbclust_branch_table$parallel) {
       metric <- gf_nbclust$All.index
       if (nbclust_index_metadata$crit) {
         crit <- gf_nbclust$All.CriticalValues
       }
+    } else {
+        best_nc <- gf_nbclust$Best.nc["Number_clusters"]
     }
   }
 
@@ -105,7 +105,6 @@ nbclust_fit_branches <- function(gf_predicted,
                     bestnc = best_nc,
                     metric = metric,
                     crit = crit,
-                    serial = nbclust_index_metadata$serial,
                     nbclust_index = nbclust_index_metadata$index
                     ))
 }
@@ -116,10 +115,12 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
                                    ) {
 
   ## First, collapse parallel indicies
-  gf_cluster_nbclust_tmp <- nbclust_branch_fitted[
+    gf_cluster_nbclust_tmp <- nbclust_branch_fitted[
+
     ## All rows of parallel indices
-    serial == FALSE,
+    parallel == TRUE,
     {
+
       ordered <- .SD[order(k_min)]
       if (nbclust_index_metadata[index == .BY[["nbclust_index"]], "crit"][[1]] == FALSE) {
         ## Pass function metric
@@ -138,7 +139,6 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
     },
     by = c("gf_ind", "dist", "method", "nbclust_index")
   ]
-
   ## Add serial metrics back
   gf_cluster_nbclust_all <- rbind(
     gf_cluster_nbclust_tmp,
