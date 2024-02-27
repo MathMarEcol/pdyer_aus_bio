@@ -25,7 +25,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
   ## Should have data to cluster in gf_predicted$comp_turnover
 
   gf_fixed_clusts <- cluster::clara(
-    gf_predicted$comp_turnover[[1]][,gf_predicted$imp_preds[[1]]], with = FALSE],
+    gf_predicted$comp_turnover[[1]][,gf_predicted$imp_preds[[1]], with = FALSE],
     cluster_fixed_k,
     metric = "manhattan",
     samples = clara_samples,
