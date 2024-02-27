@@ -195,7 +195,7 @@ plot_env_continuous <- function(
 
 
   env_dom <- env_domain[domain == gf_predicted$env_domain &
-    res == gf_predicted$res_clust_target &
+    res == gf_predicted$res_clust &
     env_year == gf_predicted$env_year &
     env_pathway == gf_predicted$env_pathway, "data"][[1]][[1]]
 
