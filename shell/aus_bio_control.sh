@@ -116,8 +116,8 @@ mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
 		mv "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
 fi
-mksquashfs $TMPDIR_CONTROL/code/R/_targets $TMPDIR/targets_cache.squashfs -comp zstd -Xcompression-level 1 -b 1M -quiet -no-duplicates -noappend -no-strip -mem 25G
-cp $TMPDIR/targets_cache.squashfs "${ROOT_STORE_DIR}/aus_bio_outputs"
+cd $TMPDIR_CONTROL/code/R/
+mksquashfs _targets ${ROOT_STORE_DIR}/aus_bio_outputs/targets_cache.squashfs -comp zstd -Xcompression-level 1 -b 1M -quiet -no-duplicates -noappend -no-strip -mem 25G
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs" ]]; then
 		rm "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache_old.squashfs"
 fi
