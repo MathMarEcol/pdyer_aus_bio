@@ -134,7 +134,7 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
       if (length(best_nc) != 0) {
         list(bestnc = best_nc)
       } else {
-        list(bestnc = NA)
+        list(bestnc = -1)
       }
     },
     by = c("gf_ind", "dist", "method", "nbclust_index")
@@ -142,7 +142,7 @@ nbclust_merge_branches <- function(nbclust_branch_fitted,
   ## Add serial metrics back
   gf_cluster_nbclust_all <- rbind(
     gf_cluster_nbclust_tmp,
-    nbclust_branch_fitted[serial == TRUE, colnames(gf_cluster_nbclust_tmp), with=FALSE]
+    nbclust_branch_fitted[parallel == FALSE, colnames(gf_cluster_nbclust_tmp), with=FALSE]
   )
 
   ## Next, collapse back to gf objects

@@ -37,6 +37,8 @@ plot_nbclust_rank <- function(
         heuristic = names(gf_cluster_nbclust$best_nc[[1]]),
         nclust = gf_cluster_nbclust$best_nc[[1]]
         )
+    ranked_scores$nclust[is.na(ranked_scores$nclust)] <- -1
+
     ranked_scores <- ranked_scores[order(ranked_scores$nclust), ]
     ranked_scores <- cbind(ranked_scores, list(x = seq.int(to = nrow(ranked_scores))))
 
