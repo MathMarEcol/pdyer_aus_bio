@@ -73,7 +73,7 @@ nbclust_fit_branches <- function(gf_predicted,
   gf_nbclust <- tryCatch(
   {
     NbClust::NbClust(
-      gf_predicted$comp_turnover[[1]][, env_biooracle_names[env_year == gf_predicted$env_year & env_pathway == gf_predicted$env_pathway, env_biooracle_names][[1]], with = FALSE],
+      gf_predicted$comp_turnover[[1]][, c(gf_predicted$imp_preds[[1]]), with = FALSE],
       distance = nbclust_branch_table$dist,
       min.nc = nbclust_branch_table$k_min,
       max.nc = nbclust_branch_table$k_max,

@@ -1,5 +1,4 @@
 cluster_gf_kmedoids <- function(gf_predicted,
-                                env_biooracle_names,
                                 cluster_fixed_k,
                                 clara_samples,
                                 clara_sampsize,
@@ -26,7 +25,7 @@ cluster_gf_kmedoids <- function(gf_predicted,
   ## Should have data to cluster in gf_predicted$comp_turnover
 
   gf_fixed_clusts <- cluster::clara(
-    gf_predicted$comp_turnover[[1]][,env_biooracle_names[env_year == gf_predicted$env_year & env_pathway == gf_predicted$env_pathway, env_biooracle_names][[1]], with = FALSE],
+    gf_predicted$comp_turnover[[1]][,gf_predicted$imp_preds[[1]]], with = FALSE],
     cluster_fixed_k,
     metric = "manhattan",
     samples = clara_samples,

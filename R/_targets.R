@@ -337,24 +337,48 @@ list(
   ),
 
   tar_target(
-      gf_predicted,
-      predict_gf(
-        gf_combined,
+    gf_no_env_predicted,
+    predict_gf(
+      gf_combined,
+      res_clust_target,
+      env_domain,
+      env_biooracle_names,
+      extrap,
+      pred_importance_top,
+      env_id_col,
+      depth_range
+    ),
+    pattern = cross(gf_combined, res_clust_target)
+  ),
+
+  tar_target(
+    ## Matches gf_predicted, except the predictions are the original env vars, maybe PCA adjusted if Sayre or mcquaid did
+    env_predicted,
+    predict_env(
         res_clust_target,
+        res_gf_target,
         env_domain,
         env_biooracle_names,
         extrap,
         pred_importance_top,
         env_id_col,
         depth_range
-      ),
-      pattern = cross(gf_combined, res_clust_target)
+    )
+  ),
+
+  tar_target(
+    gf_predicted,
+    rbind(gf_no_env_predicted,
+          env_predicted)
   ),
 
   tar_target(
     plot_gf_cont,
     plot_gf_continuous(
         gf_predicted,
+        env_domain,
+        env_biooracle_names,
+        pred_importance_top,
         marine_map,
         env_poly,
         pca_n_vars,
@@ -429,7 +453,6 @@ list(
     gf_cluster_kmedoids,
     cluster_gf_kmedoids(
       gf_predicted,
-      env_biooracle_names,
       cluster_fixed_k,
       clara_samples,
       clara_sampsize,
