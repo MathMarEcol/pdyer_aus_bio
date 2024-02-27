@@ -83,6 +83,10 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
   tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1, dpi = 1200)
 
+  if (gf_predicted$survey %in% c("envonly", "envmeanonly")) {
+    return(pl_file["no_samp"])
+  }
+
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
   grouping_vars <- c("trophic", "survey", "depth_cat", "env_domain", "env_year", "env_pathway")
