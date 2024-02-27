@@ -30,7 +30,7 @@ nbclust_generate_branches <- function(gf_predicted,
       rep(max(k_range), nrow(nbclust_serial))
     )]
 
-  nbclust_serial[, parallel = FALSE]
+  nbclust_serial[, parallel := FALSE]
 
   ## Parallel branches are row per k per index per gf
   parallel_rows <- !(nbclust_index_metadata$serial | nbclust_index_metadata$runtime <= 2) &
@@ -46,7 +46,7 @@ nbclust_generate_branches <- function(gf_predicted,
   )
 
   nbclust_parallel[, k_max := .(k_min)]
-  nbclust_parallel[, parallel = TRUE]
+  nbclust_parallel[, parallel := TRUE]
   return(rbind(nbclust_serial, nbclust_parallel))
 }
 
