@@ -271,7 +271,7 @@ ccg <- switch(host_trunc,
       crew.cluster::crew_controller_slurm(
         name = "smallram",
         host = R.utils::System$getHostname(),
-        workers = 500,
+        workers = 1000,
         seconds_timeout = 100,
         seconds_idle = 60,
         seconds_wall = 164 * 60 * 60, # 1 week
