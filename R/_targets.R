@@ -423,7 +423,7 @@ list(
       )
     },
     resources = tar_resources(
-        crew = tar_resources_crew(controller = "ram")
+        crew = tar_resources_crew(controller = "smallram")
     ),
     pattern = map(nbclust_branch_table)
   ),

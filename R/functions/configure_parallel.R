@@ -4,6 +4,7 @@
 ##   -Falls back to BLAS multithreading, if no nvidia gpu, get lots of cores
 ## - "multicore" - needs many cores and lots of ram
 ## - "ram" - needs 1 core and lots of RAM
+## - "smallram" tuned for nbclust, about 50GB ram and 1 core
 
 ## Matches names in aus_bio_submit.sh
 host_trunc <- regmatches(R.utils::System$getHostname(), regexpr(pattern = "(^prime-ai|^bun)", R.utils::System$getHostname()))
@@ -94,6 +95,31 @@ ccg <- switch(host_trunc,
       ),
       crew.cluster::crew_controller_slurm(
         name = "ram",
+        workers = 1,
+        seconds_timeout = 10,
+        seconds_idle = 10,
+        seconds_wall = 22 * 60 * 60, # 1 day
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export TENSOR_CPU_MEM_MAX=55000000000",
+          r_alias
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = 5.5,
+        slurm_cpus_per_task = 9,
+        slurm_time_minutes = 24 * 60,
+        slurm_partition = "cpu"
+        ),
+      crew.cluster::crew_controller_slurm(
+        name = "smallram",
         workers = 1,
         seconds_timeout = 10,
         seconds_idle = 10,
@@ -239,6 +265,36 @@ ccg <- switch(host_trunc,
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
         slurm_cpus_per_task = 10,
+        slurm_time_minutes = 164 * 60 + 10, # 1 week
+        slurm_partition = "general"
+        ),
+      crew.cluster::crew_controller_slurm(
+        name = "smallram",
+        host = R.utils::System$getHostname(),
+        workers = 500,
+        seconds_timeout = 100,
+        seconds_idle = 60,
+        seconds_wall = 164 * 60 * 60, # 1 week
+        reset_globals = FALSE,
+        garbage_collection = TRUE,
+
+        ## This is sufficient to make runnable slurm workers
+        script_lines = paste(
+          sep = "\n",
+          paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
+          "#SBATCH --nodes=1",
+          "#SBATCH --ntasks-per-node=1",
+          "#SBATCH --mem=55G",
+          "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
+          "export TENSOR_CPU_MEM_MAX=5000000000",
+          r_alias
+        ),
+        slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
+        slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
+        slurm_memory_gigabytes_per_cpu = NULL,
+        slurm_cpus_per_task = 1,
         slurm_time_minutes = 164 * 60 + 10, # 1 week
         slurm_partition = "general"
       )
