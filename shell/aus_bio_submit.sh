@@ -73,7 +73,7 @@ then create and edit ~/.config/nix/nix.conf"
 				## Control job goes to "general" partition
 				export SBATCH_PARTITION=general
 				export SBATCH_TIMELIMIT=320:00:00
-				export SBATCH_MEM_PER_NODE=32G
+				export SBATCH_MEM_PER_NODE=96G
 				export SBATCH_OUTPUT=$SCRATCH_PIPELINE_DIR/logs/aus_bio_output_%j
 				export SBATCH_ERROR=$SCRATCH_PIPELINE_DIR/logs/aus_bio_error_%j
 
