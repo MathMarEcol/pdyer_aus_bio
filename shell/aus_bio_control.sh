@@ -112,7 +112,7 @@ set -euo pipefail
 
 ## Store the logs
 mkdir -p $ROOT_STORE_DIR/aus_bio_logs
-mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.7z" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend  -mem 25G
+mksquashfs $SCRATCH_PIPELINE_DIR/logs "${ROOT_STORE_DIR}/aus_bio_logs/${date_run}_${GIT_BRANCH}_${git_hash}_logs.squashfs" -comp zstd -Xcompression-level 1 -quiet -no-duplicates -noappend  -mem 25G
 
 #Store the cache
 if [[ -f  "$ROOT_STORE_DIR/aus_bio_outputs/targets_cache.squashfs" ]]; then
