@@ -104,7 +104,7 @@ export SBATCH_EXPORT=LC_ALL,R_FUTURE_GLOBALS_MAXSIZE,date,HOME,LANG,MKL_THREADIN
 ## On success or failure, clean up rather than killing the pipeline
 set +euo pipefail
 ## timeout: If pipeline takes too long, stop and clean up
-timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make(reporter = 'verbose_positives')"
+timeout 315h  nix develop github:PhDyellow/nix_r_dev_shell/${R_SHELL_REV}#devShells."x86_64-linux".r-shell -c $NIX_GL_PREFIX R --vanilla -e "targets::tar_make(c(extrap_plotted, extrap_confidence_plot, gfbootstrap_coverage_plots, gfbootstrap_mpa_plots, gfbootstrap_plotted, gfbootstrap_diagnostics_plots), reporter = 'verbose_positives')"
 
 set -euo pipefail
 
