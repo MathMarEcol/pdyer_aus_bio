@@ -234,7 +234,9 @@ ccg <- switch(host_trunc,
         slurm_log_output = file.path(Sys.getenv("LOGDIR", "."), "crew_log_%A.txt"),
         slurm_log_error = file.path(Sys.getenv("LOGDIR", "."), "crew_log_error_%A.txt"),
         slurm_memory_gigabytes_per_cpu = NULL,
-        slurm_cpus_per_task = 96,
+        slurm_cpus_per_task = 100, ## Most efficient use of CPU workers if
+        ## this number divides
+        ## gf_bootstrap_iters evenly
         slurm_time_minutes = 164 * 60 + 10,
         slurm_partition = "general"
       ),
