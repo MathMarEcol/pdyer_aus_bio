@@ -333,7 +333,7 @@ list(
       resources = tar_resources(
         crew = tar_resources_crew(controller = "ram")
       ),
-      pattern = map(gf_combined_tmp)
+      pattern = slice(gf_combined_tmp, index = c(29))
   ),
 
   tar_target(
@@ -554,7 +554,7 @@ list(
     resources = tar_resources(
       crew = tar_resources_crew(controller = "multicore")
     ),
-    pattern = map(gfbootstrap_combined_tmp)
+    pattern = slice(gfbootstrap_combined_tmp, index = c(29))
   ),
 
 
