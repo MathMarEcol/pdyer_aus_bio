@@ -187,17 +187,17 @@ ccg <- switch(host_trunc,
         script_lines = paste(
           sep = "\n",
           paste0("#SBATCH --account=", Sys.getenv("SLURM_JOB_ACCOUNT")),
-          "#SBATCH --gpus=nvidia_a100_80gb_pcie_1g.10gb:1",
+          "#SBATCH --gpus=l40:1",
           "#SBATCH --nodes=1",
           "#SBATCH --ntasks-per-node=1",
-          "#SBATCH --mem=100G",
+          "#SBATCH --mem=200G",
           "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export BLIS_NUM_THREADS=$SLURM_CPUS_PER_TASK",
           "export TF_FORCE_GPU_ALLOW_GROWTH='true'",
           "export CUDA_MODULE_LOADING=LAZY",
-          "export TENSOR_CPU_MEM_MAX=90000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
-          "export TENSOR_GPU_MEM_MAX=5500000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
+          "export TENSOR_CPU_MEM_MAX=190000000000", #Certain operations that do bulk operations over matricies will batch to keep RAM usage within this amount (in bytes)
+          "export TENSOR_GPU_MEM_MAX=35000000000", #Certain operations that do bulk operations over matricies will batch to keep GPU memory usage within this amount (in bytes)
           "export TENSOR_DEVICE=CUDA", # Set to CUDA to attempt to use nvidia graphics card, any other value will use CPU
           r_alias
         ),
