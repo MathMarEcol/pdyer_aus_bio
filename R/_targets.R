@@ -659,7 +659,7 @@ list(
     pattern = map(gfbootstrap_cluster,
                   gfbootstrap_polygons, cross(gfbootstrap_predicted, clust_methods_target)),
     resources = tar_resources(
-          crew = tar_resources_crew(controller = "smallram")
+          crew = tar_resources_crew(controller = "ram")
     ),
     format = "file"
   ),
@@ -710,6 +710,9 @@ list(
                           cross(env_biooracle_names,
                                 map(gfbootstrap_cluster,
                                     cross(gfbootstrap_predicted, clust_methods_target))))),
+      resources = tar_resources(
+        crew = tar_resources_crew(controller = "ram")
+      ),
       format = "file"
   ),
 
