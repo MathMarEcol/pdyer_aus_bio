@@ -658,6 +658,9 @@ list(
     ),
     pattern = map(gfbootstrap_cluster,
                   gfbootstrap_polygons, cross(gfbootstrap_predicted, clust_methods_target)),
+    resources = tar_resources(
+          crew = tar_resources_crew(controller = "smallram")
+    ),
     format = "file"
   ),
 
