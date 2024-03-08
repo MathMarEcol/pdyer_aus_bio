@@ -176,7 +176,7 @@ ccg <- switch(host_trunc,
       crew.cluster::crew_controller_slurm(
         name = "gpu",
         host = R.utils::System$getHostname(),
-        workers = 10,
+        workers = 3,
         seconds_timeout = 100,
         seconds_idle = 60,
         seconds_wall = 22 * 60 * 60, # 24 hours
