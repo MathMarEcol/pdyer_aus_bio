@@ -45,7 +45,9 @@ plot_gfbootstrap <- function(
     pl_file <- c(pl_file,
                  sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
                  sim_mat_ungrouped = paste0(pl_file_base, "_clustering_sim_mat_ungrouped.png"),
-                 sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png")
+                 sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png"),
+                 sim_mat_hist_log_cap = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_cap.png"),
+                 sim_mat_hist_log_remove = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_remove.png")
     )
   }
   if (is.na(gfbootstrap_cluster$best_clust)) {
@@ -59,6 +61,8 @@ plot_gfbootstrap <- function(
         ggsave_wrapper(filename = pl_file["sim_mat"], plot = no_plot)
         ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = no_plot)
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = no_plot)
+        ggsave_wrapper(filename = pl_file["sim_mat_hist_log_cap"], plot = no_plot)
+        ggsave_wrapper(filename = pl_file["sim_mat_hist_log_remove"], plot = no_plot)
     }
     return(pl_file)
   }
@@ -243,12 +247,32 @@ plot_gfbootstrap <- function(
         ggsave_wrapper(filename = pl_file["sim_mat_ungrouped"], plot = pl_sim_mat_ungrouped)
 
 
-        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = as.vector(strip_diag(sim_mat))),
+        hist_data <- as.vector(strip_diag(sim_mat))
+
+        hist_data_log <- log10(hist_data)
+
+        hist_data_log_cap <- hist_data_log
+        hist_data_log_cap[is.infinite(hist_data_log)] <- min(hist_data_log[!is.infinite(hist_data_log)])
+
+        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data),
                                            ggplot2::aes(x = x)) +
             geom_histogram(na.rm = TRUE) +
             ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
+        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log),
+                                           ggplot2::aes(x = x)) +
+            geom_histogram(na.rm = TRUE) +
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
+
+        ggsave_wrapper(filename = pl_file["sim_mat_hist_log_remove"], plot = pl_sim_mat_hist)
+
+        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log_cap),
+                                           ggplot2::aes(x = x)) +
+            geom_histogram(na.rm = TRUE) +
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
+
+        ggsave_wrapper(filename = pl_file["sim_mat_hist_log_cap"], plot = pl_sim_mat_hist)
     }
 
     if(s2_disabled) sf::sf_use_s2(TRUE)
