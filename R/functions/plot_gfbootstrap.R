@@ -248,6 +248,7 @@ plot_gfbootstrap <- function(
 
 
         hist_data <- as.vector(strip_diag(sim_mat))
+        hist_data <- hist_data[!is.na(hist_data)]
 
         hist_data_log <- log10(hist_data)
 
