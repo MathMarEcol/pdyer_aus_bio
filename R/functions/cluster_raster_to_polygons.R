@@ -31,15 +31,19 @@ cluster_raster_to_polygons <- function(
   clust_poly_sf <- sf::st_as_sf(clust_multipoly)
 
     if(nrow(sites_no_clust) > 1) {
-        no_clust_raster <- terra::rast(
-                                      x = as.matrix(sites_no_clust),
-                                      type = "xyz",
-                                      crs = "+proj=longlat +datum=WGS84")
-        names(no_clust_raster) <- c("clustering")
-        no_clust_multipoly <- terra::as.polygons(no_clust_raster)
-        no_clust_sf <- sf::st_as_sf(no_clust_multipoly)
+      no_clust_vec <- terra::vect(sites_no_clust,
+        crs = terra::crs(clust_raster)
+        )
+      no_clust_raster <- terra::rasterize(
+        x = no_clust_vec,
+        y = clust_raster,
+        field = c("cl")
+      )
+      names(no_clust_raster) <- c("clustering")
+      no_clust_multipoly <- terra::as.polygons(no_clust_raster)
+      no_clust_sf <- sf::st_as_sf(no_clust_multipoly)
     } else {
-        no_clust_sf <- NA
+      no_clust_sf <- NA
     }
 
     return(data.table::data.table(cluster_row[, .(env_domain, env_year, env_pathway, res_gf, res_clust, trophic, survey, depth_cat, clust_method)],
