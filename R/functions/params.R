@@ -204,7 +204,7 @@ env_present_only = c("nitrate", "silicate", "iron")
 
 ## BioORACLE strings to match layer codes
 env_year = c("2050", "2100")
-env_pathway = c("RCP26", "RCP45", "RCP60", "RCP85")
+env_pathway = c("RCP26", "RCP60", "RCP85")
 env_bathy = "MS_bathy_5m"
 ## "present" is also always included
 env_fitting <- "present"
