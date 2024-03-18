@@ -32,7 +32,7 @@ plot_confidence <- function(cluster_env_assign_cluster,
         no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
           ggplot2::geom_point() +
           ggplot2::ggtitle(paste0(paste0(c(survey_specs, plot_description), collapse = "_"),  " has not successfully clustered"))
-        file_names <- paste0(pl_file_base, "_", plot_description, ".png")
+        file_names <- paste0(pl_file_base, "_", plot_description, ".pdf")
         ggsave_wrapper(filename = file_names, plot = no_plot)
         return(file_names)
     }
@@ -88,9 +88,9 @@ plot_confidence <- function(cluster_env_assign_cluster,
             pl_conf <- pl_conf + tmap::tm_shape(env_poly_local, bbox = env_bbox) +
                 tmap::tm_borders(lwd = 1)
 
-        pl_file <- paste0(paste0(c(pl_file_base, paste0(c("cl", cl), collapse = ""), plot_description), collapse = "_"), ".png")
+        pl_file <- paste0(paste0(c(pl_file_base, paste0(c("cl", cl), collapse = ""), plot_description), collapse = "_"), ".pdf")
         file_names[cl] <- pl_file
-        tmap_save_wrapper(tm = pl_conf, filename = pl_file, scale = 0.8, dpi = 1200)
+        tmap_save_wrapper(tm = pl_conf, filename = pl_file)
         }
     sf::sf_use_s2(s2_used)
     return(file_names)

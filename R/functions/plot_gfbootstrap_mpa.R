@@ -28,7 +28,7 @@ plot_gfbootstrap_mpa <- function(
     pl_survey_name <- paste0(c(survey_specs, mpa_polygons$iucn_categories[[1]]$name, plot_description),
                              collapse = "_")
     pl_file <- file.path(output_folder, pl_survey_name)
-    pl_file <- paste0(pl_file, ".png")
+    pl_file <- paste0(pl_file, ".pdf")
 
     if (is.na(gfbootstrap_cluster$best_clust)) {
         no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
@@ -67,7 +67,7 @@ plot_gfbootstrap_mpa <- function(
             tm_polygons(col = "grey", alpha = 0.7, border.col = "grey", border.alpha = 0.9)
 
     ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
-    tmap_save_wrapper(tm = pl_no_samp, filename = pl_file, scale = 0.1, dpi = 1200)
+    tmap_save_wrapper(tm = pl_no_samp, filename = pl_file)
 
     sf::sf_use_s2(s2_used)
     return(pl_file)

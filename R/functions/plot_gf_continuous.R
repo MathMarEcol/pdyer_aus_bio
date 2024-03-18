@@ -29,8 +29,8 @@ plot_gf_continuous <- function(
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
-    map = paste0(pl_file_base, "_map.png"),
-    pca = paste0(pl_file_base, "_pca.png")
+    map = paste0(pl_file_base, "_map.pdf"),
+    pca = paste0(pl_file_base, "_pca.pdf")
   )
 
   if (all(is.na(gf_predicted$imp_preds))) {
@@ -120,7 +120,7 @@ plot_gf_continuous <- function(
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
-  tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"])
 
   ## PCA
 
@@ -286,7 +286,7 @@ plot_env_continuous <- function(
                                                  "{pred_string}"),
                     main.title.size = 0.5)
 
-  tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"])
 
   ## PCA
 

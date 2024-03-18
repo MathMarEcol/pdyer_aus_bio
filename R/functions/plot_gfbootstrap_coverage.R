@@ -26,7 +26,7 @@ plot_gfbootstrap_coverage <- function(
                                                  collapse = "_")
 
   pl_file_base <- file.path(output_folder, pl_survey_name)
-  pl_file <-  paste0(pl_file_base, ".png")
+  pl_file <-  paste0(pl_file_base, ".pdf")
   ### Skip failed surveys
   if (is.na(gfbootstrap_polygons$polygons)) {
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +

@@ -107,7 +107,7 @@ make_poly_name <- function(poly_group, output_folder, plot_description) {
                "for trophic levels [{trophic}], survey [{survey}],\n",
                "depth [{depth_cat}] and clustering technique [{clust}]")
 
-    filename <- glue::glue_data(poly_group, "{env_domain}_{res_gf}_{res_clust}_{env_year}_{env_pathway}_{trophic}_{survey}_{depth_cat}_{clust}_{plot_description}.png")
+    filename <- glue::glue_data(poly_group, "{env_domain}_{res_gf}_{res_clust}_{env_year}_{env_pathway}_{trophic}_{survey}_{depth_cat}_{clust}_{plot_description}.pdf")
     file_out <- file.path(output_folder, filename)
     return(list(title = title, file_out = file_out))
 
@@ -142,6 +142,6 @@ save_polys_overlays <- function(polys, env_poly, poly_name) {
     }
     pl_tm <- pl_tm + tm_layout(main.title = poly_name$title, main.title.size = 0.5)
 
-    tmap_save_wrapper(tm = pl_tm, filename = poly_name$file_out, scale = 0.5, dpi = 1200)
+    tmap_save_wrapper(tm = pl_tm, filename = poly_name$file_out)
 
 }

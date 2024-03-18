@@ -29,9 +29,9 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
-    no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
-    samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
-    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png")
+    no_samp = paste0(pl_file_base, "_clustering_no_samples.pdf"),
+    samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.pdf"),
+    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.pdf")
   )
 
   if (all(is.na(gf_cluster_kmedoids$clust_ind))) {
@@ -74,14 +74,11 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   env_poly = env_poly[name == gf_cluster_kmedoids$env_domain, data][[1]],
                   labels = plot_clust_labels)+
     tmap::tm_layout(main.title = glue::glue_data(gf_cluster_kmedoids,
-                                                 "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain}.\n",
-                                                 "Clustered with {cluster_fixed_k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{cluster_fixed_k} clusters"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
-  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"])
 
   if (gf_predicted$survey %in% c("envonly", "envmeanonly")) {
     return(pl_file["no_samp"])
@@ -174,14 +171,11 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   samples = fit_samples,
                   grids = fit_grids)+
     tmap::tm_layout(main.title = glue::glue_data(gf_cluster_kmedoids,
-                                                 "Clustering showing samples in domain for depth [{depth_cat}]\n",
-                                                 "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain}. Clustered with {cluster_fixed_k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{cluster_fixed_k} clusters"),
                     main.title.size = 0.5)
 
   ##ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
-  tmap_save_wrapper(tm = pl_samp_clipped, filename = pl_file["samp_clipped"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_samp_clipped, filename = pl_file["samp_clipped"])
 
 
 
@@ -196,14 +190,11 @@ plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                   grids = fit_grids,
                   clip_samples = FALSE) +
     tmap::tm_layout(main.title = glue::glue_data(gf_cluster_kmedoids,
-                                                 "Clustering showing all samples, including unused, for depth [{depth_cat}]\n",
-                                                 "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain}. Clustered with {cluster_fixed_k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{cluster_fixed_k} clusters"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
-  tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"])
 
   ## Need plot_clust_poly
 

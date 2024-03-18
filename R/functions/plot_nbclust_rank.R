@@ -27,7 +27,7 @@ plot_nbclust_rank <- function(
         no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
             ggplot2::geom_point() +
             ggplot2::ggtitle(paste0(paste0(c(survey_specs, plot_description), collapse = "_"),  " has not successfully clustered"))
-        file_names <- paste0(pl_file_base, "_", plot_description, ".png")
+        file_names <- paste0(pl_file_base, "_", plot_description, ".pdf")
         ggsave_wrapper(filename = file_names, plot = no_plot)
         return(file_names)
     }
@@ -52,7 +52,7 @@ plot_nbclust_rank <- function(
           ggplot2::geom_hline(yintercept = 41, colour = "red") +
           ggthemes::theme_tufte()
 
-    pl_file <- paste0(pl_file_base, "_", plot_description, ".png")
+    pl_file <- paste0(pl_file_base, "_", plot_description, ".pdf")
     ggsave_wrapper(
       filename = pl_file,
       plot = pl_nbclust_rank

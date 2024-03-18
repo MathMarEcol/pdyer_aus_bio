@@ -37,17 +37,17 @@ plot_gfbootstrap <- function(
                                                  collapse = "_")
   pl_file_base <- file.path(output_folder, pl_survey_name)
   pl_file <- c(
-    no_samp = paste0(pl_file_base, "_clustering_no_samples.png"),
-    samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.png"),
-    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.png")
+    no_samp = paste0(pl_file_base, "_clustering_no_samples.pdf"),
+    samp_clipped = paste0(pl_file_base, "_clustering_samples_env_domain.pdf"),
+    samp = paste0(pl_file_base, "_clustering_samples_sample_domain.pdf")
   )
   if (plot_sim_mat) {
     pl_file <- c(pl_file,
-                 sim_mat = paste0(pl_file_base, "_clustering_sim_mat.png"),
-                 sim_mat_ungrouped = paste0(pl_file_base, "_clustering_sim_mat_ungrouped.png"),
-                 sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.png"),
-                 sim_mat_hist_log_cap = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_cap.png"),
-                 sim_mat_hist_log_remove = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_remove.png")
+                 sim_mat = paste0(pl_file_base, "_clustering_sim_mat.pdf"),
+                 sim_mat_ungrouped = paste0(pl_file_base, "_clustering_sim_mat_ungrouped.pdf"),
+                 sim_mat_hist = paste0(pl_file_base, "_clustering_sim_mat_hist.pdf"),
+                 sim_mat_hist_log_cap = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_cap.pdf"),
+                 sim_mat_hist_log_remove = paste0(pl_file_base, "_clustering_sim_mat_hist_zero_remove.pdf")
     )
   }
   if (is.na(gfbootstrap_cluster$best_clust)) {
@@ -99,14 +99,11 @@ plot_gfbootstrap <- function(
                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                   labels = plot_clust_labels)+
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
-                                                 "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}.\n",
-                                                 "Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{k} clusters"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
-  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1)
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
@@ -199,7 +196,7 @@ plot_gfbootstrap <- function(
                     main.title.size = 0.5)
 
   ##ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
-  tmap_save_wrapper(tm = pl_samp_clipped, filename = pl_file["samp_clipped"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_samp_clipped, filename = pl_file["samp_clipped"])
 
 
 
@@ -214,14 +211,11 @@ plot_gfbootstrap <- function(
                   grids = fit_grids,
                   clip_samples = FALSE) +
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
-                                                 "Clustering showing all samples, including unused, for depth [{depth_cat}]\n",
-                                                 "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{k} clusters"),
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["samp"], plot = pl_samp)
-  tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"], scale = 0.1, dpi = 1200)
+  tmap_save_wrapper(tm = pl_samp, filename = pl_file["samp"])
 
     if(plot_sim_mat) {
         sim_mat <- gfbootstrap_predicted$sim_mat[[1]][[1]]
@@ -237,7 +231,7 @@ plot_gfbootstrap <- function(
                                               highlight = TRUE,
                                               sort_within_clust = is_caster,
                                               sort_among_clust = is_caster) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Similarity matrix for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters."))
+            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "{k} clusters"))
 
         ggsave_wrapper(filename = pl_file["sim_mat"], plot = pl_sim_mat)
 
@@ -257,21 +251,18 @@ plot_gfbootstrap <- function(
 
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data),
                                            ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
+            geom_histogram(na.rm = TRUE)
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log),
                                            ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
+            geom_histogram(na.rm = TRUE)
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist_log_remove"], plot = pl_sim_mat_hist)
 
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log_cap),
                                            ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE) +
-            ggplot2::ggtitle(glue::glue_data(gfbootstrap_cluster, "Histogram of similarities for depth [{depth_cat}] in survey [{survey}] studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters"))
+            geom_histogram(na.rm = TRUE)
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist_log_cap"], plot = pl_sim_mat_hist)
     }
