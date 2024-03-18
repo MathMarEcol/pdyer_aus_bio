@@ -4,7 +4,7 @@ ggsave_wrapper <- function(filename, plot,
                            height = 9,
                            scale = 1,
                            device = cairo_pdf,
-                           family = "serif",
+                           family = "sans",
                            ...
                            ){
   ggplot2::ggsave(filename =  filename,
@@ -25,7 +25,7 @@ tmap_save_wrapper <- function(tm, filename,
                            height = 9,
                            scale = 1,
                            device = cairo_pdf,
-                           family = "serif",
+                           family = "sans",
                            ...
                            ){
   tmap::tmap_save(tm = tm,
