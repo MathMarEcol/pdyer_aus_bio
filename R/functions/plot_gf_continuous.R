@@ -18,6 +18,7 @@ plot_gf_continuous <- function(
                                    "env_year",
                                    "env_pathway",
                                    "res_gf",
+                                   "res_clust",
                                    "trophic",
                                    "survey",
                                    "depth_cat"
