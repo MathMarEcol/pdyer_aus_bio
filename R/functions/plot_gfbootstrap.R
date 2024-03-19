@@ -246,20 +246,32 @@ plot_gfbootstrap <- function(
         hist_data_log_cap <- hist_data_log
         hist_data_log_cap[is.infinite(hist_data_log)] <- min(hist_data_log[!is.infinite(hist_data_log)])
 
-        pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data),
-                                           ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE)
+        pl_sim_mat_hist <- ggplot2::ggplot(
+          data.frame(x = hist_data),
+          ggplot2::aes(x = x)
+        ) +
+          ggplot2::geom_histogram(na.rm = TRUE) +
+          ggthemes::theme_tufte() +
+          ggplot2::xlab(expression(Similarity)) +
+          ggplot2::ylab("Frequency")
+
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist"], plot = pl_sim_mat_hist)
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log),
                                            ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE)
+            geom_histogram(na.rm = TRUE) +
+          ggthemes::theme_tufte() +
+          ggplot2::xlab(expression(log[10](Similarity))) +
+          ggplot2::ylab("Frequency")
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist_log_remove"], plot = pl_sim_mat_hist)
 
         pl_sim_mat_hist <- ggplot2::ggplot(data.frame(x = hist_data_log_cap),
                                            ggplot2::aes(x = x)) +
-            geom_histogram(na.rm = TRUE)
+            geom_histogram(na.rm = TRUE) +
+          ggthemes::theme_tufte() +
+          ggplot2::xlab(expression(log[10](Similarity))) +
+          ggplot2::ylab("Frequency")
 
         ggsave_wrapper(filename = pl_file["sim_mat_hist_log_cap"], plot = pl_sim_mat_hist)
     }
