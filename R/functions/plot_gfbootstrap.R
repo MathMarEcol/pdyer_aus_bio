@@ -103,7 +103,7 @@ plot_gfbootstrap <- function(
                     main.title.size = 0.5)
 
   ## ggsave_wrapper(filename = pl_file["no_samp"], plot = pl_no_samp)
-  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"], scale = 0.1)
+  tmap_save_wrapper(tm = pl_no_samp, filename = pl_file["no_samp"])
 
   # TODO will need to aggregate samples for combined surveys. Waiting until I have a ready run to make it easier
 
@@ -189,10 +189,7 @@ plot_gfbootstrap <- function(
                   samples = fit_samples,
                   grids = fit_grids)+
     tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
-                                                 "Clustering showing samples in domain for depth [{depth_cat}]\n",
-                                                 "in survey [{survey}] studying trophic level [{trophic}],\n",
-                                                 "domain is {env_domain} at res {res_clust}. Clustered with {clust_method} which found {k} clusters. Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "{k} clusters"),
                     main.title.size = 0.5)
 
   ##ggsave_wrapper(filename = pl_file["samp_clipped"], plot = pl_samp_clipped)
@@ -366,7 +363,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
   ## ggplot2::geom_point(mapping = ggplot2::aes(x = lon, y = lat), shape = ".", colour = "dimgray", data = samples[,spatial_vars], inherit.aes = FALSE)
   pl_tm <- pl_tm +
     tm_shape(samples) +
-    tm_dots(col = "lightgray", shape = 01, size = 0.2)
+    tm_dots(col = "lightgray", shape = 01, size = 0.02)
   }
   if(!is.null(grids)){
     if(class(grids)[1] == "list" && length(grids) == 1){
@@ -380,7 +377,7 @@ pl_tm <-   tm_shape(cluster_polygons, bbox = env_bbox) +
 
   pl_tm <- pl_tm +
     tm_shape(grids) +
-    tm_symbols(col = "dimgray", border.lwd = NA, alpha = 0.4, size = 0.4, shape = 23)
+    tm_symbols(col = "dimgray", border.lwd = NA, alpha = 0.4, size = 0.04, shape = 23)
   }
   if(plot_map){
     pl_tm <- pl_tm + tm_shape(marine_map, bbox = env_bbox) +
