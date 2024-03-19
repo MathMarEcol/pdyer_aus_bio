@@ -16,11 +16,15 @@ cluster_raster_to_polygons <- function(
   }
 
   ## cluster_row is assumed to have a clust_ind table with sites and a cl entry with cluster IDs
-    sites <- data.frame(cluster_row$clust_ind[[1]][, ..spatial_vars],
-                                  cl = cluster_row$clust_ind[[1]]$cl)
-    sites_clust <- sites[!is.na(sites$cl), ]
-    sites_no_clust <- sites[is.na(sites$cl), ]
-    sites_no_clust$cl <- rep.int(0, nrow(sites_no_clust))
+  sites <- data.frame(cluster_row$clust_ind[[1]][, ..spatial_vars],
+    cl = cluster_row$clust_ind[[1]]$cl
+    )
+  sites_na <- is.na(sites$cl)
+  sites_clust <- sites
+  sites_no_clust <- sites
+  sites_no_clust$cl[!sites_na] <- NA
+  sites_no_clust$cl[sites_na] <- 0
+
   clust_raster <- terra::rast(
             x = as.matrix(sites_clust),
             type = "xyz",
@@ -31,14 +35,10 @@ cluster_raster_to_polygons <- function(
   clust_poly_sf <- sf::st_as_sf(clust_multipoly)
 
     if(nrow(sites_no_clust) > 1) {
-      no_clust_vec <- terra::vect(sites_no_clust,
-        crs = terra::crs(clust_raster)
-        )
-      no_clust_raster <- terra::rasterize(
-        x = no_clust_vec,
-        y = clust_raster,
-        field = c("cl")
-      )
+      no_clust_raster <- terra::rast(
+        x = sites_no_clust,
+        type = "xyz",
+        crs = "+proj=longlat +datum=WGS84")
       names(no_clust_raster) <- c("clustering")
       no_clust_multipoly <- terra::as.polygons(no_clust_raster)
       no_clust_sf <- sf::st_as_sf(no_clust_multipoly)
