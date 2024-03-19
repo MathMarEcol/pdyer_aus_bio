@@ -58,10 +58,7 @@ plot_gfbootstrap_mpa <- function(
                                   env_poly = env_poly[name == gfbootstrap_cluster$env_domain, data][[1]],
                                   labels = plot_clust_labels)  +
         tmap::tm_layout(main.title = glue::glue_data(gfbootstrap_cluster,
-                                                     "Clustering for depth [{depth_cat}] in survey [{survey}]\n",
-                                                     "studying trophic level [{trophic}], domain is {env_domain} at res {res_clust}.\n",
-                                                     "Clustered with {clust_method} which found {k} clusters. Showing [{mpa_polygons$iucn_categories[[1]]$name}] MPAs. Predictors used:\n",
-                                                     "{pred_string}"),
+                                                     "{k} clusters"),
                         main.title.size = 0.5) +
             tmap::tm_shape(mpa_polygons$mpa_polys[[1]]) +
             tm_polygons(col = "grey", alpha = 0.7, border.col = "grey", border.alpha = 0.9)
