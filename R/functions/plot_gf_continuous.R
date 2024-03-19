@@ -133,17 +133,20 @@ plot_gf_continuous <- function(
   pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
 
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
-    ggplot2::geom_point(show.legend = FALSE) +
-    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]) * pca_scale, mapping = aes(x = PC1, y = PC2), inherit.aes = FALSE) +
-      ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]) * pca_scale,
-                            arrow = arrow(),
-                            inherit.aes = FALSE) +
-      ggrepel::geom_text_repel(
-        data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale),
-        mapping = aes(x = PC1, y = PC2, label = imp_preds),
-        inherit.aes = FALSE
-            ) +
-    ggthemes::theme_tufte()
+    ggplot2::geom_point(show.legend = FALSE, size = 0.1) +
+    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.5, inherit.aes = FALSE) +
+    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]),
+      arrow = arrow(),
+      inherit.aes = FALSE
+    ) +
+    ggrepel::geom_text_repel(
+      data = data.frame(imp_preds, p_comps$rotation[, 1:2]),
+      mapping = aes(x = PC1, y = PC2, label = imp_preds),
+      inherit.aes = FALSE
+    ) +
+    ggthemes::theme_tufte() +
+    xlab("PC1") +
+    ylab("PC2")
 
   ggsave_wrapper(filename = pl_file["pca"], plot = pl)
 
@@ -278,10 +281,7 @@ plot_env_continuous <- function(
 
   pl_tm <- pl_tm +
     tmap::tm_layout(main.title = glue::glue_data(gf_predicted,
-                                                 "Continuous Compositional turnover for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain}.\n",
-                                                 "Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "Continuous Compositional turnover"),
                     main.title.size = 0.5)
 
   tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"])
@@ -299,17 +299,19 @@ plot_env_continuous <- function(
   pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
 
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
-    ggplot2::geom_point(show.legend = FALSE) +
-    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]) * pca_scale, mapping = aes(x = PC1, y = PC2), inherit.aes = FALSE) +
-    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]) * pca_scale,
+    ggplot2::geom_point(show.legend = FALSE, size = 0.1) +
+    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.5, inherit.aes = FALSE) +
+    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]),
                           arrow = arrow(),
                           inherit.aes = FALSE) +
     ggrepel::geom_text_repel(
-      data = data.frame(imp_preds, p_comps$rotation[, 1:2] * pca_scale),
+      data = data.frame(imp_preds, p_comps$rotation[, 1:2]),
       mapping = aes(x = PC1, y = PC2, label = imp_preds),
       inherit.aes = FALSE
     ) +
-    ggthemes::theme_tufte()
+    ggthemes::theme_tufte() +
+    xlab("PC1") +
+    ylab("PC2")
 
   ggsave_wrapper(filename = pl_file["pca"], plot = pl)
 
