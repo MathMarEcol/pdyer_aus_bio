@@ -115,10 +115,7 @@ plot_gf_continuous <- function(
 
   pl_tm <- pl_tm +
     tmap::tm_layout(main.title = glue::glue_data(gf_predicted,
-                                                 "Continuous Compositional turnover for depth [{depth_cat}] in survey [{survey}]\n",
-                                                 "studying trophic level [{trophic}], domain is {env_domain}.\n",
-                                                 "Predictors used:\n",
-                                                 "{pred_string}"),
+                                                 "Continuous Compositional turnover"),
                     main.title.size = 0.5)
 
   tmap_save_wrapper(tm = pl_tm, filename = pl_file["map"])
