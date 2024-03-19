@@ -497,22 +497,60 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
     gfbootstrap_combined$gfbootstrap <- list(qs::qread(gfbootstrap_combined$gfbootstrap[[1]]))
   }
 
-  if (inherits(gfbootstrap_combined$gfbootstrap[[1]], "combinedBootstrapGF")) {
-    gg_plots <- gfbootstrap::gg_combined_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]])
-    file_names <- vapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
-      pl_file <- paste0(c(paste0(c(pl_file_base, n, plot_description), collapse = "_"), ".png"), collapse = "")
-      ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
-      return(pl_file)
-    }, character(1), gg_plots = gg_plots, pl_file_base = pl_file_base)
-  } else if (inherits(gfbootstrap_combined$gfbootstrap[[1]], "bootstrapGradientForest")) {
-    gg_plots <- gfbootstrap::gg_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]])
-    file_names <- vapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
-      pl_file <- paste0(c(paste0(c(pl_file_base, n, plot_description), collapse = "_"), ".png"), collapse = "")
-      ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
-      return(pl_file)
-    }, character(1), gg_plots = gg_plots, pl_file_base = pl_file_base)
+  imp <- gradientForest::importance(gfbootstrap_combined$gfbootstrap[[1]], sort = TRUE)
+  if (pred_importance_top >= 1) {
+    imp_preds <- names(imp)[seq.int(1, min(length(imp), pred_importance_top))]
   } else {
-    file_names <- paste0(c(paste0(c(pl_file_base, "nofit", plot_description), collapse = "_"), ".png"), collapse = "")
+    imp_explained <- cumsum(imp) / sum(imp)
+    ## Take all predictors below threshold, then one more
+    n_preds <- sum(imp_explained < pred_importance_top) + 1
+    imp_preds <- names(imp)[seq.int(1, n_preds)]
+  }
+
+  n_preds <- length(imp)
+  per_side <- 9 * ceiling(sqrt(n_preds))
+
+
+  if (inherits(gfbootstrap_combined$gfbootstrap[[1]], "combinedBootstrapGF")) {
+
+    gg_plots <- gfbootstrap::gg_combined_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]])
+    file_names <- vapply(names(gg_plots), function(n, gg_plots, pl_file_base, per_side) {
+      pl_file <- paste0(c(paste0(c(pl_file_base, "allpreds", n, plot_description), collapse = "_"), ".pdf"), collapse = "")
+      ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]], width = per_side, height = per_side)
+      return(pl_file)
+    }, character(1), gg_plots = gg_plots, pl_file_base = pl_file_base, per_side = per_side)
+
+    each_imp_files <- lapply(imp_preds, function(im, cbgf, pl_file_base) {
+      gg_plots <- gfbootstrap::gg_combined_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]], var = im, n_curves = 30)
+      file_names <- lapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
+        pl_file <- paste0(c(paste0(c(pl_file_base, im, n, plot_description), collapse = "_"), ".pdf"), collapse = "")
+        ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
+        return(pl_file)
+      }, gg_plots = gg_plots, pl_file_base = pl_file_base)
+    }, cbgf = gfbootstrap_combined$gfbootstrap[[1]], pl_file_base = pl_file_base)
+    file_names <- c(file_names, unlist(each_imp_files))
+
+  } else if (inherits(gfbootstrap_combined$gfbootstrap[[1]], "bootstrapGradientForest")) {
+
+    gg_plots <- gfbootstrap::gg_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]])
+    file_names <- vapply(names(gg_plots), function(n, gg_plots, pl_file_base, per_side) {
+      pl_file <- paste0(c(paste0(c(pl_file_base, n, plot_description), collapse = "_"), ".pdf"), collapse = "")
+      ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]], width = per_side, height = per_side)
+      return(pl_file)
+    }, character(1), gg_plots = gg_plots, pl_file_base = pl_file_base, per_side = per_side)
+
+    each_imp_files <- lapply(imp_preds, function(im, bgf, pl_file_base) {
+      gg_plots <- gfbootstrap::gg_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]], var = im, n_curves = 30)
+      file_names <- lapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
+        pl_file <- paste0(c(paste0(c(pl_file_base, im, n, plot_description), collapse = "_"), ".pdf"), collapse = "")
+        ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
+        return(pl_file)
+      }, gg_plots = gg_plots, pl_file_base = pl_file_base)
+    }, bgf = gfbootstrap_combined$gfbootstrap[[1]], pl_file_base = pl_file_base)
+    file_names <- c(file_names, unlist(each_imp_files))
+
+  } else {
+    file_names <- paste0(c(paste0(c(pl_file_base, "nofit", plot_description), collapse = "_"), ".pdf"), collapse = "")
     no_plot <- ggplot2::ggplot(data.frame(x = 1:5, y = 1:5), ggplot2::aes(x = x, y = y)) +
       ggplot2::geom_point() +
       ggplot2::ggtitle(paste0(pl_survey_name, " has not successfully clustered"))
@@ -699,8 +737,8 @@ gf_diag_plot_helper <- function(gfbootstrap_combined,
   pl_extrap <- pl_extrap + tmap::tm_shape(env_poly_local, bbox = env_bbox) +
     tmap::tm_borders(lwd = 1)
 
-  pl_file <- paste0(paste0(c(pl_file_base, paste0("extrap", pl_type), plot_description), collapse = "_"), ".png")
-  tmap_save_wrapper(tm = pl_extrap, filename = pl_file, scale = 0.8, dpi = 1200)
+  pl_file <- paste0(paste0(c(pl_file_base, paste0("extrap", pl_type), plot_description), collapse = "_"), ".pdf")
+  tmap_save_wrapper(tm = pl_extrap, filename = pl_file)
     sf::sf_use_s2(s2_used)
   return(pl_file)
 }
