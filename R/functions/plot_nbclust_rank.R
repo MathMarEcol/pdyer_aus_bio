@@ -44,13 +44,16 @@ plot_nbclust_rank <- function(
 
     pl_nbclust_rank <- ggplot2::ggplot(ranked_scores, aes(x = x, y = nclust, labels = heuristic)) +
       ggplot2::geom_point() +
-        ggplot2::scale_x_discrete(limits = factor(ranked_scores$x),
-                                  labels = ranked_scores$heuristic,
-                                  name = "Heuristic",
-                                  guide = ggplot2::guide_axis(angle = 45)) +
-        ggplot2::ggtitle("Recommended number of clusters by hyperparameter tuning heuristics, ranked") +
-          ggplot2::geom_hline(yintercept = 41, colour = "red") +
-          ggthemes::theme_tufte()
+      ggplot2::scale_x_discrete(
+        limits = factor(ranked_scores$x),
+        labels = ranked_scores$heuristic,
+        name = "Heuristic",
+        guide = ggplot2::guide_axis(angle = 45)
+      ) +
+      ggplot2::ggtitle("Recommended number of clusters by hyperparameter tuning heuristics, ranked") +
+      ggplot2::geom_hline(yintercept = 41, colour = "red") +
+      ggthemes::theme_tufte() +
+      ylab("Recommended Clusters")
 
     pl_file <- paste0(pl_file_base, "_", plot_description, ".pdf")
     ggsave_wrapper(
