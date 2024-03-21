@@ -136,9 +136,12 @@ plot_gf_continuous <- function(
   ## Set scale of "rotation" so it is as large as possible without breaking the
   ## plot
   indicator_radius <- max(
-    diff(range(pca_df$pc1)) / 2,
-    diff(range(pca_df$pc2)) / 2
+    c(
+      range(pca_df$pc1),
+      range(pca_df$pc2)
+    )
   )
+
   scaled_eigs <- p_comps$rotation * indicator_radius
 
   prominent_eig_vars <- sort(apply(scaled_eigs[, 1:2], 1, \(x){
@@ -322,8 +325,10 @@ plot_env_continuous <- function(
   ## Set scale of "rotation" so it is as large as possible without breaking the
   ## plot
   indicator_radius <- max(
-    diff(range(pca_df$pc1)) / 2,
-    diff(range(pca_df$pc2)) / 2
+    c(
+      range(pca_df$pc1),
+      range(pca_df$pc2)
+    )
   )
 
   scaled_eigs <- p_comps$rotation * indicator_radius
