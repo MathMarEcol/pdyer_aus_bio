@@ -428,7 +428,7 @@ clara_rngR = TRUE
 clara_pamLike = TRUE
 clara_correct.d = TRUE
 
-pca_n_vars = 10
+pca_n_vars = 5
 pca_scale = 1/20
 
 nbclust_dist = "manhattan"

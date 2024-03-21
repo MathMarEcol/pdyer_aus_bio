@@ -128,20 +128,42 @@ plot_gf_continuous <- function(
     colours = colours
   )
 
-  pca_n_vars <- min(pca_n_vars, length(imp_preds))
+  ## get scale of lines right
+  ## scale of eigenvectors and scale of points from dataset
+  ## don't always line up.
+  ## eigenvectors are normalised to 1.
+  ## points are not
+  ## Set scale of "rotation" so it is as large as possible without breaking the
+  ## plot
+  indicator_radius <- max(
+    diff(range(pca_df$pc1)) / 2,
+    diff(range(pca_df$pc2)) / 2
+  )
+  tuning_factor <- 1 / max(p_comps$rotation[, 1:2])
+  scaled_eigs <- p_comps$rotation * indicator_radius*tuning_factor
 
-  pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
+  prominent_eig_vars <- sort(apply(scaled_eigs[, 1:2], 1, \(x){
+    norm(x, type = "2")
+  }), decreasing = TRUE)
+
+  pca_n_vars_local <- min(pca_n_vars, length(imp_preds))
+
+  pred_ind <- rownames(scaled_eigs) %in% imp_preds[seq.int(pca_n_vars_local)]
+  prom_names <- names(prominent_eig_vars)[pred_ind]
+  prom_ind <- rownames(scaled_eigs) %in% prom_names
 
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
-    ggplot2::geom_point(show.legend = FALSE, size = 0.1) +
-    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.5, inherit.aes = FALSE) +
-    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]),
-      arrow = arrow(),
+    ggplot2::geom_point(show.legend = FALSE, size = 0.2) +
+    ggplot2::geom_point(data = data.frame(scaled_eigs[!prom_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.25, inherit.aes = FALSE) +
+    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(scaled_eigs[prom_ind, 1:2]),
+      arrow = grid::arrow(length = (grid::unit(0.25, "cm"))),
+      linewidth = 0.2,
       inherit.aes = FALSE
     ) +
     ggrepel::geom_text_repel(
-      data = data.frame(imp_preds, p_comps$rotation[, 1:2]),
-      mapping = aes(x = PC1, y = PC2, label = imp_preds),
+      data = data.frame(imp_preds[prom_ind], scaled_eigs[prom_ind, 1:2]),
+      mapping = aes(x = PC1, y = PC2, label = imp_preds[prom_ind]),
+      size = 2,
       inherit.aes = FALSE
     ) +
     ggthemes::theme_tufte() +
@@ -149,7 +171,6 @@ plot_gf_continuous <- function(
     ylab("PC2")
 
   ggsave_wrapper(filename = pl_file["pca"], plot = pl)
-
   return(pl_file)
 }
 
@@ -294,19 +315,43 @@ plot_env_continuous <- function(
     colours = colours
   )
 
-  pca_n_vars <- min(pca_n_vars, length(imp_preds))
+  ## get scale of lines right
+  ## scale of eigenvectors and scale of points from dataset
+  ## don't always line up.
+  ## eigenvectors are normalised to 1.
+  ## points are not
+  ## Set scale of "rotation" so it is as large as possible without breaking the
+  ## plot
+  indicator_radius <- max(
+    diff(range(pca_df$pc1)) / 2,
+    diff(range(pca_df$pc2)) / 2
+  )
+  tuning_factor <- 1 / max(p_comps$rotation[, 1:2])
+  scaled_eigs <- p_comps$rotation * indicator_radius*tuning_factor
 
-  pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars)]
+  prominent_eig_vars <- sort(apply(scaled_eigs[, 1:2], 1, \(x){
+    norm(x, type = "2")
+  }), decreasing = TRUE)
+
+  pca_n_vars_local <- min(pca_n_vars, length(imp_preds))
+
+  pred_ind <- rownames(p_comps$rotation) %in% imp_preds[seq.int(pca_n_vars_local)]
+
+  prom_names <- names(prominent_eig_vars)[pred_ind]
+  prom_ind <- rownames(scaled_eigs) %in% prom_names
 
   pl <- ggplot2::ggplot(pca_df, ggplot2::aes(x = pc1, y = pc2, colour = I(colours))) +
-    ggplot2::geom_point(show.legend = FALSE, size = 0.1) +
-    ggplot2::geom_point(data = data.frame(p_comps$rotation[!pred_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.5, inherit.aes = FALSE) +
-    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(p_comps$rotation[pred_ind, 1:2]),
-                          arrow = arrow(),
-                          inherit.aes = FALSE) +
+    ggplot2::geom_point(show.legend = FALSE, size = 0.2) +
+    ggplot2::geom_point(data = data.frame(scaled_eigs[!prom_ind, 1:2]), mapping = aes(x = PC1, y = PC2), size = 0.25, inherit.aes = FALSE) +
+    ggplot2::geom_segment(aes(x = 0, y = 0, xend = PC1, yend = PC2), data.frame(scaled_eigs[prom_ind, 1:2]),
+                          arrow = grid::arrow(length = (grid::unit(0.25, "cm"))),
+                          linewidth = 0.2,
+                          inherit.aes = FALSE
+                          ) +
     ggrepel::geom_text_repel(
-      data = data.frame(imp_preds, p_comps$rotation[, 1:2]),
-      mapping = aes(x = PC1, y = PC2, label = imp_preds),
+      data = data.frame(imp_preds[prom_ind], scaled_eigs[prom_ind, 1:2]),
+      mapping = aes(x = PC1, y = PC2, label = imp_preds[prom_ind]),
+      size = 2,
       inherit.aes = FALSE
     ) +
     ggthemes::theme_tufte() +
