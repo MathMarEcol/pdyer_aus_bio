@@ -524,7 +524,18 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
       gg_plots <- gfbootstrap::gg_combined_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]], var = im, n_curves = 30)
       file_names <- lapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
         pl_file <- paste0(c(paste0(c(pl_file_base, im, n, plot_description), collapse = "_"), ".pdf"), collapse = "")
-        ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
+        fixed_linewidth <- ggplot2::ggplot_build(gg_plots[[n]] +
+          ggplot2::xlab(im) +
+          ggplot2::ylab(expression(paste("Compositional Turnover ", (R^2)))) +
+          ggthemes::theme_tufte() +
+          ggplot2::theme(
+            legend.position = "none",
+            strip.background = element_blank(),
+            strip.text.x = element_blank()
+          ))
+        fixed_linewidth$data[[1]]$linewidth <- 0.2
+
+        ggsave_wrapper(filename = pl_file, plot = ggplot2::ggplot_gtable(fixed_linewidth))
         return(pl_file)
       }, gg_plots = gg_plots, pl_file_base = pl_file_base)
     }, cbgf = gfbootstrap_combined$gfbootstrap[[1]], pl_file_base = pl_file_base)
@@ -543,7 +554,19 @@ gfbootstrap_diagnostic_plots <- function(gfbootstrap_cluster,
       gg_plots <- gfbootstrap::gg_bootstrapGF(gfbootstrap_combined$gfbootstrap[[1]], var = im, n_curves = 30)
       file_names <- lapply(names(gg_plots), function(n, gg_plots, pl_file_base) {
         pl_file <- paste0(c(paste0(c(pl_file_base, im, n, plot_description), collapse = "_"), ".pdf"), collapse = "")
-        ggsave_wrapper(filename = pl_file, plot = gg_plots[[n]])
+        fixed_linewidth <- ggplot2::ggplot_build(gg_plots[[n]] +
+          ggplot2::xlab(im) +
+          ggplot2::ylab(expression(paste("Compositional Turnover ", (R^2)))) +
+          ggthemes::theme_tufte() +
+          ggplot2::theme(
+            legend.position = "none",
+            strip.background = element_blank(),
+            strip.text.x = element_blank()
+          ))
+        fixed_linewidth$data[[1]]$linewidth <- 0.2
+
+
+        ggsave_wrapper(filename = pl_file, plot = ggplot2::ggplot_gtable(fixed_linewidth))
         return(pl_file)
       }, gg_plots = gg_plots, pl_file_base = pl_file_base)
     }, bgf = gfbootstrap_combined$gfbootstrap[[1]], pl_file_base = pl_file_base)
