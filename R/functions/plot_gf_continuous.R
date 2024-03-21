@@ -139,8 +139,7 @@ plot_gf_continuous <- function(
     diff(range(pca_df$pc1)) / 2,
     diff(range(pca_df$pc2)) / 2
   )
-  tuning_factor <- 1 / max(p_comps$rotation[, 1:2])
-  scaled_eigs <- p_comps$rotation * indicator_radius*tuning_factor
+  scaled_eigs <- p_comps$rotation * indicator_radius
 
   prominent_eig_vars <- sort(apply(scaled_eigs[, 1:2], 1, \(x){
     norm(x, type = "2")
@@ -326,8 +325,8 @@ plot_env_continuous <- function(
     diff(range(pca_df$pc1)) / 2,
     diff(range(pca_df$pc2)) / 2
   )
-  tuning_factor <- 1 / max(p_comps$rotation[, 1:2])
-  scaled_eigs <- p_comps$rotation * indicator_radius*tuning_factor
+
+  scaled_eigs <- p_comps$rotation * indicator_radius
 
   prominent_eig_vars <- sort(apply(scaled_eigs[, 1:2], 1, \(x){
     norm(x, type = "2")
