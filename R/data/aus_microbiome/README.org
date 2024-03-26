@@ -1,0 +1,13 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: CC-BY-4.0
+
+* Australian Microbiome Initiative
+Data downloaded from https://data.bioplatforms.com/bpa/otu on 2019-07-03.
+
+Login is required.
+
+License depends on sample project, but samples are generally CC-BY-4.0-AU.
+
+Amplicon was set to ~XXXXXX_bacteria~ and, under contexual filter, Environment was set to ~marine~.
+
+Then download OTU and contextual data as CSV and place in this folder.

@@ -1,0 +1,10 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: CC-BY-4.0
+* BioORACLE
+BioORACLE data are downloaded at runtime and cached in this folder.
+
+However, make sure that an empty folder is present at ~$ROOT_STORE_DIR/data/bioORACLE~.
+
+The R package ~sdmpredictors~ or ~biooracler~ is used to load the dataset.
+
+License for BioORACLE data is GPL (version not specified, see https://bio-oracle.org/downloads-to-email.php).

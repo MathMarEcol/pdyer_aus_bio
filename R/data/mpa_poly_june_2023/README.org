@@ -1,0 +1,20 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: CC-BY-4.0
+
+* MPA polygons
+
+Sourced from the World Database of Protected Areas (WDPA https://www.protectedplanet.net/country/AUS).
+
+Non-commercial use with attribution required.
+
+Download the .SHP variant.
+
+Note that WDPA splits the dataset up into three separate datasets.
+
+The source code assumes each dataset will be extracted and placed into:
+
+- ~./aus_mpa_0~
+- ~./aus_mpa_1~
+- ~./aus_mpa_2~
+
+Either follow this convention or modify ~./R/functions/get_mpa_polys.R~.

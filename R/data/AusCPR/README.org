@@ -1,0 +1,6 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: CC-BY-4.0
+* IMOS AODN data
+Clone the contents of	https://github.com/MathMarEcol/aus_cpr_for_bioregions into this folder.
+
+Data is CC-BY-4.0, provided by AODN and IMOS, with some preprocessed data and code supplied by Claire Davies, reused in the above repository with permission.
