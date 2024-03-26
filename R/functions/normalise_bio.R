@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 
 ## Assumes the data.table had the following structure:
 #' c("survey", "trophic", "depth", "depth_cat", spatial_vars, "taxon", "abund")

@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 merge_bio_env <- function(
                           env_poly,
                           res_gf_target,

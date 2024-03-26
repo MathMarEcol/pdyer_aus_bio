@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 fit_gf <- function(
                    all_bio_env,
                    env_biooracle_names,

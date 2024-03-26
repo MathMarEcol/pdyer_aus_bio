@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 ## Must contain the following controller names:
 ## - "small" - needs 1 core and <4GB RAM
 ## - "gpu" - needs a GPU.

@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 #' batch covariance matrix for tensors
 #' see 
 #' https://stackoverflow.com/questions/71357619/how-do-i-compute-batched-sample-covariance-in-pytorch

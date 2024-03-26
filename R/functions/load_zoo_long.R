@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 #' Loads in zooplankton data,
 #' adds survey and trophic identifiers,
 #' and converts to long form

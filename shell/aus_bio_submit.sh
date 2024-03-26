@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
+
+set -euo pipefail
 
 ## Script to set up and submit the targets pipeline
 ## usage: ./aus_bio_submit.sh branchname acctstring qrisrefQxxxx

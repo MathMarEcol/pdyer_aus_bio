@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 plot_gf_kmedoids <- function(gf_cluster_kmedoids,
                              gf_kmedoid_polygons,
                              gf_predicted,

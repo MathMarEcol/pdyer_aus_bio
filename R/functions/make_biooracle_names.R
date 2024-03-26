@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 make_biooracle_names <- function(env_vars,
                                  env_modes,
                                  env_year,

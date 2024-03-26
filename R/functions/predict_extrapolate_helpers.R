@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 ## Returns a list of vectors with
 ## batch indicies and site indices
 ## Uses env var "TENSOR_MEM_MAX" to decide batch sizes

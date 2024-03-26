@@ -1,3 +1,7 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
+
+
 library(drake)
 cache_dir <- "/vmshare/PARA/resources/hpc_sandbox/Q1216/pdyer/pdyer_aus_bio/drake_cache/"
 cache_ob <- drake::drake_cache(cache_dir)

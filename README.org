@@ -5,6 +5,8 @@
 :END:
 Check out the latest commit.
 Currently the ~f_targets~ branch is the latest.
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: CC-BY-4.0
 
 Set the root directory, here we use home for simplicity:
 

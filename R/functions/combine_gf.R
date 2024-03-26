@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 combine_gf_p1 <- function(
                                    gf_survey,
                                    custom_combinations) {

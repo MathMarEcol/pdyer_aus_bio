@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 
 
 if [ ! -v SBATCH_PARTITION ]; then

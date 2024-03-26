@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 plot_gf_continuous <- function(
                                gf_predicted,
                                env_domain,

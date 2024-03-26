@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 cluster_raster_to_polygons <- function(
                                        cluster_row, #generic, works with any clustering
                                        spatial_vars

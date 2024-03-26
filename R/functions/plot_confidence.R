@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 plot_confidence <- function(cluster_env_assign_cluster,
                             env_domain,
                             env_poly,

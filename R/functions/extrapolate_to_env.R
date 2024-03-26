@@ -1,3 +1,5 @@
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 extrapolate_to_env <- function(
                                gfbootstrap_combined,
                                gfbootstrap_predicted,

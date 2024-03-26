@@ -8,6 +8,8 @@
 #SBATCH -o logs/aus_bio_output_%j
 #SBATCH -e logs/aus_bio_error_%j
 
+# Copyright 2017-2024 Philip Dyer
+# SPDX-License-Identifier: GPL-3.0-only
 
 set -euo pipefail
 
