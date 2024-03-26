@@ -12,7 +12,7 @@ The output consists of R objects, stored in an R ~targets~ cache, and plots, sto
 
 The branch ~f_varied_res~ was used to generate results for the thesis.
 
-Further development on the source code will take place at https://
+Further development on the source code will take place at https://github.com/MathMarEcol/pdyer_aus_bio
 
 * Modifying the Code
 
