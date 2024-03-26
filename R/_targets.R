@@ -81,7 +81,6 @@ tar_option_set(
   ## Track these packages, rebuild targets if package changes. "packages" option will not rebuild targets.
   imports = c(
     "gfbootstrap",
-    "rphildyerphd"
   )
 
 
