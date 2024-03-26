@@ -133,16 +133,19 @@ Either follow this convention or modify ~./R/functions/get_mpa_polys.R~.
 
 
 *** Watson Fisheries Data
-?
 
 Published Watson and Tidd
 https://doi.org/10.25959/5c522cadbea37
 
 CC-BY-4.0 for data
 
-Oddly, Version 4 is available publically, V5 is behind a login.
-Jase Everett wrote code for transforming it, but the repo is private.
-I may be commenting it out.
+Version 4 is available publically.
+V5 is behind a login, and source code expects some preprocessing.
+
+As I do not currenlty have permission to share V5 and the preprocessing scripts, functionality related to this dataset has been commented out.
+
+
+
 ** Directory structure
 :PROPERTIES:
 :ID:       org:09e255e4-a92d-439c-b959-6b998e00880f

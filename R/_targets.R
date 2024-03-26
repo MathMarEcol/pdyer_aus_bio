@@ -235,20 +235,20 @@ list(
     )
   ),
 
-  tar_target(
-    fish_long,
-    load_fish_long(
-      fish_taxon_file,
-      fish_data_dir,
-      fish_years,
-      description_to_survey,
-      spatial_vars,
-      depth_names,
-      depth_range,
-      env_offset,
-      biooracle_folder
-    )
-  ),
+  ## tar_target(
+  ##   fish_long,
+  ##   load_fish_long(
+  ##     fish_taxon_file,
+  ##     fish_data_dir,
+  ##     fish_years,
+  ##     description_to_survey,
+  ##     spatial_vars,
+  ##     depth_names,
+  ##     depth_range,
+  ##     env_offset,
+  ##     biooracle_folder
+  ##   )
+  ## ),
 
   ## Combine all biological data together
   ## Each row is a survey, the unit GF models are fit over
@@ -259,8 +259,8 @@ list(
       list(
         zoo_long,
         phy_long,
-        bac_long,
-        fish_long
+        bac_long
+        ## fish_long
       ),
       use.names = TRUE
     )
